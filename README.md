@@ -67,11 +67,14 @@ vthumb --dry-run ~/Videos
 # Animiertes Sheet: jede Kachel spielt 3 Sekunden ab, als MP4 (oder webm, gif)
 vthumb -a mp4 --clip-seconds 3 --fps 10 film.mkv     # -> film.sheet.mp4
 
+# Zeitstempel gelb mit roter Kontur und Millisekunden, grüner Titel im Info-Kopf
+vthumb --timestamp-color "#FFFF00" --outline-color "#FF0000" --milliseconds --title-color "#00FF00" film.mkv
+
 # Eigene Einstellungen als Preset speichern
 vthumb --columns 5 --rows 6 --no-header --save-preset "5x6 ohne Kopf"
 ```
 
-Ohne `--preset` werden die zuletzt in der Oberfläche benutzten Einstellungen verwendet. Alle Optionen: `vthumb --help`.
+Ohne `--preset` werden die zuletzt in der Oberfläche benutzten Einstellungen verwendet. Jede Einstellung eines Presets lässt sich auch per Option ändern (Raster, Zeitstempel samt Farben, Kontur, Schatten und Millisekunden, Info-Kopf samt Farben und Schriftgrößen, Ausgabe, Animation). Farben als `#RRGGBB` oder `#AARRGGBB` (AA = Deckkraft). Alle Optionen: `vthumb --help`.
 
 Sprache: `--lang de|en|auto` (oder Umgebungsvariable `VTHUMB_LANG`) für Hilfe und Meldungen; ohne Angabe gilt die in der Oberfläche gewählte Sprache, sonst die Systemsprache. `--sheet-lang de|en|auto` legt die Sprache der Texte im Sheet fest (z. B. „Größe:“/„Size:“, Dezimalkomma).
 Exit-Codes: 0 ok, 1 einzelne Videos fehlgeschlagen, 2 Aufruffehler, 3 ffmpeg fehlt, 130 abgebrochen.
