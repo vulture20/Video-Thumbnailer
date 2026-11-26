@@ -136,7 +136,7 @@ public partial class MainWindow : Window, IUiServices
         return files.Count > 0 ? files[0].TryGetLocalPath() : null;
     }
 
-    public async Task<string?> PickImageFileAsync(string? current)
+    public async Task<string?> PickImageFileAsync(string? current, string titleKey)
     {
         IStorageFolder? start = null;
         try
@@ -147,7 +147,7 @@ public partial class MainWindow : Window, IUiServices
         catch { /* start in the default folder */ }
         var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = Loc.T("BackgroundImagePick"),
+            Title = Loc.T(titleKey),
             SuggestedStartLocation = start,
             FileTypeFilter =
             [

@@ -225,7 +225,7 @@ public class SheetLayoutFeatureTests
         s.BackgroundImage.Path = "/does/not/exist.png";
         using var sheet = RenderSheet(s);
         Assert.Equal(new SKColor(0x10, 0x20, 0x30), sheet.GetPixel(3, 3));
-        Assert.Null(BackgroundImageCache.Get(s.BackgroundImage.Path));
+        Assert.Null(ImageFileCache.Get(s.BackgroundImage.Path));
     }
 
     [Fact]

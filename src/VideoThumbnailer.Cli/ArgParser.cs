@@ -99,6 +99,41 @@ public static class ArgParser
                 }
                 case "--background-mode": { var v = ParseEnum<BackgroundImageMode>(Next(), a); o.Overrides.Add(s => s.BackgroundImage.Mode = v); break; }
                 case "--background-opacity": { var v = NextDouble(); o.Overrides.Add(s => s.BackgroundImage.Opacity = v > 1 ? v / 100 : v); break; }
+                case "--tile-border": { var v = NextFloat(); o.Overrides.Add(s => s.TileStyle.BorderWidth = Math.Max(0, v)); break; }
+                case "--no-tile-border": o.Overrides.Add(s => s.TileStyle.BorderWidth = 0); break;
+                case "--tile-border-color": { var v = NextColor(); o.Overrides.Add(s => s.TileStyle.BorderColor = v); break; }
+                case "--tile-shadow": o.Overrides.Add(s => s.TileStyle.Shadow = true); break;
+                case "--no-tile-shadow": o.Overrides.Add(s => s.TileStyle.Shadow = false); break;
+                case "--tile-shadow-color": { var v = NextColor(); o.Overrides.Add(s => { s.TileStyle.Shadow = true; s.TileStyle.ShadowColor = v; }); break; }
+                case "--tile-shadow-offset": { var v = NextFloat(); o.Overrides.Add(s => { s.TileStyle.Shadow = true; s.TileStyle.ShadowOffset = v; }); break; }
+                case "--tile-shadow-blur": { var v = NextFloat(); o.Overrides.Add(s => { s.TileStyle.Shadow = true; s.TileStyle.ShadowBlur = v; }); break; }
+                case "--grayscale": o.Overrides.Add(s => s.TileStyle.Grayscale = true); break;
+                case "--no-grayscale": o.Overrides.Add(s => s.TileStyle.Grayscale = false); break;
+                case "--corners": { var v = ParseEnum<TileCorners>(Next(), a); o.Overrides.Add(s => s.TileStyle.Corners = v); break; }
+                case "--corner-radius": { var v = NextFloat(); o.Overrides.Add(s => s.TileStyle.CornerRadius = v); break; }
+                case "--sheet-border": { var v = NextFloat(); o.Overrides.Add(s => s.SheetBorderWidth = Math.Max(0, v)); break; }
+                case "--no-sheet-border": o.Overrides.Add(s => s.SheetBorderWidth = 0); break;
+                case "--sheet-border-color": { var v = NextColor(); o.Overrides.Add(s => s.SheetBorderColor = v); break; }
+                case "--comment": { var v = Next().Replace("\\n", "\n"); o.Overrides.Add(s => s.Header.Comment = v.Length == 0 ? null : v); break; }
+                case "--no-comment": o.Overrides.Add(s => s.Header.Comment = null); break;
+                case "--watermark": { var v = Next(); o.Overrides.Add(s => { s.Watermark.Text = v.Length == 0 ? null : v; s.Watermark.ImagePath = null; }); break; }
+                case "--watermark-image":
+                {
+                    var v = Next();
+                    string? path = v.ToLowerInvariant() is "none" or "off" or "" ? null : Path.GetFullPath(v);
+                    if (path is not null && !File.Exists(path)) throw new UsageException(CliText.T("FileNotFound", v, a));
+                    o.Overrides.Add(s => s.Watermark.ImagePath = path);
+                    break;
+                }
+                case "--no-watermark": o.Overrides.Add(s => { s.Watermark.Text = null; s.Watermark.ImagePath = null; }); break;
+                case "--watermark-pos": { var v = ParseEnum<WatermarkPosition>(Next(), a); o.Overrides.Add(s => s.Watermark.Position = v); break; }
+                case "--watermark-size": { var v = NextDouble(); o.Overrides.Add(s => s.Watermark.Size = v > 1 ? v / 100 : v); break; }
+                case "--watermark-opacity": { var v = NextDouble(); o.Overrides.Add(s => s.Watermark.Opacity = v > 1 ? v / 100 : v); break; }
+                case "--watermark-color": { var v = NextColor(); o.Overrides.Add(s => s.Watermark.Color = v); break; }
+                case "--watermark-per-tile": o.Overrides.Add(s => s.Watermark.PerTile = true); break;
+                case "--watermark-sheet": o.Overrides.Add(s => s.Watermark.PerTile = false); break;
+                case "--audio": o.Overrides.Add(s => s.Animation.Audio = true); break;
+                case "--no-audio": o.Overrides.Add(s => s.Animation.Audio = false); break;
                 case "--layout": { var v = ParseLayout(Next(), a); o.Overrides.Add(s => s.Template = v?.Clone()); break; }
                 case "--fit-screen": { var v = ParseScreenFit(Next()); o.Overrides.Add(s => s.FitToScreen = v); break; }
                 case "--screen":
@@ -205,8 +240,12 @@ public static class ArgParser
     public static AnimationFormat ParseAnimationFormat(string v) => v.ToLowerInvariant().TrimStart('.') switch
     {
         "mp4" or "h264" => AnimationFormat.Mp4,
+        "h265" or "hevc" or "mp4-h265" or "x265" => AnimationFormat.H265,
         "webm" or "vp9" => AnimationFormat.Webm,
         "gif" => AnimationFormat.Gif,
+        "webp" => AnimationFormat.Webp,
+        "apng" or "png" => AnimationFormat.Apng,
+        "ogv" or "ogg" or "theora" => AnimationFormat.Ogv,
         _ => throw new UsageException(CliText.T("UnknownAnimationFormat", v)),
     };
 

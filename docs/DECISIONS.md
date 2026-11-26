@@ -153,7 +153,7 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | Datum | Entscheidung | Begründung / Anmerkung |
 |---|---|---|
 | 26.11.2026 | Animiertes Sheet = gleiches Raster wie das Standbild, jede Kachel spielt einen kurzen Ausschnitt ab ihrem Zeitpunkt ab; Zeitstempel laufen mit, Info-Kopf bleibt stehen | gleiche Gestaltung und Einstellungen wie beim Standbild |
-| 26.11.2026 | Formate MP4 (H.264, `yuv420p`, `faststart`), WebM (VP9) und GIF (eigene Palette, Bayer-Dithering, Endlosschleife). Ohne Ton | überall abspielbar bzw. für Web/Foren; Ton ergibt bei vielen gleichzeitigen Ausschnitten keinen Sinn |
+| 26.11.2026 | Formate MP4 (H.264, `yuv420p`, `faststart`), WebM (VP9) und GIF (eigene Palette, Bayer-Dithering, Endlosschleife). Ohne Ton | überall abspielbar bzw. für Web/Foren; Ton ergibt bei vielen gleichzeitigen Ausschnitten keinen Sinn. Ergänzt durch #30: weitere Formate und Ton einer Kachel als Option |
 | 26.11.2026 | Standard: 3 s je Ausschnitt, 10 Bilder/s (einstellbar 0,5–30 s, 1–60 Bilder/s). Die Qualität (Schieberegler) steuert bei MP4/WebM den CRF-Wert, bei GIF hat sie keine Wirkung | kleine Dateien, flüssig genug für eine Übersicht |
 | 26.11.2026 | Animiert ist ein Schalter im Preset (`animation.enabled`); dann wird statt des Bildes die Animation gespeichert. Einzelbilder („jede Aufnahme speichern“) nur beim Standbild | ein Durchlauf, ein Ergebnis; Standbild und Animation lassen sich über zwei Presets erzeugen |
 | 26.11.2026 | Animierte Sheets heißen immer `<Name>.sheet.<mp4\|webm\|gif>`; Ordner-Scans überspringen solche Dateien | sonst würde `film.mp4` neben dem Video überschrieben bzw. beim nächsten Lauf selbst als Video erkannt |
@@ -240,6 +240,44 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Fehlt das Bild oder ist es nicht lesbar, entsteht das Sheet mit der Hintergrundfarbe und der Eintrag bekommt einen Hinweis; die Kommandozeile prüft `--background-image` sofort | ein verschobenes Bild soll keinen Stapellauf scheitern lassen |
 | 26.11.2026 | Oberfläche nur unter „Erweitert“ (Zeile „Hintergrundbild“ mit „…“ und ✕, darunter Darstellung und Deckkraft); Kommandozeile `--background-image <Datei|none>`, `--background-mode`, `--background-opacity`. Auch animierte Sheets bekommen das Bild (einmal gelesen, nicht je Einzelbild) | |
 
+### Kachel-Effekte (#27)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 26.11.2026 | Neue Preset-Gruppe `tileStyle`: Rahmen (`borderWidth`, `borderColor`), Schlagschatten (`shadow`, `shadowColor`, `shadowOffset`, `shadowBlur`), Graustufen (`grayscale`), Ecken (`corners`: `Square`/`Rounded`/`Cut`, `cornerRadius`). Dazu `sheetBorderWidth`/`sheetBorderColor` für einen Rahmen um das ganze Sheet. **Alles standardmäßig aus**, die eingebauten Presets bleiben unverändert | bestehende Sheets sehen genauso aus wie vorher |
+| 26.11.2026 | Rahmen und Schatten verändern das Layout **nicht**: Der Kachelrahmen wird innen gezeichnet (folgt den Ecken), der Schatten fällt in Abstand/Rand, der Sheet-Rahmen liegt im Rand. Abstand und Rand stellt man bei Bedarf selbst größer | sonst müssten Kachelgröße, „An Bildschirm anpassen“ und die Aufnahmegröße der Bilder mitrechnen; so bleibt jede Rechnung wie sie ist, und die Wirkung sieht man sofort in der Vorschau |
+| 26.11.2026 | Alle Schatten werden vor allen Kacheln gezeichnet; ein Schatten größer als der Abstand liegt also unter der Nachbarkachel, nie darüber | sauberes Bild auch bei kleinem Abstand |
+| 26.11.2026 | Ecken schneiden das Bild ab (Clip), Zeitstempel und Wasserzeichen je Kachel ebenso; bei „eckig“ wird nichts geclippt | gleiche Form für Bild, Rahmen und Schatten |
+| 26.11.2026 | Graustufen nach Rec. 709 (wie die Schwarzbild-Erkennung), nur die Kachelbilder, nicht Hintergrundbild, Zeitstempel oder Info-Kopf | Effekt gehört zu den Kacheln |
+| 26.11.2026 | Gilt für Standbild, animierte Sheets (jedes Bild wird ohnehin neu gezeichnet) und die Live-Vorschau. Einzelbilder („jede Aufnahme speichern“) bleiben unverändert | Einzelbilder sind die Rohaufnahmen |
+| 26.11.2026 | Oberfläche nur unter „Erweitert“, eigener Block unter dem Layout; ein Wert pro Zeile (Breite und Farbe getrennt). Versatz und Weichheit des Schattens nur im Preset und auf der Kommandozeile (wie beim Zeitstempel-Schatten) | Paare passen nicht in die 350 px breite Spalte; die Standardwerte (je 4 px) passen meistens |
+| 26.11.2026 | Kommandozeile: `--tile-border`, `--tile-border-color`, `--no-tile-border`, `--tile-shadow`/`--no-tile-shadow`, `--tile-shadow-color`/`-offset`/`-blur` (schalten den Schatten ein), `--grayscale`/`--no-grayscale`, `--corners square\|rounded\|cut`, `--corner-radius`, `--sheet-border`, `--sheet-border-color`, `--no-sheet-border` | Muster wie bei den Zeitstempel-Optionen |
+
+### Kommentartext (#28)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 26.11.2026 | Kein eigener Bereich mit Position/Schrift/Farbe, sondern Teil des Info-Kopfs: `header.comment` (mehrzeilig möglich). Steht `{comment}` in der Vorlage, kommt der Text dorthin; sonst als letzte Zeile(n) unter die Video-Infos, in Textgröße und -farbe des Kopfs. Ohne Kommentar verschwindet eine Zeile, die nur `{comment}` enthält | funktioniert ohne Anpassen der Vorlage, lässt sich aber frei platzieren; Schrift und Farbe gibt es schon beim Info-Kopf |
+| 26.11.2026 | Ist der Info-Kopf aus, erscheint auch der Kommentar nicht. Wer nur den Kommentar will, setzt die Vorlage auf `{comment}` | eine Stelle für Text im Sheet |
+| 26.11.2026 | Gespeichert im Preset; `--comment "…"` (`\n` für Zeilen) setzt ihn für einen Lauf, `--no-comment` entfernt ihn. Oberfläche: Feld „Kommentar“ im Info-Kopf unter „Erweitert“ | beides aus dem Issue: je Preset und je Lauf |
+
+### Wasserzeichen (#29)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 26.11.2026 | Preset-Gruppe `watermark`: `text`, `imagePath`, `position` (`TopLeft`, `TopRight`, `BottomLeft`, `BottomRight` (Standard), `Center`, `Tiled` = wiederholt), `size` (Breite relativ zur Fläche, Standard 0,2), `opacity` (Standard 0,5), `color` (Text), `perTile`. Ein Bild hat Vorrang vor dem Text; ohne beides kein Wasserzeichen (Standard) | eine Einstellung, ein Wasserzeichen; die Größe relativ zur Breite passt sich jeder Sheet-Größe an |
+| 26.11.2026 | Wahlweise einmal über dem ganzen Sheet (Standard, über Kacheln und Info-Kopf) oder in jeder Kachel (`perTile`, Größe dann relativ zur Kachel, unter dem Zeitstempel). Abstand zum Rand 3 % der kürzeren Seite. Nie größer als die Fläche (lange Texte werden verkleinert) | beide Varianten aus dem Issue; der Zeitstempel bleibt lesbar |
+| 26.11.2026 | Text in fetter Sheet-Schrift ohne Kontur; Schriftgröße so, dass der Text die eingestellte Breite hat. „Wiederholt“ setzt das Wasserzeichen versetzt in Abständen von 1,5 × Breite bzw. 2,5 × Höhe | schlicht; Lesbarkeit regelt die Deckkraft |
+| 26.11.2026 | Auch in animierten Sheets (Bild wird einmal gelesen, siehe `ImageFileCache`) und der Live-Vorschau; **nicht** in Einzelbildern | Einzelbilder sind die Rohaufnahmen, wie bei den Kachel-Effekten |
+| 26.11.2026 | Bildpfade wie beim Hintergrundbild: relativ zur Preset-Datei, beim Export im selben Ordner relativ gespeichert; fehlt das Bild, entsteht das Sheet ohne Wasserzeichen mit Hinweis. `--watermark-image` prüft die Datei sofort | gleiche Regeln wie #26 |
+| 26.11.2026 | Kommandozeile: `--watermark <Text>` (löscht ein Bild), `--watermark-image <Datei\|none>`, `--no-watermark`, `--watermark-pos`, `--watermark-size`/`--watermark-opacity` (0–1 oder %), `--watermark-color`, `--watermark-per-tile`/`--watermark-sheet`. Oberfläche unter „Erweitert“ im Block der Kachel-Effekte | |
+
+### Weitere Animationsformate und Ton (#30)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 26.11.2026 | Alle vier Formate aus dem Issue umgesetzt: **H.265** (MP4, `libx265`, Tag `hvc1` für Apple-Player, CRF 18–44), **animiertes WebP** (`libwebp_anim`, sonst `libwebp`; Qualität = WebP-Qualität), **APNG** (verlustfrei, Qualitätsregler ohne Wirkung) und **OGV** (Theora, Qualität 1–10). Dateiendungen `.sheet.mp4`, `.sheet.webp`, `.sheet.png`, `.sheet.ogv` | jeder Encoder kostet nur ein paar Zeilen. APNG wird groß und OGV ist kaum noch verbreitet, aber beide sind ausdrücklich gewünscht und schaden niemandem, der sie nicht wählt. APNG als `.png`, weil das jeder Browser und Bildbetrachter öffnet |
+| 26.11.2026 | Vor dem Kodieren wird einmal je Programmlauf `ffmpeg -encoders` gelesen. Fehlt der nötige Encoder, schlägt nur dieses Video mit „Diesem ffmpeg fehlt der Encoder …“ fehl | ein ffmpeg aus der Distribution oder ein schlanker Build hat nicht jeden Encoder; eine klare Meldung statt einer ffmpeg-Fehlermeldung. Ob die fest hinterlegten Builds (gyan.dev, martin-riedl.de) alle Encoder haben, prüft die CI: sie erzeugt mit dem heruntergeladenen ffmpeg auf allen drei Systemen je ein Sheet in H.265, WebP, APNG und OGV (mit Ton) |
+| 26.11.2026 | **Ton**: Schalter `animation.audio` (Standard **aus**). Es läuft der Ton **einer** Kachel während ihres Ausschnitts: der größten (Spezial-Raster), bei gleich großen der frühesten mit Bild. Kein Nacheinander aller Ausschnitte | viele Tonspuren gleichzeitig ergeben nur Lärm; nacheinander passt nicht zur Länge der Animation (20 Kacheln × 3 s ≠ 3 s). Die große Kachel ist der Blickfang. Ersetzt die frühere Entscheidung „ohne Ton“ nicht als Standard, sondern ergänzt sie als Option |
+| 26.11.2026 | Ton nur bei MP4/H.265 (AAC 128 kbit/s), WebM (Opus, sonst Vorbis) und OGV (Vorbis, sonst Opus). Bei GIF, WebP und APNG wird der Schalter ignoriert (Oberfläche: ausgegraut). Videos ohne Ton ergeben ein stummes Sheet ohne Fehler | diese Formate können keinen Ton enthalten |
+| 26.11.2026 | Oberfläche: sieben Formatknöpfe in zwei Reihen (Videos MP4, H.265, WebM, OGV; Bilder GIF, WebP, APNG), darunter „Mit Ton“. Kommandozeile `-a mp4\|h265\|webm\|ogv\|gif\|webp\|apng`, `--audio`/`--no-audio` | alles in „Einfach“ wie bisher die drei Formate |
+
 ## Offen
 
 | Seit | Punkt | Stand |
@@ -254,14 +292,10 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 
 ## Spätere Ideen (P2/P3, noch ohne Entscheidung)
 
-Aus der Spezifikation, je ein Issue. Erledigt sind aus P2 bereits: Kommandozeile, Live-Vorschau, Deutsch/Englisch, Preset-Import/-Export, „Einfach“/„Erweitert“ statt Optionsdialog, Hintergrundfarbe, animierte Sheets (MP4/WebM/GIF), Videos per URL (#21), schwarze Bilder überspringen (#22), Aufnahmezeitpunkte von Hand (#23), Spezial-Raster (#24), „An Bildschirm anpassen“ (#25) und Hintergrundbild (#26). Die Wahl der Render-Engine (P3) entfällt: ffmpeg ist das einzige Backend.
+Aus der Spezifikation, je ein Issue. Erledigt sind aus P2 bereits: Kommandozeile, Live-Vorschau, Deutsch/Englisch, Preset-Import/-Export, „Einfach“/„Erweitert“ statt Optionsdialog, Hintergrundfarbe, animierte Sheets (MP4/WebM/GIF), Videos per URL (#21), schwarze Bilder überspringen (#22), Aufnahmezeitpunkte von Hand (#23), Spezial-Raster (#24), „An Bildschirm anpassen“ (#25), Hintergrundbild (#26), Kachel-Effekte (#27), Kommentartext (#28), Wasserzeichen (#29) und weitere Animationsformate mit Ton (#30). Die Wahl der Render-Engine (P3) entfällt: ffmpeg ist das einzige Backend.
 
 | Prio | Idee | Issue |
 |---|---|---|
-| P2 | Kachel-Effekte: Rahmen, Schlagschatten, Graustufen, abgeschnittene Ecken | #27 |
-| P2 | Eigener Kommentartext | #28 |
-| P2 | Wasserzeichen (Bild oder Text) | #29 |
-| P2 | Animierte Sheets: H.265, WebP, APNG, OGV, Ton | #30 |
 | P2 | Durchgehende Vorschau-Animation / GIF-Slideshow | #31 |
 | P2 | Export der Video-Infos als CSV, XML, WebVTT | #32 |
 | P2 | Preset-Datei per Doppelklick öffnen (Dateizuordnung) | #33 |

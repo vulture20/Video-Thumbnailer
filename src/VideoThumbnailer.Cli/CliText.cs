@@ -74,7 +74,7 @@ internal static class CliText
         ["InvalidTimes"] = ("Invalid time in {0}: '{1}'. Use seconds, mm:ss or hh:mm:ss, '-' for automatic, '+s' for the clip length.", "Ungültiger Zeitpunkt bei {0}: „{1}“. Erlaubt sind Sekunden, mm:ss oder hh:mm:ss, „-“ für automatisch, „+s“ für die Länge des Ausschnitts."),
         ["NeedsNumber"] = ("Option {0} needs a number.", "Option {0} braucht eine Zahl."),
         ["UnknownOption"] = ("Unknown option: {0}", "Unbekannte Option: {0}"),
-        ["UnknownAnimationFormat"] = ("Unknown animation format '{0}' (mp4, webm, gif).", "Unbekanntes Animationsformat „{0}“ (mp4, webm, gif)."),
+        ["UnknownAnimationFormat"] = ("Unknown animation format '{0}' (mp4, h265, webm, ogv, gif, webp, apng).", "Unbekanntes Animationsformat „{0}“ (mp4, h265, webm, ogv, gif, webp, apng)."),
         ["UnknownFormat"] = ("Unknown format '{0}' (jpg, png, webp).", "Unbekanntes Format „{0}“ (jpg, png, webp)."),
         ["UnknownOrder"] = ("Unknown order '{0}' (row, column, random).", "Unbekannte Reihenfolge „{0}“ (row, column, random)."),
         ["InvalidColor"] = ("Invalid color '{0}' for {1}. Use #RRGGBB or #AARRGGBB (AA = opacity, FF = opaque).", "Ungültige Farbe „{0}“ für {1}. Erlaubt: #RRGGBB oder #AARRGGBB (AA = Deckkraft, FF = deckend)."),

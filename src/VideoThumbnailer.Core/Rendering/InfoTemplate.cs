@@ -20,18 +20,34 @@ public static partial class InfoTemplate
         "filename", "name", "ext", "folder", "path", "title", "container",
         "size", "size:B|KB|MB|GB", "duration", "bitrate",
         "width", "height", "resolution", "vcodec", "vprofile", "fps", "pixfmt", "hdr", "vbitrate", "rotation",
-        "audio", "acodec", "samplerate", "channels", "channellayout", "abitrate", "alang", "audiotracks",
+        "audio", "acodec", "samplerate", "channels", "channellayout", "abitrate", "alang", "audiotracks", "comment",
     ];
 
     /// <param name="lang">Language for words like "none" and the decimal separator; default <see cref="Lang.Current"/>.</param>
-    public static string Expand(string template, MediaInfo info, string? lang = null)
+    /// <param name="comment">Text for <c>{comment}</c> (#28); null = empty.</param>
+    public static string Expand(string template, MediaInfo info, string? lang = null, string? comment = null)
     {
         lang ??= Lang.Current;
         return Placeholder().Replace(template.Replace("\r\n", "\n"), m =>
-            Resolve(m.Groups["key"].Value.ToLowerInvariant(), m.Groups["arg"].Success ? m.Groups["arg"].Value : null, info, lang) ?? m.Value);
+            Resolve(m.Groups["key"].Value.ToLowerInvariant(), m.Groups["arg"].Success ? m.Groups["arg"].Value : null, info, lang, comment) ?? m.Value);
     }
 
-    private static string? Resolve(string key, string? arg, MediaInfo i, string lang)
+    [GeneratedRegex(@"\{comment\}", RegexOptions.IgnoreCase)]
+    private static partial Regex CommentPlaceholder();
+
+    /// <summary>
+    /// The template with the comment in place: without <c>{comment}</c> it is added as last line(s); without a comment,
+    /// lines that only hold <c>{comment}</c> are dropped (no empty line).
+    /// </summary>
+    public static string WithComment(string template, string? comment)
+    {
+        template = template.Replace("\r\n", "\n");
+        if (string.IsNullOrWhiteSpace(comment))
+            return string.Join("\n", template.Split('\n').Where(l => !CommentPlaceholder().IsMatch(l) || l.Trim().Length != "{comment}".Length));
+        return CommentPlaceholder().IsMatch(template) ? template : template.TrimEnd('\n') + "\n{comment}";
+    }
+
+    private static string? Resolve(string key, string? arg, MediaInfo i, string lang, string? comment)
     {
         var v = i.Video;
         var a = i.Audio;
@@ -67,6 +83,7 @@ public static partial class InfoTemplate
             "abitrate" => Formatting.Bitrate(a?.BitRate, nf, na),
             "alang" => a?.Language ?? na,
             "audiotracks" => i.AudioStreams.Count.ToString(),
+            "comment" => comment?.Replace("\r\n", "\n") ?? "",
             _ => null,
         };
     }

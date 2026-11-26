@@ -20,9 +20,11 @@ Free, cross-platform video contact sheet generator with GUI and command line.
 - Aufnahmezeitpunkte von Hand: Kachel in der Vorschau anklicken und den Zeitpunkt per Schieberegler, Eingabe oder bildgenau wählen (bei animierten Sheets auch die Länge des Ausschnitts); in der Kommandozeile mit `--times`
 - Zeitstempel in jeder Kachel (5 Positionen, Farbe, Deckkraft, Kontur- und Schattenfarbe, optional mit Millisekunden)
 - Hintergrundfarbe oder Hintergrundbild (füllen, strecken, kacheln, zentriert, mit Deckkraft)
-- Info-Kopf mit frei konfigurierbaren Video-Infos (Name, Größe, Dauer, Auflösung, Codecs, Bitrate, FPS, Audio …), eigene Titel- und Textfarbe
+- Kachel-Effekte: Rahmen, Schlagschatten, Graustufen, abgerundete oder abgeschnittene Ecken, Rahmen um das ganze Sheet
+- Wasserzeichen als Text oder Bild (Ecke, Mitte oder wiederholt, mit Deckkraft), über dem Sheet oder in jeder Kachel
+- Info-Kopf mit frei konfigurierbaren Video-Infos (Name, Größe, Dauer, Auflösung, Codecs, Bitrate, FPS, Audio …), eigene Titel- und Textfarbe, dazu ein eigener Kommentartext
 - Ausgabe als JPG, PNG oder WebP; optional jede Aufnahme als Einzelbild
-- Animierte Sheets als MP4, WebM oder GIF: jede Kachel spielt einen kurzen Ausschnitt ab ihrem Zeitpunkt ab, mit mitlaufendem Zeitstempel
+- Animierte Sheets als MP4 (H.264 oder H.265), WebM, OGV, GIF, animiertes WebP oder APNG: jede Kachel spielt einen kurzen Ausschnitt ab ihrem Zeitpunkt ab, mit mitlaufendem Zeitstempel; Videoformate optional mit dem Ton einer Kachel
 - Warteschlange mit Pause, Abbruch, Fortschritt und paralleler Verarbeitung über alle CPU-Kerne; klappt in schmalen Fenstern zu einer Leiste ein
 - Ausgabe in einen Ordner (optional mit Ordnerstruktur), neben das Video oder in einen Unterordner; Dateinamen-Muster
 - Presets als offene JSON-Dateien, 4 mitgelieferte Basis-Presets
@@ -73,8 +75,12 @@ vthumb -p Compact --columns 6 -f webp -o ~/Sheets --keep-structure ~/Videos
 # Nur anzeigen, was passieren würde
 vthumb --dry-run ~/Videos
 
-# Animiertes Sheet: jede Kachel spielt 3 Sekunden ab, als MP4 (oder webm, gif)
+# Animiertes Sheet: jede Kachel spielt 3 Sekunden ab, als MP4 (oder h265, webm, ogv, gif, webp, apng)
 vthumb -a mp4 --clip-seconds 3 --fps 10 film.mkv     # -> film.sheet.mp4
+
+# Animiertes WebP bzw. H.265-Video mit dem Ton der größten Kachel
+vthumb -a webp film.mkv                              # -> film.sheet.webp
+vthumb -a h265 --audio --layout big-center film.mkv
 
 # Zeitstempel gelb mit roter Kontur und Millisekunden, grüner Titel im Info-Kopf
 vthumb --timestamp-color "#FFFF00" --outline-color "#FF0000" --milliseconds --title-color "#00FF00" film.mkv
@@ -94,6 +100,13 @@ vthumb --layout big-center --fit-screen both --screen 2560x1440 film.mkv
 
 # Hintergrundbild, abgedunkelt (Deckkraft 40 % über dunklem Hintergrund)
 vthumb --background-image ~/Bilder/kino.jpg --background-opacity 40 film.mkv
+
+# Abgerundete Kacheln mit hellem Rahmen und Schatten, Graustufen, Kommentar und Wasserzeichen
+vthumb --gap 12 --corners rounded --tile-border 2 --tile-border-color "#E6E6E6" --tile-shadow --grayscale \
+       --comment "Urlaub 2026" --watermark "© 2026" --watermark-opacity 0.4 film.mkv
+
+# Logo als Wasserzeichen in jeder Kachel, oben links, ein Zehntel der Kachelbreite
+vthumb --watermark-image logo.png --watermark-per-tile --watermark-pos top-left --watermark-size 0.1 film.mkv
 
 # Eigene Einstellungen als Preset speichern
 vthumb --columns 5 --rows 6 --no-header --save-preset "5x6 ohne Kopf"
@@ -115,7 +128,13 @@ Ohne `--preset` werden die zuletzt in der Oberfläche benutzten Einstellungen ve
 
 **An Bildschirm anpassen:** In der Oberfläche zählt der Bildschirm, auf dem das Fenster ist (nutzbare Fläche ohne Taskleiste, in physischen Pixeln). Die Kommandozeile nimmt `--screen BxH`, sonst den zuletzt von der Oberfläche gesehenen Bildschirm, sonst die feste Breite des Presets.
 
-**Hintergrundbild:** Relative Pfade in einer Preset-Datei gelten relativ zu deren Ordner; beim Export wird ein Bild im selben Ordner relativ eingetragen, sodass Preset und Bild zusammen weitergegeben werden können.
+**Hintergrundbild und Wasserzeichen-Bild:** Relative Pfade in einer Preset-Datei gelten relativ zu deren Ordner; beim Export wird ein Bild im selben Ordner relativ eingetragen, sodass Preset und Bild zusammen weitergegeben werden können.
+
+**Kachel-Effekte:** Der Rahmen wird innen an der Kachel gezeichnet, die Bildgröße ändert sich also nicht. Der Schatten fällt in den Abstand zwischen den Kacheln; ohne Abstand ist er kaum zu sehen (Faustregel: Abstand etwa so groß wie Versatz plus Weichheit, Standard je 4 px). Der Sheet-Rahmen liegt im Rand. Einzelbilder (`--frames`) bleiben unverändert.
+
+**Wasserzeichen:** Ein Bild hat Vorrang vor dem Text. Die Größe ist die Breite des Wasserzeichens im Verhältnis zur Sheet-Breite (mit `--watermark-per-tile` zur Kachelbreite), höchstens so hoch wie die Fläche. Es liegt über dem Info-Kopf, in Kacheln unter dem Zeitstempel. Einzelbilder bekommen kein Wasserzeichen.
+
+**Animierte Formate:** MP4 (H.264) läuft überall; H.265 ist kleiner, spielt aber nicht jeder Browser ab. WebP und GIF eignen sich für Webseiten und Foren, APNG ist verlustfrei und entsprechend groß, OGV (Theora) gibt es für ältere freie Umgebungen. Mit `--audio` (bzw. „Mit Ton“) läuft der Ton der größten Kachel während ihres Ausschnitts, bei gleich großen Kacheln der der ersten; GIF, WebP und APNG können keinen Ton enthalten.
 
 Sprache: `--lang de|en|auto` (oder Umgebungsvariable `VTHUMB_LANG`) für Hilfe und Meldungen; ohne Angabe gilt die in der Oberfläche gewählte Sprache, sonst die Systemsprache. `--sheet-lang de|en|auto` legt die Sprache der Texte im Sheet fest (z. B. „Größe:“/„Size:“, Dezimalkomma).
 Exit-Codes: 0 ok, 1 einzelne Videos fehlgeschlagen, 2 Aufruffehler, 3 ffmpeg fehlt, 130 abgebrochen.
@@ -124,9 +143,9 @@ Exit-Codes: 0 ok, 1 einzelne Videos fehlgeschlagen, 2 Aufruffehler, 3 ffmpeg feh
 
 `{filename}` `{name}` `{ext}` `{folder}` `{path}` `{title}` `{container}` `{size}` `{size:B|KB|MB|GB|TB}` `{duration}` `{bitrate}`
 `{width}` `{height}` `{resolution}` `{vcodec}` `{vprofile}` `{fps}` `{pixfmt}` `{hdr}` `{vbitrate}` `{rotation}`
-`{audio}` `{acodec}` `{samplerate}` `{channels}` `{channellayout}` `{abitrate}` `{alang}` `{audiotracks}`
+`{audio}` `{acodec}` `{samplerate}` `{channels}` `{channellayout}` `{abitrate}` `{alang}` `{audiotracks}` `{comment}`
 
-Die erste Zeile wird fett und größer dargestellt.
+Die erste Zeile wird fett und größer dargestellt. `{comment}` ist der eigene Kommentartext; steht er nicht in der Vorlage, kommt der Kommentar als letzte Zeile(n) dazu.
 
 ### Platzhalter im Dateinamen
 

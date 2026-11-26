@@ -48,6 +48,15 @@ jobs:
           test -s "$RUNNER_TEMP/smoke-out/smoke.jpg"
           $CLI --lang en --ffmpeg "$BIN" -a mp4 --clip-seconds 1 -o "$RUNNER_TEMP/smoke-out" "$RUNNER_TEMP/smoke.mp4"
           test -s "$RUNNER_TEMP/smoke-out/smoke.sheet.mp4"
+          # Further animation formats (#30) with the downloaded ffmpeg: needs libx265, libwebp, apng, libtheora/libvorbis.
+          $CLI --lang en --ffmpeg "$BIN" -a h265 --audio --clip-seconds 1 -o "$RUNNER_TEMP/smoke-out/h265" "$RUNNER_TEMP/smoke.mp4"
+          test -s "$RUNNER_TEMP/smoke-out/h265/smoke.sheet.mp4"
+          $CLI --lang en --ffmpeg "$BIN" -a webp --clip-seconds 1 -o "$RUNNER_TEMP/smoke-out" "$RUNNER_TEMP/smoke.mp4"
+          test -s "$RUNNER_TEMP/smoke-out/smoke.sheet.webp"
+          $CLI --lang en --ffmpeg "$BIN" -a apng --clip-seconds 1 -o "$RUNNER_TEMP/smoke-out" "$RUNNER_TEMP/smoke.mp4"
+          test -s "$RUNNER_TEMP/smoke-out/smoke.sheet.png"
+          $CLI --lang en --ffmpeg "$BIN" -a ogv --audio --clip-seconds 1 -o "$RUNNER_TEMP/smoke-out" "$RUNNER_TEMP/smoke.mp4"
+          test -s "$RUNNER_TEMP/smoke-out/smoke.sheet.ogv"
       - name: Upload smoke-test sheet
         uses: actions/upload-artifact@v4
         with:

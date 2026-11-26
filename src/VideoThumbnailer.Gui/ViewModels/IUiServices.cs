@@ -6,8 +6,8 @@ public interface IUiServices
     Task<IReadOnlyList<string>> PickVideoFilesAsync();
     Task<string?> PickFolderAsync(string title);
     Task<string?> PickPresetFileAsync(bool save, string? suggestedName = null);
-    /// <summary>Picture for the sheet background; null when cancelled.</summary>
-    Task<string?> PickImageFileAsync(string? current);
+    /// <summary>Picture for the sheet (background, watermark); the dialog title is a translation key. Null when cancelled.</summary>
+    Task<string?> PickImageFileAsync(string? current, string titleKey);
     Task<string?> PromptTextAsync(string title, string message, string initial);
     /// <summary>Yes/No question; null button texts use the translated "Yes"/"No".</summary>
     Task<bool> ConfirmAsync(string title, string message, string? yes = null, string? no = null);

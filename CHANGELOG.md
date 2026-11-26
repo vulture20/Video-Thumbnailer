@@ -7,6 +7,10 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 ## [Unveröffentlicht]
 
 ### Hinzugefügt
+- Kachel-Effekte unter „Erweitert“: Rahmen je Kachel (innen gezeichnet, Farbe und Breite), Schlagschatten (fällt in den Abstand), Graustufen, abgerundete oder abgeschnittene Ecken mit einstellbarer Größe und ein Rahmen um das ganze Sheet. Alles standardmäßig aus; gilt auch für animierte Sheets und die Live-Vorschau. Kommandozeile `--tile-border`, `--tile-border-color`, `--tile-shadow`, `--tile-shadow-color`, `--tile-shadow-offset`, `--tile-shadow-blur`, `--grayscale`, `--corners square|rounded|cut`, `--corner-radius`, `--sheet-border`, `--sheet-border-color` ([#47], #27)
+- Eigener Kommentartext im Info-Kopf (z. B. „Urlaub 2026“, auch mehrzeilig): steht unter den Zeilen des Info-Kopfs oder dort, wo die Vorlage `{comment}` enthält; gespeichert im Preset, auf der Kommandozeile `--comment` ([#47], #28)
+- Wasserzeichen als Text oder Bild (PNG mit Transparenz) mit Position (Ecken, Mitte, wiederholt), Größe relativ zur Sheet-Breite und Deckkraft, einmal über dem Sheet oder in jeder Kachel; auch in animierten Sheets. Kommandozeile `--watermark`, `--watermark-image`, `--watermark-pos`, `--watermark-size`, `--watermark-opacity`, `--watermark-color`, `--watermark-per-tile` ([#47], #29)
+- Animierte Sheets zusätzlich als MP4 mit H.265, animiertes WebP, APNG und OGV (Theora); optional mit dem Ton der größten (sonst ersten) Kachel bei MP4, H.265, WebM und OGV. Fehlt dem ffmpeg ein Encoder, sagt die Meldung welcher. Kommandozeile `-a h265|webp|apng|ogv`, `--audio` ([#47], #30)
 - Spezial-Raster mit großen und kleinen Kacheln: neue Kachelreihe „Layout“ mit „Raster“ und vier Vorlagen (Groß oben, Groß Mitte, Zwei groß, Groß zuerst). Große Kacheln werden in voller Größe aufgenommen und kommen in der Zeitfolge dort dran, wo sie beginnen. Eigene Vorlagen als offenes JSON im Preset (`template`: Felder und Kacheln); Kommandozeile `--layout big-top|big-center|two-big|big-first|<Datei>|grid` ([#46], #24)
 - Bildgröße „Bildschirmbreite“ und „An Bildschirm anpassen“: das Sheet wird so breit wie der Bildschirm, auf dem das Fenster ist, bzw. so groß, dass es ganz ohne Scrollen darauf passt (physische Pixel ohne Taskleiste). Im Preset steht der Modus, die feste Breite bleibt Ersatz. Kommandozeile `--fit-screen off|width|both` und `--screen BxH`, sonst der zuletzt von der Oberfläche gesehene Bildschirm ([#46], #25)
 - Hintergrundbild hinter den Kacheln (unter „Erweitert“): füllen, strecken, kacheln oder zentriert, mit Deckkraft über der Hintergrundfarbe (Standard 0,5) für lesbare Zeitstempel; fehlt das Bild, gibt es einen Hinweis statt eines Fehlers. Beim Preset-Export wird ein Bild neben der Datei relativ gespeichert. Kommandozeile `--background-image`, `--background-mode`, `--background-opacity` ([#46], #26)
@@ -124,6 +128,7 @@ Erste Version.
 [0.1.0]: https://github.com/vulture20/Video-Thumbnailer/releases/tag/v0.1.0
 [#1]: https://github.com/vulture20/Video-Thumbnailer/pull/1
 [#2]: https://github.com/vulture20/Video-Thumbnailer/pull/2
+[#47]: https://github.com/vulture20/Video-Thumbnailer/pull/47
 [#42]: https://github.com/vulture20/Video-Thumbnailer/pull/42
 [#46]: https://github.com/vulture20/Video-Thumbnailer/pull/46
 [#45]: https://github.com/vulture20/Video-Thumbnailer/pull/45

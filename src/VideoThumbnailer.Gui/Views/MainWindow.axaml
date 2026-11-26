@@ -267,6 +267,55 @@
                              IsEnabled="{Binding Settings.SkipBlackFrames}" />
             </Grid>
 
+            <!-- Tile effects (#27) and watermark (#29), advanced only. One value per row: pairs do not fit the 350 px column. -->
+            <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="4" Margin="0,8,0,0" IsVisible="{Binding IsAdvanced}">
+              <TextBlock Grid.Row="0" Classes="label" Text="{l:T TileBorder}" ToolTip.Tip="{l:T TileBorderTip}" />
+              <NumericUpDown x:Name="TileBorderBox" Grid.Row="0" Grid.Column="1" Value="{Binding Settings.TileBorderWidth}" Minimum="0" Maximum="100" Increment="1" FormatString="0.#"
+                             ToolTip.Tip="{l:T TileBorderTip}" />
+              <TextBlock Grid.Row="1" Classes="label" Text="{l:T TileBorderColor}" IsEnabled="{Binding Settings.HasTileBorder}" />
+              <c:ColorField x:Name="TileBorderColorField" Grid.Row="1" Grid.Column="1" Text="{Binding Settings.TileBorderColor}" IsEnabled="{Binding Settings.HasTileBorder}" />
+              <CheckBox x:Name="TileShadowCheck" Grid.Row="2" Content="{l:T TileShadow}" IsChecked="{Binding Settings.TileShadow}" ToolTip.Tip="{l:T TileShadowTip}" />
+              <c:ColorField x:Name="TileShadowColorField" Grid.Row="2" Grid.Column="1" Text="{Binding Settings.TileShadowColor}" IsEnabled="{Binding Settings.TileShadow}" />
+              <TextBlock Grid.Row="3" Classes="label" Text="{l:T TileCorners}" ToolTip.Tip="{l:T TileCornersTip}" />
+              <ComboBox x:Name="TileCornersBox" Grid.Row="3" Grid.Column="1" ItemsSource="{x:Static vm:SettingsViewModel.CornerStyles}" DisplayMemberBinding="{ReflectionBinding Label}"
+                        SelectedValueBinding="{ReflectionBinding Value}" SelectedValue="{Binding Settings.TileCorners, Mode=TwoWay}" HorizontalAlignment="Stretch" />
+              <TextBlock Grid.Row="4" Classes="label" Text="{l:T TileCornerSize}" IsEnabled="{Binding Settings.HasCornerSize}" />
+              <NumericUpDown Grid.Row="4" Grid.Column="1" Value="{Binding Settings.TileCornerRadius}" Minimum="0" Maximum="500" Increment="1" FormatString="0"
+                             IsEnabled="{Binding Settings.HasCornerSize}" ToolTip.Tip="{l:T TileCornersTip}" />
+              <CheckBox x:Name="GrayscaleCheck" Grid.Row="5" Grid.ColumnSpan="2" Content="{l:T Grayscale}" IsChecked="{Binding Settings.TileGrayscale}" />
+              <TextBlock Grid.Row="6" Classes="label" Text="{l:T SheetBorder}" ToolTip.Tip="{l:T SheetBorderTip}" />
+              <NumericUpDown Grid.Row="6" Grid.Column="1" Value="{Binding Settings.SheetBorderWidth}" Minimum="0" Maximum="500" Increment="1" FormatString="0.#"
+                             ToolTip.Tip="{l:T SheetBorderTip}" />
+              <TextBlock Grid.Row="7" Classes="label" Text="{l:T SheetBorderColor}" IsEnabled="{Binding Settings.HasSheetBorder}" />
+              <c:ColorField x:Name="SheetBorderColorField" Grid.Row="7" Grid.Column="1" Text="{Binding Settings.SheetBorderColor}" IsEnabled="{Binding Settings.HasSheetBorder}" />
+
+              <TextBlock Grid.Row="8" Classes="label" Text="{l:T Watermark}" Margin="0,8,0,0" />
+              <TextBox x:Name="WatermarkTextBox" Grid.Row="8" Grid.Column="1" Margin="0,8,0,0" Text="{Binding Settings.WatermarkText}"
+                       PlaceholderText="{l:T WatermarkTextPlaceholder}" IsEnabled="{Binding Settings.IsWatermarkText}" />
+              <TextBlock Grid.Row="9" Classes="label" Text="{l:T WatermarkImage}" ToolTip.Tip="{l:T WatermarkImageTip}" />
+              <Grid Grid.Row="9" Grid.Column="1" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="4">
+                <TextBox x:Name="WatermarkImageBox" Text="{Binding Settings.WatermarkImagePath}" PlaceholderText="{l:T BackgroundImageNone}" ToolTip.Tip="{l:T WatermarkImageTip}" />
+                <Button x:Name="PickWatermarkImageButton" Grid.Column="1" Content="…" Width="26" Height="26" Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                        Command="{Binding PickWatermarkImageCommand}" ToolTip.Tip="{l:T WatermarkImagePick}" />
+                <Button Grid.Column="2" Content="✕" Width="26" Height="26" Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                        Command="{Binding ClearWatermarkImageCommand}" IsEnabled="{Binding Settings.HasWatermarkImage}" ToolTip.Tip="{l:T WatermarkImageClear}" />
+              </Grid>
+              <TextBlock Grid.Row="10" Classes="label" Text="{l:T Position}" IsEnabled="{Binding Settings.HasWatermark}" />
+              <ComboBox x:Name="WatermarkPositionBox" Grid.Row="10" Grid.Column="1" ItemsSource="{x:Static vm:SettingsViewModel.WatermarkPositions}" DisplayMemberBinding="{ReflectionBinding Label}"
+                        SelectedValueBinding="{ReflectionBinding Value}" SelectedValue="{Binding Settings.WatermarkPosition, Mode=TwoWay}" HorizontalAlignment="Stretch"
+                        IsEnabled="{Binding Settings.HasWatermark}" />
+              <TextBlock Grid.Row="11" Classes="label" Text="{l:T WatermarkSize}" IsEnabled="{Binding Settings.HasWatermark}" ToolTip.Tip="{l:T WatermarkSizeTip}" />
+              <NumericUpDown Grid.Row="11" Grid.Column="1" Value="{Binding Settings.WatermarkSize}" Minimum="0.01" Maximum="1" Increment="0.05" FormatString="0.0#"
+                             IsEnabled="{Binding Settings.HasWatermark}" ToolTip.Tip="{l:T WatermarkSizeTip}" />
+              <TextBlock Grid.Row="12" Classes="label" Text="{l:T Opacity}" IsEnabled="{Binding Settings.HasWatermark}" />
+              <NumericUpDown Grid.Row="12" Grid.Column="1" Value="{Binding Settings.WatermarkOpacity}" Minimum="0" Maximum="1" Increment="0.1" FormatString="0.0#"
+                             IsEnabled="{Binding Settings.HasWatermark}" />
+              <TextBlock Grid.Row="13" Classes="label" Text="{l:T WatermarkColor}" IsEnabled="{Binding Settings.HasWatermarkText}" />
+              <c:ColorField x:Name="WatermarkColorField" Grid.Row="13" Grid.Column="1" Text="{Binding Settings.WatermarkColor}" IsEnabled="{Binding Settings.HasWatermarkText}" />
+              <CheckBox x:Name="WatermarkPerTileCheck" Grid.Row="14" Grid.ColumnSpan="2" Content="{l:T WatermarkPerTile}" IsChecked="{Binding Settings.WatermarkPerTile}"
+                        IsEnabled="{Binding Settings.HasWatermark}" />
+            </Grid>
+
             <Border Classes="divider" />
 
             <!-- Timestamps -->
@@ -297,7 +346,7 @@
               <TextBlock Classes="label" Text="{l:T ShowHeaderShort}" ToolTip.Tip="{l:T ShowHeader}" />
               <ToggleSwitch x:Name="HeaderSwitch" Grid.Column="1" IsChecked="{Binding Settings.HeaderEnabled}" OnContent="" OffContent="" MinWidth="0" />
             </Grid>
-            <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="4" Margin="0,2,0,0" IsEnabled="{Binding Settings.HeaderEnabled}" IsVisible="{Binding IsAdvanced}">
+            <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="4" Margin="0,2,0,0" IsEnabled="{Binding Settings.HeaderEnabled}" IsVisible="{Binding IsAdvanced}">
               <TextBlock Classes="label" Text="{l:T Position}" />
               <ComboBox Grid.Column="1" ItemsSource="{x:Static vm:SettingsViewModel.HeaderPositions}" DisplayMemberBinding="{ReflectionBinding Label}" SelectedValueBinding="{ReflectionBinding Value}" SelectedValue="{Binding Settings.HeaderPosition, Mode=TwoWay}" HorizontalAlignment="Stretch" />
               <TextBlock Grid.Row="1" Classes="label" Text="{l:T HeaderFontSize}" />
@@ -312,9 +361,12 @@
               <TextBlock Grid.Row="4" Classes="label" Text="{l:T SheetLanguage}" />
               <ComboBox Grid.Row="4" Grid.Column="1" ItemsSource="{x:Static vm:SettingsViewModel.SheetLanguages}" DisplayMemberBinding="{ReflectionBinding Label}"
                         SelectedValueBinding="{ReflectionBinding Value}" SelectedValue="{Binding Settings.SheetLanguage, Mode=TwoWay}" HorizontalAlignment="Stretch" />
-              <TextBox Grid.Row="5" Grid.ColumnSpan="2" Text="{Binding Settings.HeaderTemplate}" AcceptsReturn="True" TextWrapping="Wrap"
+              <TextBlock Grid.Row="5" Classes="label" Text="{l:T HeaderComment}" ToolTip.Tip="{l:T HeaderCommentTip}" VerticalAlignment="Top" Margin="0,6,0,0" />
+              <TextBox x:Name="HeaderCommentBox" Grid.Row="5" Grid.Column="1" Text="{Binding Settings.HeaderComment}" AcceptsReturn="True" TextWrapping="Wrap"
+                       PlaceholderText="{l:T HeaderCommentPlaceholder}" ToolTip.Tip="{l:T HeaderCommentTip}" />
+              <TextBox Grid.Row="6" Grid.ColumnSpan="2" Text="{Binding Settings.HeaderTemplate}" AcceptsReturn="True" TextWrapping="Wrap"
                        MinHeight="90" FontFamily="monospace" Margin="0,4,0,0" />
-              <TextBlock Grid.Row="6" Grid.ColumnSpan="2" Classes="hint" Text="{Binding Settings.PlaceholderHelp}" />
+              <TextBlock Grid.Row="7" Grid.ColumnSpan="2" Classes="hint" Text="{Binding Settings.PlaceholderHelp}" />
             </Grid>
 
             <!-- Output: format buttons, quality slider, location -->
@@ -323,11 +375,21 @@
               <TextBlock Classes="label" Text="{l:T Animated}" ToolTip.Tip="{l:T AnimatedTip}" />
               <ToggleSwitch x:Name="AnimatedSwitch" Grid.Column="1" IsChecked="{Binding Settings.Animated}" OnContent="" OffContent="" MinWidth="0" />
             </Grid>
-            <UniformGrid Columns="3" ColumnSpacing="6" IsVisible="{Binding Settings.Animated}">
-              <RadioButton x:Name="FormatMp4" Classes="choice" GroupName="AnimationFormat" Content="MP4" IsChecked="{Binding Settings.IsMp4}" />
-              <RadioButton x:Name="FormatWebm" Classes="choice" GroupName="AnimationFormat" Content="WebM" IsChecked="{Binding Settings.IsWebm}" />
+            <!-- Videos in the first row, animated pictures in the second. -->
+            <UniformGrid Columns="4" ColumnSpacing="6" RowSpacing="6" IsVisible="{Binding Settings.Animated}">
+              <RadioButton x:Name="FormatMp4" Classes="choice" GroupName="AnimationFormat" Content="MP4" IsChecked="{Binding Settings.IsMp4}" ToolTip.Tip="H.264" />
+              <RadioButton x:Name="FormatH265" Classes="choice" GroupName="AnimationFormat" Content="H.265" IsChecked="{Binding Settings.IsH265}" ToolTip.Tip="MP4 (HEVC)" />
+              <RadioButton x:Name="FormatWebm" Classes="choice" GroupName="AnimationFormat" Content="WebM" IsChecked="{Binding Settings.IsWebm}" ToolTip.Tip="VP9" />
+              <RadioButton x:Name="FormatOgv" Classes="choice" GroupName="AnimationFormat" Content="OGV" IsChecked="{Binding Settings.IsOgv}" ToolTip.Tip="Theora" />
               <RadioButton x:Name="FormatGif" Classes="choice" GroupName="AnimationFormat" Content="GIF" IsChecked="{Binding Settings.IsGif}" />
+              <RadioButton x:Name="FormatWebpAnim" Classes="choice" GroupName="AnimationFormat" Content="WebP" IsChecked="{Binding Settings.IsWebpAnimation}" />
+              <RadioButton x:Name="FormatApng" Classes="choice" GroupName="AnimationFormat" Content="APNG" IsChecked="{Binding Settings.IsApng}" />
             </UniformGrid>
+            <Grid ColumnDefinitions="*,Auto" Margin="0,6,0,0" IsVisible="{Binding Settings.Animated}">
+              <TextBlock Classes="label" Text="{l:T AnimationAudio}" ToolTip.Tip="{l:T AnimationAudioTip}" IsEnabled="{Binding Settings.CanHaveAudio}" />
+              <ToggleSwitch x:Name="AudioSwitch" Grid.Column="1" IsChecked="{Binding Settings.AnimationAudio}" OnContent="" OffContent="" MinWidth="0"
+                            IsEnabled="{Binding Settings.CanHaveAudio}" ToolTip.Tip="{l:T AnimationAudioTip}" />
+            </Grid>
             <Grid ColumnDefinitions="*,190" RowDefinitions="Auto,Auto" RowSpacing="6" Margin="0,6,0,0" IsVisible="{Binding Settings.Animated}">
               <TextBlock Classes="label" Text="{l:T ClipSeconds}" />
               <NumericUpDown Grid.Column="1" Value="{Binding Settings.ClipSeconds}" Minimum="0.5" Maximum="30" Increment="0.5" FormatString="0.#" />

@@ -532,12 +532,22 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private async Task PickBackgroundImageAsync()
     {
-        var file = await _ui.PickImageFileAsync(Settings.BackgroundImagePath);
+        var file = await _ui.PickImageFileAsync(Settings.BackgroundImagePath, "BackgroundImagePick");
         if (file is not null) Settings.BackgroundImagePath = file;
     }
 
     [RelayCommand]
     private void ClearBackgroundImage() => Settings.BackgroundImagePath = null;
+
+    [RelayCommand]
+    private async Task PickWatermarkImageAsync()
+    {
+        var file = await _ui.PickImageFileAsync(Settings.WatermarkImagePath, "WatermarkImagePick");
+        if (file is not null) Settings.WatermarkImagePath = file;
+    }
+
+    [RelayCommand]
+    private void ClearWatermarkImage() => Settings.WatermarkImagePath = null;
 
     /// <summary>
     /// The window moved to another screen or the screen changed: "fit to screen" sheets follow it. The size is also

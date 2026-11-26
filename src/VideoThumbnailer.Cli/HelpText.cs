@@ -59,6 +59,21 @@ internal static class HelpText
               --background-mode fill|stretch|tile|center  (default fill)
               --background-opacity <0-1 or %>  how strongly the picture shows over the background color (default 0.5)
 
+        Tiles and sheet (#27):
+              --tile-border <px>  --tile-border-color <color>  --no-tile-border   line inside the edge of each tile
+              --tile-shadow / --no-tile-shadow  --tile-shadow-color <color>  --tile-shadow-offset <px>
+              --tile-shadow-blur <px>   drop shadow, falls into the gap (use a gap of about the offset)
+              --grayscale / --no-grayscale      tiles in shades of gray
+              --corners square|rounded|cut  --corner-radius <px>  (default 12)
+              --sheet-border <px>  --sheet-border-color <color>  --no-sheet-border   line around the sheet
+
+        Watermark (#29):
+              --watermark <text>     text over the sheet  --watermark-image <file|none>  picture instead (PNG)
+              --no-watermark         --watermark-pos TopLeft|TopRight|BottomLeft|BottomRight|Center|Tiled
+              --watermark-size <0-1 or %>  width relative to the sheet (or tile), default 0.2
+              --watermark-opacity <0-1 or %>  (default 0.5)  --watermark-color <color>
+              --watermark-per-tile / --watermark-sheet   in every tile instead of once
+
         Timestamps (colors as #RRGGBB or #AARRGGBB, AA = opacity):
               --timestamps / --no-timestamps
               --timestamp-pos TopLeft|TopRight|BottomLeft|BottomRight|Center
@@ -73,6 +88,8 @@ internal static class HelpText
               --header-template <t>  e.g. "{filename}\n{size:GB} · {duration} · {resolution}"
               --title-size <pt>  --header-size <pt>  --title-color <color>  --header-color <color>
               --line-spacing <factor>  (default 1.25)
+              --comment <text>       own text below the header lines, or where the template has {comment};
+                                     "\n" for more lines (--no-comment)
 
         Output:
           -f, --format jpg|png|webp  -q, --quality <1-100>
@@ -87,7 +104,9 @@ internal static class HelpText
               --save-preset <name>   save the resulting settings as a preset (--description <text>)
 
         Animated sheet (every tile plays a short clip):
-          -a, --animated mp4|webm|gif  write an animated sheet instead of an image
+          -a, --animated mp4|h265|webm|ogv|gif|webp|apng  write an animated sheet instead of an image
+                                     (mp4 = H.264; apng is lossless and large)
+              --audio / --no-audio   sound of the biggest (or first) tile, for mp4, h265, webm, ogv
               --clip-seconds <s>     length of each clip and of the animation (default 3)
               --fps <n>              frames per second (default 10)
               --still                still image even if the preset is animated
@@ -156,6 +175,21 @@ internal static class HelpText
               --background-mode fill|stretch|tile|center  füllen, strecken, kacheln, zentriert (Standard fill)
               --background-opacity <0-1 oder %>  wie stark das Bild über der Hintergrundfarbe liegt (Standard 0,5)
 
+        Kacheln und Sheet (#27):
+              --tile-border <px>  --tile-border-color <Farbe>  --no-tile-border   Linie innen am Rand jeder Kachel
+              --tile-shadow / --no-tile-shadow  --tile-shadow-color <Farbe>  --tile-shadow-offset <px>
+              --tile-shadow-blur <px>   Schlagschatten, fällt in den Abstand (Abstand etwa so groß wie der Versatz)
+              --grayscale / --no-grayscale      Kacheln in Graustufen
+              --corners square|rounded|cut  --corner-radius <px>  eckig, abgerundet, abgeschnitten (Standard 12)
+              --sheet-border <px>  --sheet-border-color <Farbe>  --no-sheet-border   Linie um das ganze Sheet
+
+        Wasserzeichen (#29):
+              --watermark <Text>     Text über dem Sheet  --watermark-image <Datei|none>  stattdessen ein Bild (PNG)
+              --no-watermark         --watermark-pos TopLeft|TopRight|BottomLeft|BottomRight|Center|Tiled
+              --watermark-size <0-1 oder %>  Breite im Verhältnis zum Sheet (bzw. zur Kachel), Standard 0,2
+              --watermark-opacity <0-1 oder %>  (Standard 0,5)  --watermark-color <Farbe>
+              --watermark-per-tile / --watermark-sheet   in jeder Kachel statt einmal
+
         Zeitstempel (Farben als #RRGGBB oder #AARRGGBB, AA = Deckkraft):
               --timestamps / --no-timestamps
               --timestamp-pos TopLeft|TopRight|BottomLeft|BottomRight|Center
@@ -170,6 +204,8 @@ internal static class HelpText
               --header-template <t>  z. B. "{filename}\n{size:GB} · {duration} · {resolution}"
               --title-size <pt>  --header-size <pt>  --title-color <Farbe>  --header-color <Farbe>
               --line-spacing <Faktor>  (Standard 1,25)
+              --comment <Text>       eigener Text unter den Zeilen des Info-Kopfs oder dort, wo die Vorlage
+                                     {comment} enthält; "\n" für weitere Zeilen (--no-comment)
 
         Ausgabe:
           -f, --format jpg|png|webp  -q, --quality <1-100>
@@ -184,7 +220,9 @@ internal static class HelpText
               --save-preset <Name>   resultierende Einstellungen als Preset speichern (--description <Text>)
 
         Animiertes Sheet (jede Kachel spielt einen kurzen Ausschnitt ab):
-          -a, --animated mp4|webm|gif  animiertes Sheet statt eines Bildes erstellen
+          -a, --animated mp4|h265|webm|ogv|gif|webp|apng  animiertes Sheet statt eines Bildes erstellen
+                                     (mp4 = H.264; apng ist verlustfrei und groß)
+              --audio / --no-audio   Ton der größten (sonst ersten) Kachel, bei mp4, h265, webm, ogv
               --clip-seconds <s>     Länge jedes Ausschnitts und der Animation (Standard 3)
               --fps <n>              Bilder pro Sekunde (Standard 10)
               --still                Standbild, auch wenn das Preset animiert ist
