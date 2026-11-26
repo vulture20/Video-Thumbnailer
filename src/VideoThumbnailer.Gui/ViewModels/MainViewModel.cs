@@ -7,6 +7,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VideoThumbnailer.Core.Batch;
+using VideoThumbnailer.Core.Extraction;
 using VideoThumbnailer.Core.Ffmpeg;
 using VideoThumbnailer.Core.Input;
 using VideoThumbnailer.Core.Rendering;
@@ -53,6 +54,8 @@ public partial class MainViewModel : ObservableObject
     /// <summary>Video whose name and size appear in the preview: the selected one, otherwise the first in the queue.</summary>
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(PreviewTitle))] private JobViewModel? _previewJob;
     public string PreviewTitle => PreviewJob?.FileName ?? Loc.T("PreviewSampleName");
+    [ObservableProperty] private string _previewNote = Loc.T("PreviewNote");
+    [ObservableProperty] private string _previewNoteTip = Loc.T("PreviewNoteTip");
     public string QueueTitle => Loc.T("QueueTitle", Jobs.Count);
 
     public static Choice[] Languages { get; } = Choice.ForEnum<UiLanguage>("Lang");
@@ -98,7 +101,7 @@ public partial class MainViewModel : ObservableObject
         if (!IsRunning) StatusText = Loc.T("StatusIntro");
         OnPropertyChanged(nameof(PreviewTitle));
         OnPropertyChanged(nameof(QueueTitle));
-        if (_lastPreview is { } p) PreviewCaption = Loc.T("PreviewCaption", p.Columns, p.Rows, p.Tiles, p.Width, p.Height);
+        UpdatePreviewTexts();
         SchedulePreview();
     }
 
@@ -127,6 +130,7 @@ public partial class MainViewModel : ObservableObject
         _clockTimer = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Background, (_, _) => UpdateStats());
         _previewTimer.Tick += (_, _) => { _previewTimer.Stop(); _ = UpdatePreviewAsync(); };
         Settings.PropertyChanged += (_, _) => SchedulePreview();
+        Ffmpeg.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(FfmpegViewModel.IsReady)) SchedulePreview(); };
         RenderPreviewNow();
     }
 
@@ -180,59 +184,138 @@ public partial class MainViewModel : ObservableObject
         _previewTimer.Start();
     }
 
-    private sealed record PreviewData(byte[] Png, int Width, int Height, int Columns, int Rows, int Tiles);
+    private enum PreviewMode { Sample, NoFfmpeg, Unreadable, Real }
 
-    private (SheetSettings Settings, Core.Media.MediaInfo Info) PreviewInput()
+    private sealed record PreviewData(byte[] Png, int Width, int Height, int Columns, int Rows, int Tiles, int RealFrames);
+
+    private PreviewSource? _previewSource;
+    private CancellationTokenSource? _previewCts;
+
+    /// <summary>Real video data for the preview while ffmpeg is available; recreated when ffmpeg changes.</summary>
+    private PreviewSource? CurrentPreviewSource()
     {
-        var job = PreviewJob;
-        var info = job is null
-            ? SheetPreview.SampleInfo(Loc.T("PreviewSampleName"))
-            : job.FileSize > 0 ? SheetPreview.SampleInfo(job.Job.InputPath, job.FileSize) : SheetPreview.SampleInfo(job.Job.InputPath);
-        return (CurrentSettings(), info);
+        var tools = Ffmpeg.Tools;
+        if (tools is null) return _previewSource = null;
+        if (_previewSource?.Tools != tools)
+            _previewSource = new PreviewSource(tools, Math.Clamp(Environment.ProcessorCount / 2, 1, 4));
+        return _previewSource;
     }
 
-    private static PreviewData BuildPreview(SheetSettings s, Core.Media.MediaInfo info)
+    private Core.Media.MediaInfo SampleFor(JobViewModel? job) => job is null
+        ? SheetPreview.SampleInfo(Loc.T("PreviewSampleName"))
+        : job.FileSize > 0 ? SheetPreview.SampleInfo(job.Job.InputPath, job.FileSize) : SheetPreview.SampleInfo(job.Job.InputPath);
+
+    /// <summary>Video information for the preview: the real one when it can be read, otherwise sample values.</summary>
+    private async Task<(Core.Media.MediaInfo Info, PreviewSource? Source, PreviewMode Mode)> ResolvePreviewInfoAsync(JobViewModel? job, CancellationToken ct)
     {
-        using var result = SheetPreview.Render(s, info, maxWidth: 1200);
+        if (job is null) return (SampleFor(null), null, PreviewMode.Sample);
+        var source = CurrentPreviewSource();
+        if (source is null) return (SampleFor(job), null, PreviewMode.NoFfmpeg);
+        try
+        {
+            var info = await source.GetInfoAsync(job.Job.InputPath, ct);
+            return info.Video is null ? (SampleFor(job), null, PreviewMode.Unreadable) : (info, source, PreviewMode.Real);
+        }
+        catch (OperationCanceledException) { throw; }
+        catch { return (SampleFor(job), null, PreviewMode.Unreadable); }
+    }
+
+    private static PreviewData BuildPreview(SheetSettings s, Core.Media.MediaInfo info, PreviewSource? source)
+    {
+        using var result = SheetPreview.Render(s, info, maxWidth: 1200, source is null ? null : t => source.TryGetFrame(info.Path, t));
         using var ms = new MemoryStream();
         SheetRenderer.Encode(result.Bitmap, ms, ImageFormat.Png, 100);
         var shown = s.Clone();
         shown.Normalize();
-        return new PreviewData(ms.ToArray(), result.SheetWidth, result.SheetHeight, shown.Columns, shown.Rows, result.Tiles);
+        return new PreviewData(ms.ToArray(), result.SheetWidth, result.SheetHeight, shown.Columns, shown.Rows, result.Tiles, result.RealFrames);
     }
 
     private PreviewData? _lastPreview;
+    private PreviewMode _lastPreviewMode = PreviewMode.Sample;
 
-    private void ApplyPreview(PreviewData d)
+    private void ApplyPreview(PreviewData d, PreviewMode mode)
     {
         _lastPreview = d;
+        _lastPreviewMode = mode;
         var old = PreviewImage;
         PreviewImage = new Bitmap(new MemoryStream(d.Png));
         old?.Dispose();
-        PreviewCaption = Loc.T("PreviewCaption", d.Columns, d.Rows, d.Tiles, d.Width, d.Height);
+        UpdatePreviewTexts();
     }
 
-    /// <summary>Renders the preview synchronously (start-up and tests).</summary>
+    /// <summary>Caption under the sheet and the note above it (where the pictures come from, loading progress).</summary>
+    private void UpdatePreviewTexts()
+    {
+        if (_lastPreview is not { } d) return;
+        PreviewCaption = Loc.T("PreviewCaption", d.Columns, d.Rows, d.Tiles, d.Width, d.Height);
+        PreviewNote = _lastPreviewMode switch
+        {
+            PreviewMode.Real when d.RealFrames >= d.Tiles => Loc.T("PreviewNoteReal"),
+            PreviewMode.Real => Loc.T("PreviewNoteLoading", d.RealFrames, d.Tiles),
+            PreviewMode.NoFfmpeg => Loc.T("PreviewNoteNoFfmpeg"),
+            PreviewMode.Unreadable => Loc.T("PreviewNoteUnreadable"),
+            _ => Loc.T("PreviewNote"),
+        };
+        PreviewNoteTip = Loc.T(_lastPreviewMode == PreviewMode.Real ? "PreviewNoteRealTip" : "PreviewNoteTip");
+    }
+
+    /// <summary>Renders the preview synchronously from what is known right now (start-up and tests).</summary>
     public void RenderPreviewNow()
     {
         _previewGeneration++;
         try
         {
-            var (s, info) = PreviewInput();
-            ApplyPreview(BuildPreview(s, info));
+            var job = PreviewJob;
+            var source = CurrentPreviewSource();
+            if (job is not null && source?.TryGetInfo(job.Job.InputPath) is { Video: not null } known)
+                ApplyPreview(BuildPreview(CurrentSettings(), known, source), PreviewMode.Real);
+            else
+                ApplyPreview(BuildPreview(CurrentSettings(), SampleFor(job), null),
+                    job is null ? PreviewMode.Sample : source is null ? PreviewMode.NoFfmpeg : PreviewMode.Sample);
         }
         catch (Exception ex) { PreviewCaption = Loc.T("PreviewFailed", ex.Message); }
     }
 
-    private async Task UpdatePreviewAsync()
+    /// <summary>
+    /// Renders the preview: first at once with what is cached, then, for a real video, again every 300 ms while
+    /// missing frames are extracted in the background. A newer change cancels an older run.
+    /// </summary>
+    public async Task UpdatePreviewAsync()
     {
+        _previewTimer.Stop(); // this run covers any change that was still waiting
         var generation = ++_previewGeneration;
+        _previewCts?.Cancel();
+        var cts = _previewCts = new CancellationTokenSource();
+        var ct = cts.Token;
+        var s = CurrentSettings();
         try
         {
-            var (s, info) = PreviewInput();
-            var data = await Task.Run(() => BuildPreview(s, info));
-            if (generation == _previewGeneration) ApplyPreview(data);
+            var (info, source, mode) = await ResolvePreviewInfoAsync(PreviewJob, ct);
+            if (generation != _previewGeneration) return;
+            var data = await Task.Run(() => BuildPreview(s, info, source), ct);
+            if (generation != _previewGeneration) return;
+            ApplyPreview(data, mode);
+            if (source is null || data.RealFrames >= data.Tiles) return;
+
+            var times = SheetPreview.PlanTimes(s, info);
+            var fresh = 0;
+            var load = Task.Run(() => source.LoadFramesAsync(info, times, () => Interlocked.Exchange(ref fresh, 1), ct), ct);
+            while (true)
+            {
+                await Task.WhenAny(load, Task.Delay(300, ct));
+                var finished = load.IsCompleted;
+                if (generation != _previewGeneration) return;
+                if (Interlocked.Exchange(ref fresh, 0) == 1 || finished)
+                {
+                    data = await Task.Run(() => BuildPreview(s, info, source), ct);
+                    if (generation != _previewGeneration) return;
+                    ApplyPreview(data, mode);
+                }
+                if (finished) break;
+            }
+            await load; // surfaces extraction errors
         }
+        catch (OperationCanceledException) { }
         catch (Exception ex)
         {
             if (generation == _previewGeneration) PreviewCaption = Loc.T("PreviewFailed", ex.Message);
