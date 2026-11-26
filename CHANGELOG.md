@@ -7,7 +7,7 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 ## [Unveröffentlicht]
 
 ### Geändert
-- Dokumentation auf den Stand von v0.5.0 gebracht: erledigte und doppelte offene Punkte in `docs/DECISIONS.md` bereinigt, überholte Entscheidungen markiert, README (Funktionen, Inhalt der ZIPs, Aufbau) aktualisiert; spätere Ideen aus der Spezifikation als Issues #21–#39 ([#40])
+- Dokumentation auf den Stand von v0.5.0 gebracht: erledigte und doppelte offene Punkte in `docs/DECISIONS.md` bereinigt, überholte Entscheidungen markiert, README (Funktionen, Inhalt der ZIPs, Aufbau) aktualisiert; spätere Ideen aus der Spezifikation als Issues #21–#39 ([#41])
 
 ## [0.5.0] – 2026-11-26
 
@@ -126,4 +126,4 @@ Erste Version.
 [#18]: https://github.com/vulture20/Video-Thumbnailer/pull/18
 [#17]: https://github.com/vulture20/Video-Thumbnailer/pull/17
 [#19]: https://github.com/vulture20/Video-Thumbnailer/pull/19
-[#40]: https://github.com/vulture20/Video-Thumbnailer/pull/40
+[#41]: https://github.com/vulture20/Video-Thumbnailer/pull/41
