@@ -151,20 +151,32 @@ public sealed class FfmpegInstaller
             throw new InvalidDataException(CoreText.T("ChecksumMismatch", Path.GetFileName(file), expectedSha256, hash));
     }
 
-    /// <summary>Extracts the wanted executables (by file name, anywhere in the archive) into <paramref name="dest"/>.</summary>
+    /// <summary>
+    /// Extracts the wanted executables (by file name, anywhere in the archive) into <paramref name="dest"/>, plus the
+    /// shared libraries of <see cref="FfmpegAsset.Libraries"/> from the archive's "bin" folder.
+    /// </summary>
     internal static List<string> Extract(string archive, FfmpegAsset asset, string dest)
     {
         var wanted = asset.Binaries.Select(FfmpegLocator.ExeName).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var written = new List<string>();
+        var libraries = new List<string>();
+        bool IsLibrary(string key)
+        {
+            if (asset.Libraries is not { Count: > 0 } exts) return false;
+            var parts = key.Replace('\\', '/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+            return parts.Length >= 2 && parts[^2].Equals("bin", StringComparison.OrdinalIgnoreCase)
+                   && exts.Any(x => parts[^1].EndsWith(x, StringComparison.OrdinalIgnoreCase));
+        }
         if (asset.Kind == ArchiveKind.Zip)
         {
             using var zip = ZipFile.OpenRead(archive);
             foreach (var e in zip.Entries)
             {
-                if (!wanted.Contains(e.Name)) continue;
+                var lib = IsLibrary(e.FullName);
+                if (!wanted.Contains(e.Name) && !lib) continue;
                 var target = Path.Combine(dest, e.Name);
                 e.ExtractToFile(target, overwrite: true);
-                written.Add(target);
+                (lib ? libraries : written).Add(target);
             }
         }
         else
@@ -175,18 +187,21 @@ public sealed class FfmpegInstaller
             {
                 if (reader.Entry.IsDirectory || reader.Entry.Key is null) continue;
                 var name = Path.GetFileName(reader.Entry.Key.Replace('\\', '/'));
-                if (!wanted.Contains(name)) continue;
+                var lib = IsLibrary(reader.Entry.Key);
+                if (!wanted.Contains(name) && !lib) continue;
                 var target = Path.Combine(dest, name);
                 using (var es = reader.OpenEntryStream())
                 using (var fs = File.Create(target))
                     es.CopyTo(fs);
-                written.Add(target);
+                (lib ? libraries : written).Add(target);
             }
         }
         var missing = wanted.Except(written.Select(Path.GetFileName)!, StringComparer.OrdinalIgnoreCase).ToList();
         if (missing.Count > 0)
             throw new InvalidDataException(CoreText.T("ArchiveMissing", Path.GetFileName(archive), string.Join(", ", missing)));
-        return written;
+        if (asset.Libraries is { Count: > 0 } && libraries.Count == 0)
+            throw new InvalidDataException(CoreText.T("ArchiveMissing", Path.GetFileName(archive), string.Join(", ", asset.Libraries.Select(x => "*" + x))));
+        return [.. written, .. libraries];
     }
 
     private void SwapIn(string staging)

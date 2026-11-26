@@ -6,8 +6,12 @@ namespace VideoThumbnailer.Core.Ffmpeg;
 
 public enum ArchiveKind { Zip, TarXz }
 
-/// <summary>One downloadable archive containing one or more of the wanted binaries.</summary>
-public sealed record FfmpegAsset(string FileName, Uri Url, string Sha256, ArchiveKind Kind, IReadOnlyList<string> Binaries);
+/// <summary>
+/// One downloadable archive containing one or more of the wanted binaries. <paramref name="Libraries"/>: file
+/// extensions of shared libraries that sit next to the binaries and must be installed with them (e.g. ".dll").
+/// </summary>
+public sealed record FfmpegAsset(string FileName, Uri Url, string Sha256, ArchiveKind Kind, IReadOnlyList<string> Binaries,
+    IReadOnlyList<string>? Libraries = null);
 
 /// <summary>A concrete build that can be installed. <see cref="Id"/> changes whenever the build changes.</summary>
 public sealed record FfmpegRelease(string SourceName, string Version, IReadOnlyList<FfmpegAsset> Assets)
@@ -56,9 +60,11 @@ public static class FfmpegSources
 }
 
 /// <summary>
-/// Static GPL builds from https://github.com/BtbN/FFmpeg-Builds (Windows and Linux, x64 and arm64).
+/// GPL builds from https://github.com/BtbN/FFmpeg-Builds (Windows and Linux, x64 and arm64).
 /// Uses the floating "latest" release and its checksums.sha256; picks the newest release branch
-/// build (e.g. n8.1), not master.
+/// build (e.g. n8.1), not master. Windows uses the "gpl-shared" variant: ffmpeg and ffprobe share their
+/// DLLs there, which makes the download less than half as big (about 87 instead of 198 MB, about 200 instead of
+/// 336 MB installed). Linux keeps the static build (62 vs. 53 MB, not worth shared libraries and rpath).
 /// </summary>
 public sealed partial class BtbNSource(string target) : IFfmpegSource
 {
@@ -66,6 +72,7 @@ public sealed partial class BtbNSource(string target) : IFfmpegSource
     public string Name => $"BtbN/FFmpeg-Builds ({target})";
     public string Homepage => "https://github.com/BtbN/FFmpeg-Builds";
     public string Target => target;
+    public string Variant => target.StartsWith("win", StringComparison.Ordinal) ? "gpl-shared" : "gpl";
 
     public async Task<FfmpegRelease> GetLatestAsync(HttpClient http, CancellationToken ct)
     {
@@ -78,14 +85,15 @@ public sealed partial class BtbNSource(string target) : IFfmpegSource
     {
         var best = checksums
             .Select(kv => (kv, m: ReleaseAsset().Match(kv.Key)))
-            .Where(x => x.m.Success && x.m.Groups["target"].Value == target && x.m.Groups["variant"].Value == "gpl")
+            .Where(x => x.m.Success && x.m.Groups["target"].Value == target && x.m.Groups["variant"].Value == Variant)
             .OrderByDescending(x => int.Parse(x.m.Groups["major"].Value))
             .ThenByDescending(x => int.Parse(x.m.Groups["minor"].Value))
             .FirstOrDefault();
         if (best.kv.Key is null) return null;
         var kind = best.kv.Key.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) ? ArchiveKind.Zip : ArchiveKind.TarXz;
         var version = $"{best.m.Groups["major"].Value}.{best.m.Groups["minor"].Value}";
-        var asset = new FfmpegAsset(best.kv.Key, new Uri(BaseUrl + best.kv.Key), best.kv.Value, kind, ["ffmpeg", "ffprobe"]);
+        var asset = new FfmpegAsset(best.kv.Key, new Uri(BaseUrl + best.kv.Key), best.kv.Value, kind, ["ffmpeg", "ffprobe"],
+            Variant.EndsWith("-shared", StringComparison.Ordinal) ? [".dll"] : null);
         return new FfmpegRelease(Name, version, [asset]);
     }
 
