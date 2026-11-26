@@ -57,6 +57,9 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private decimal _timestampOpacity;
     [ObservableProperty] private decimal _timestampOutline;
     [ObservableProperty] private bool _timestampShadow;
+    [ObservableProperty] private string _timestampOutlineColor = "";
+    [ObservableProperty] private string _timestampShadowColor = "";
+    [ObservableProperty] private bool _timestampMilliseconds;
 
     // Header
     [ObservableProperty] private bool _headerEnabled;
@@ -64,6 +67,8 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private string _headerTemplate = "";
     [ObservableProperty] private decimal _headerFontSize;
     [ObservableProperty] private decimal _headerTitleFontSize;
+    [ObservableProperty] private string _headerColor = "";
+    [ObservableProperty] private string _headerTitleColor = "";
 
     // Output
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsJpeg), nameof(IsPng), nameof(IsWebp), nameof(HasQuality))] private ImageFormat _format;
@@ -112,9 +117,12 @@ public partial class SettingsViewModel : ObservableObject
         TimestampFontSize = (decimal)s.Timestamp.FontSize; TimestampColor = s.Timestamp.Color;
         TimestampOpacity = (decimal)s.Timestamp.Opacity; TimestampOutline = (decimal)s.Timestamp.OutlineWidth;
         TimestampShadow = s.Timestamp.Shadow;
+        TimestampOutlineColor = s.Timestamp.OutlineColor; TimestampShadowColor = s.Timestamp.ShadowColor;
+        TimestampMilliseconds = s.Timestamp.ShowMilliseconds;
 
         HeaderEnabled = s.Header.Enabled; HeaderPosition = s.Header.Position; HeaderTemplate = s.Header.EffectiveTemplate(EffectiveSheetLanguage);
         HeaderFontSize = (decimal)s.Header.FontSize; HeaderTitleFontSize = (decimal)s.Header.TitleFontSize;
+        HeaderColor = s.Header.Color; HeaderTitleColor = s.Header.TitleColor;
 
         Format = s.Output.Format; Quality = s.Output.Quality; Location = s.Output.Location;
         OutputFolder = s.Output.Folder; KeepFolderStructure = s.Output.KeepFolderStructure;
@@ -140,9 +148,12 @@ public partial class SettingsViewModel : ObservableObject
         s.Timestamp.FontSize = (float)TimestampFontSize; s.Timestamp.Color = TimestampColor;
         s.Timestamp.Opacity = (double)TimestampOpacity; s.Timestamp.OutlineWidth = (float)TimestampOutline;
         s.Timestamp.Shadow = TimestampShadow;
+        s.Timestamp.OutlineColor = TimestampOutlineColor; s.Timestamp.ShadowColor = TimestampShadowColor;
+        s.Timestamp.ShowMilliseconds = TimestampMilliseconds;
 
         s.Header.Enabled = HeaderEnabled; s.Header.Position = HeaderPosition; s.Header.Template = Core.Localization.CoreText.IsDefaultHeaderTemplate(HeaderTemplate) ? null : HeaderTemplate;
         s.Header.FontSize = (float)HeaderFontSize; s.Header.TitleFontSize = (float)HeaderTitleFontSize;
+        s.Header.Color = HeaderColor; s.Header.TitleColor = HeaderTitleColor;
 
         s.Output.Format = Format; s.Output.Quality = (int)Quality; s.Output.Location = Location;
         s.Output.Folder = OutputFolder; s.Output.KeepFolderStructure = KeepFolderStructure;

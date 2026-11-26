@@ -6,6 +6,12 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 
 ## [Unveröffentlicht]
 
+### Hinzugefügt
+- Feinoptionen unter „Erweitert“: Konturfarbe und Schattenfarbe der Zeitstempel, Millisekunden im Zeitstempel (00:12:34.567) sowie Titel- und Textfarbe des Info-Kopfs ([#18])
+- Farbfelder zeigen ein Farbmuster neben dem Wert (mit Schachbrett für Transparenz); ungültige Eingaben werden mit „?“ markiert ([#18])
+
+### Geändert
+- Zeitstempel unter „Erweitert“: Farbe und Deckkraft stehen jetzt in eigenen Zeilen ([#18])
 ### Geändert
 - Copyright und Herausgeber in den Programmdateien (EXE-Eigenschaften): „Copyright (C) 2026 Thorsten Schröpel“ statt „Video-Thumbnailer contributors“; ebenso in der README ([#17])
 
@@ -105,4 +111,5 @@ Erste Version.
 [#10]: https://github.com/vulture20/Video-Thumbnailer/pull/10
 [#13]: https://github.com/vulture20/Video-Thumbnailer/pull/13
 [#15]: https://github.com/vulture20/Video-Thumbnailer/pull/15
+[#18]: https://github.com/vulture20/Video-Thumbnailer/pull/18
 [#17]: https://github.com/vulture20/Video-Thumbnailer/pull/17

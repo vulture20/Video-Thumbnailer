@@ -5,6 +5,7 @@ using Avalonia.Headless.XUnit;
 using Avalonia.VisualTree;
 using VideoThumbnailer.Core;
 using VideoThumbnailer.Core.Settings;
+using VideoThumbnailer.Gui.Controls;
 using VideoThumbnailer.Gui.Localization;
 using VideoThumbnailer.Gui.ViewModels;
 using VideoThumbnailer.Gui.Views;
@@ -282,6 +283,69 @@ public class GuiQueueTests
             vm.ToggleQueueCommand.Execute(null);
             vm.OnWindowWidthChanged(950);
             Assert.False(vm.IsQueueCollapsed);
+            window.Close();
+        }
+        finally
+        {
+            AppPaths.SetRootOverride(null);
+        }
+    }
+}
+
+public class GuiFineOptionTests
+{
+    [AvaloniaFact]
+    public void Advanced_mode_edits_outline_shadow_header_colors_and_milliseconds()
+    {
+        var home = TestUtil.TempDir();
+        AppPaths.SetRootOverride(home);
+        try
+        {
+            new AppSettings { FfmpegDownloadAsked = true, CheckFfmpegUpdates = false, AdvancedMode = true }.Save();
+            var window = new MainWindow { Height = 2200 };
+            var vm = new MainViewModel(window);
+            window.DataContext = vm;
+            window.Show();
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            Assert.True(vm.IsAdvanced);
+
+            var outline = window.FindControl<ColorField>("OutlineColorField")!;
+            var shadow = window.FindControl<ColorField>("ShadowColorField")!;
+            var title = window.FindControl<ColorField>("HeaderTitleColorField")!;
+            var text = window.FindControl<ColorField>("HeaderColorField")!;
+            Assert.True(outline.IsEffectivelyVisible);
+            Assert.Equal("#FF000000", outline.Text);   // loaded from the preset
+            Assert.True(outline.IsValid);
+
+            outline.Box.Text = "#FF102030";
+            shadow.Box.Text = "#80FF0000";
+            title.Box.Text = "#FFFFCC00";
+            text.Box.Text = "#FFCCCCCC";
+            window.FindControl<CheckBox>("MillisecondsCheck")!.IsChecked = true;
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+
+            var s = vm.Settings.ToSettings("x");
+            Assert.Equal("#FF102030", s.Timestamp.OutlineColor);
+            Assert.Equal("#80FF0000", s.Timestamp.ShadowColor);
+            Assert.Equal("#FFFFCC00", s.Header.TitleColor);
+            Assert.Equal("#FFCCCCCC", s.Header.Color);
+            Assert.True(s.Timestamp.ShowMilliseconds);
+
+            // Shadow color only editable with a shadow; nonsense is flagged but kept as typed.
+            vm.Settings.TimestampShadow = false;
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            Assert.False(shadow.IsEffectivelyEnabled);
+            text.Box.Text = "grün";
+            Assert.False(text.IsValid);
+            Assert.True(ColorField.TryParse("#abc", out _));
+
+            var shot = Environment.GetEnvironmentVariable("VTHUMB_SCREENSHOT_FINE");
+            if (!string.IsNullOrEmpty(shot))
+            {
+#pragma warning disable CS0618
+                window.CaptureRenderedFrame()?.Save(shot);
+#pragma warning restore CS0618
+            }
             window.Close();
         }
         finally
