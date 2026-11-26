@@ -40,6 +40,12 @@ public static class ArgParser
                 ? v : throw new UsageException(CliText.T("NeedsInt", a));
             double NextDouble() => double.TryParse(Next(), NumberStyles.Float, CultureInfo.InvariantCulture, out var v)
                 ? v : throw new UsageException(CliText.T("NeedsNumber", a));
+            float NextFloat() => (float)NextDouble();
+            string NextColor()
+            {
+                var v = Next();
+                return SkiaSharp.SKColor.TryParse(v, out _) ? v : throw new UsageException(CliText.T("InvalidColor", v, a));
+            }
 
             // allow --key=value
             if (a.StartsWith("--", StringComparison.Ordinal) && a.Contains('='))
@@ -69,6 +75,7 @@ public static class ArgParser
                     break;
                 }
                 case "--keep-structure": o.Overrides.Add(s => s.Output.KeepFolderStructure = true); break;
+                case "--no-keep-structure": o.Overrides.Add(s => s.Output.KeepFolderStructure = false); break;
                 case "-r": case "--recursive": o.Recursive = true; break;
                 case "--no-recursive": o.Recursive = false; break;
                 case "-c": case "--columns": { var v = NextInt(); o.Overrides.Add(s => s.Columns = v); break; }
@@ -77,7 +84,7 @@ public static class ArgParser
                 case "--tile-width": { var v = NextInt(); o.Overrides.Add(s => s.TileWidth = v); break; }
                 case "--gap": { var v = NextInt(); o.Overrides.Add(s => s.Gap = v); break; }
                 case "--margin": { var v = NextInt(); o.Overrides.Add(s => s.Margin = v); break; }
-                case "--background": { var v = Next(); o.Overrides.Add(s => s.BackgroundColor = v); break; }
+                case "--background": { var v = NextColor(); o.Overrides.Add(s => s.BackgroundColor = v); break; }
                 case "--font": { var v = Next(); o.Overrides.Add(s => s.FontFamily = v); break; }
                 case "-f": case "--format": { var v = ParseFormat(Next()); o.Overrides.Add(s => s.Output.Format = v); break; }
                 case "-a": case "--animated":
@@ -93,15 +100,41 @@ public static class ArgParser
                 case "--pattern": { var v = Next(); o.Overrides.Add(s => s.Output.FileNamePattern = v); break; }
                 case "--order": { var v = ParseOrder(Next()); o.Overrides.Add(s => s.Order = v); break; }
                 case "--frames": o.Overrides.Add(s => s.Output.SaveFrames = true); break;
+                case "--no-frames": o.Overrides.Add(s => s.Output.SaveFrames = false); break;
+                case "--frames-folder": { var v = Next(); o.Overrides.Add(s => { s.Output.SaveFrames = true; s.Output.FramesFolderPattern = v; }); break; }
                 case "--no-timestamps": o.Overrides.Add(s => s.Timestamp.Enabled = false); break;
+                case "--timestamps": o.Overrides.Add(s => s.Timestamp.Enabled = true); break;
+                case "--timestamp-size": { var v = NextFloat(); o.Overrides.Add(s => s.Timestamp.FontSize = v); break; }
+                case "--timestamp-bold": o.Overrides.Add(s => s.Timestamp.Bold = true); break;
+                case "--no-timestamp-bold": o.Overrides.Add(s => s.Timestamp.Bold = false); break;
+                case "--timestamp-color": { var v = NextColor(); o.Overrides.Add(s => s.Timestamp.Color = v); break; }
+                case "--timestamp-opacity": { var v = NextDouble(); o.Overrides.Add(s => s.Timestamp.Opacity = v > 1 ? v / 100 : v); break; }
+                case "--timestamp-padding": { var v = NextFloat(); o.Overrides.Add(s => s.Timestamp.Padding = v); break; }
+                case "--outline-color": { var v = NextColor(); o.Overrides.Add(s => s.Timestamp.OutlineColor = v); break; }
+                case "--outline-width": { var v = NextFloat(); o.Overrides.Add(s => s.Timestamp.OutlineWidth = Math.Max(0, v)); break; }
+                case "--no-outline": o.Overrides.Add(s => s.Timestamp.OutlineWidth = 0); break;
+                case "--shadow": o.Overrides.Add(s => s.Timestamp.Shadow = true); break;
+                case "--no-shadow": o.Overrides.Add(s => s.Timestamp.Shadow = false); break;
+                case "--shadow-color": { var v = NextColor(); o.Overrides.Add(s => { s.Timestamp.Shadow = true; s.Timestamp.ShadowColor = v; }); break; }
+                case "--shadow-offset": { var v = NextFloat(); o.Overrides.Add(s => { s.Timestamp.Shadow = true; s.Timestamp.ShadowOffset = v; }); break; }
+                case "--milliseconds": o.Overrides.Add(s => s.Timestamp.ShowMilliseconds = true); break;
+                case "--no-milliseconds": o.Overrides.Add(s => s.Timestamp.ShowMilliseconds = false); break;
                 case "--timestamp-pos": { var v = ParseEnum<OverlayPosition>(Next(), a); o.Overrides.Add(s => { s.Timestamp.Enabled = true; s.Timestamp.Position = v; }); break; }
                 case "--no-header": o.Overrides.Add(s => s.Header.Enabled = false); break;
+                case "--header": o.Overrides.Add(s => s.Header.Enabled = true); break;
+                case "--header-size": { var v = NextFloat(); o.Overrides.Add(s => s.Header.FontSize = v); break; }
+                case "--title-size": { var v = NextFloat(); o.Overrides.Add(s => s.Header.TitleFontSize = v); break; }
+                case "--header-color": { var v = NextColor(); o.Overrides.Add(s => s.Header.Color = v); break; }
+                case "--title-color": { var v = NextColor(); o.Overrides.Add(s => s.Header.TitleColor = v); break; }
+                case "--line-spacing": { var v = NextFloat(); o.Overrides.Add(s => s.Header.LineSpacing = v); break; }
                 case "--header-pos": { var v = ParseEnum<HeaderPosition>(Next(), a); o.Overrides.Add(s => { s.Header.Enabled = true; s.Header.Position = v; }); break; }
                 case "--header-template": { var v = Next().Replace("\\n", "\n"); o.Overrides.Add(s => s.Header.Template = v); break; }
                 case "--overwrite": { var v = ParseEnum<OverwriteMode>(Next(), a); o.Overrides.Add(s => s.Output.Overwrite = v); break; }
                 case "--skip-start": { var v = NextDouble(); o.Overrides.Add(s => s.SkipStartPercent = v); break; }
                 case "--skip-end": { var v = NextDouble(); o.Overrides.Add(s => s.SkipEndPercent = v); break; }
                 case "--no-portrait-swap": o.Overrides.Add(s => s.PortraitSwapGrid = false); break;
+                case "--portrait-swap": o.Overrides.Add(s => s.PortraitSwapGrid = true); break;
+                case "--description": { var v = Next(); o.Overrides.Add(s => s.Description = v); break; }
                 case "-j": case "--jobs": o.Jobs = NextInt(); break;
                 case "--videos": o.Videos = NextInt(); break;
                 case "--ffmpeg": o.FfmpegDir = Next(); break;
