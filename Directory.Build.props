@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <Version>0.3.0</Version>
+    <Version>0.4.0</Version>
     <Authors>Video-Thumbnailer contributors</Authors>
     <Copyright>Copyright (C) 2026 Video-Thumbnailer contributors</Copyright>
     <PackageLicenseExpression>AGPL-3.0-only</PackageLicenseExpression>
