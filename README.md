@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/images/banner.png" alt="Video-Thumbnailer – contact sheets from your videos" width="100%"></p>
+
 # Video-Thumbnailer
 
 Freier, plattformübergreifender Generator für Video-Kontaktbögen (Thumbnail-Sheets) für **Windows, Linux und macOS** – mit grafischer Oberfläche und Kommandozeile.
@@ -102,6 +104,8 @@ Aufbau:
 - `src/VideoThumbnailer.Cli` – Kommandozeile `vthumb`
 - `src/VideoThumbnailer.Gui` – Oberfläche (Avalonia)
 - `tests/VideoThumbnailer.Tests` – Unit-, Integrations- und GUI-Tests (headless)
+- `assets/branding` – Icon und Banner (SVG-Quellen, Build-Skript `build.py`)
+- `packaging/linux` – `.desktop`-Datei und Icons im hicolor-Schema
 
 Entscheidungen und offene Punkte: [docs/DECISIONS.md](docs/DECISIONS.md)
 

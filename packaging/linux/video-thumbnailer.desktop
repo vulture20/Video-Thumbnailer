@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=Video-Thumbnailer
+GenericName=Video Contact Sheet Generator
+GenericName[de]=Kontaktbögen für Videos
+Comment=Create thumbnail grids (contact sheets) from video files
+Comment[de]=Erzeugt Vorschaubild-Raster (Kontaktbögen) aus Videodateien
+Exec=VideoThumbnailer %F
+Icon=video-thumbnailer
+Terminal=false
+Categories=AudioVideo;Video;Graphics;
+MimeType=video/mp4;video/x-matroska;video/webm;video/quicktime;video/x-msvideo;video/x-ms-wmv;video/mp2t;video/mpeg;
+Keywords=video;thumbnail;contact sheet;preview;ffmpeg;
+StartupWMClass=VideoThumbnailer

@@ -4,6 +4,7 @@
     <RootNamespace>VideoThumbnailer.Cli</RootNamespace>
     <AssemblyName>vthumb</AssemblyName>
     <InvariantGlobalization>true</InvariantGlobalization>
+    <ApplicationIcon>..\VideoThumbnailer.Gui\Assets\app.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\VideoThumbnailer.Core\VideoThumbnailer.Core.csproj" />

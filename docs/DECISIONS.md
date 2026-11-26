@@ -50,6 +50,16 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Installation atomar: Entpacken in einen Arbeitsordner, Testlauf `ffmpeg -version`, dann Austausch des `bin`-Ordners; bei Fehlern bleibt die alte Version erhalten. `manifest.json` merkt sich Quelle, Version und Prüfsumme | Update kann nichts kaputt machen |
 | 26.11.2026 | Update-Erkennung über die Prüfsumme (neuer Build = neue Prüfsumme). GUI prüft höchstens einmal pro Woche im Hintergrund (abschaltbar) und bietet das Update an; CLI über `vthumb ffmpeg check/update` | auch tägliche „latest“-Builds werden erkannt, ohne GitHub-API-Limits |
 
+### Gestaltung (Icon, Banner)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 26.11.2026 | Eigenes Icon: dunkler Filmstreifen mit Perforation, darin ein 3×3-Raster aus hellblauen Vorschaubildern, in der Mitte ein orangefarbenes Bild mit Play-Symbol (Variante A, am 26.11.2026 freigegeben; Alternative „blauer Filmstreifen“ verworfen) | zeigt sofort „Video → Bildraster“; hebt sich auf hellen und dunklen Oberflächen ab |
+| 26.11.2026 | SVG als Master (`assets/branding/icon.svg`), dazu pixelgenaue Varianten für 16 px und 20–32 px (ohne Perforation, 16 px ohne Play-Dreieck); alle PNG/ICO/ICNS werden per `assets/branding/build.py` erzeugt und mit eingecheckt | kleine Größen bleiben scharf; Build braucht keine Grafikwerkzeuge |
+| 26.11.2026 | Windows: `app.ico` (16–256 px) als `ApplicationIcon` für `VideoThumbnailer.exe` und `vthumb.exe`, dieselbe Datei als Fenstericon der Avalonia-Oberfläche (auch Dialoge) | ein Icon für Explorer, Taskleiste und Fenster |
+| 26.11.2026 | macOS: `app.icns` (16–1024 px) liegt bereit, wird aber erst mit einem `.app`-Bundle genutzt; bis dahin zeigt das Fenster das Avalonia-Fenstericon | aktuell nur Einzeldateien im ZIP |
+| 26.11.2026 | Linux: Icons im hicolor-Schema (16–512 px + scalable SVG) und `video-thumbnailer.desktop` unter `packaging/linux`, Installation von Hand beschrieben | Grundlage für spätere Pakete (AppImage/Flatpak) |
+| 26.11.2026 | README-Banner (1280×320) und GitHub-Social-Preview (1280×640) mit englischem Text („Contact sheets from your videos“), Schrift Inter (SIL OFL), als PNG eingebunden | öffentliches Repo; PNG zeigt überall dieselbe Schrift |
+
 ## Offen
 
 | Seit | Punkt | Stand |
@@ -63,6 +73,9 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Oberfläche aktuell nur Englisch; Deutsch/Englisch-Umschaltung ist P2 | |
 | 26.11.2026 | GUI-Einstellungen für Kontur-/Schattenfarbe, Kopf-Farben und Millisekunden im Zeitstempel fehlen (im Preset-JSON und teils per CLI möglich) | Optionsdialog ist P2 |
 | 26.11.2026 | Live-Vorschau der Einstellungen (P2) | |
+| 26.11.2026 | Social-Preview muss von Hand hochgeladen werden: GitHub → Settings → General → Social preview → `docs/images/social-preview.png` (geht nicht per API/PR) | |
+| 26.11.2026 | Icon-Einbindung (ApplicationIcon, Fenstericon) konnte lokal nicht gebaut werden (kein .NET in der Entwicklungsumgebung); Prüfung über CI und ein Blick auf Windows/Linux/macOS | |
+| 26.11.2026 | macOS-Dock-Icon ohne `.app`-Bundle evtl. generisch; Bundle mit `app.icns` gehört zu „Installer/Pakete später“ | |
 
 ## Umfang v1 (Stand dieses PRs)
 
