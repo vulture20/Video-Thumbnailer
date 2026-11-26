@@ -1,3 +1,5 @@
+using Avalonia;
+using Avalonia.Styling;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using Avalonia.Threading;
@@ -42,6 +44,36 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private UiLanguage _language;
 
     public static Choice[] Languages { get; } = Choice.ForEnum<UiLanguage>("Lang");
+    public static Choice[] Themes { get; } = Choice.ForEnum<UiTheme>("Theme");
+
+    /// <summary>Show all settings; false = simple mode with only the basic ones (default).</summary>
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsSimple))] private bool _isAdvanced;
+    [ObservableProperty] private UiTheme _theme;
+
+    public bool IsSimple
+    {
+        get => !IsAdvanced;
+        set => IsAdvanced = !value;
+    }
+
+    partial void OnIsAdvancedChanged(bool value) => _app.AdvancedMode = value;
+
+    partial void OnThemeChanged(UiTheme value)
+    {
+        _app.Theme = value == UiTheme.System ? null : value.ToString();
+        ApplyTheme(value);
+    }
+
+    internal static void ApplyTheme(UiTheme theme)
+    {
+        if (Application.Current is { } app)
+            app.RequestedThemeVariant = theme switch
+            {
+                UiTheme.Light => ThemeVariant.Light,
+                UiTheme.Dark => ThemeVariant.Dark,
+                _ => ThemeVariant.Default,
+            };
+    }
     public bool IsIdle => !IsRunning;
     public string PauseButtonText => Loc.T(IsPaused ? "Resume" : "Pause");
 
@@ -60,6 +92,9 @@ public partial class MainViewModel : ObservableObject
         _app = AppSettings.Load();
         Language = Enum.TryParse<UiLanguage>(_app.Language, true, out var lang) ? lang : UiLanguage.System;
         Loc.Instance.Language = Language;
+        IsAdvanced = _app.AdvancedMode;
+        Theme = Enum.TryParse<UiTheme>(_app.Theme, true, out var theme) ? theme : UiTheme.System;
+        ApplyTheme(Theme);
         StatusText = Loc.T("StatusIntro");
         Ffmpeg = new FfmpegViewModel(ui, _app);
         Recursive = _app.Recursive;

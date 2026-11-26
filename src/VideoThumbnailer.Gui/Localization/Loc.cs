@@ -5,6 +5,8 @@ namespace VideoThumbnailer.Gui.Localization;
 
 public enum UiLanguage { System, English, German }
 
+public enum UiTheme { System, Light, Dark }
+
 /// <summary>
 /// Minimal string table for the GUI. Bind in XAML with <c>{l:T Key}</c>; in code use <see cref="T(string, object[])"/>.
 /// Switching <see cref="Language"/> updates all bound texts immediately.

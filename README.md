@@ -20,9 +20,12 @@ Free, cross-platform video contact sheet generator with GUI and command line.
 - Ausgabe in einen Ordner (optional mit Ordnerstruktur), neben das Video oder in einen Unterordner; Dateinamen-Muster
 - Presets als offene JSON-Dateien, 4 mitgelieferte Basis-Presets
 - Oberfläche, Kommandozeile und Texte im Sheet auf Deutsch und Englisch (folgt der Systemsprache, umschaltbar)
+- Einstellungen im Modus „Einfach“ (nur das Wichtigste) oder „Erweitert“ (alles); Darstellung hell, dunkel oder wie das System
 - ffmpeg wird nicht mitgeliefert, sondern nach Rückfrage automatisch geladen (mit SHA-256-Prüfung und Update-Funktion). Ein vorhandenes ffmpeg wird automatisch gefunden.
 
-![Oberfläche](docs/images/gui.png)
+![Oberfläche, Modus „Einfach“](docs/images/gui.png)
+
+![Modus „Erweitert“ in dunkler Darstellung](docs/images/gui-dark.png)
 
 ## Download und Start
 

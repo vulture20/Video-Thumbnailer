@@ -70,6 +70,15 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Linux: Icons im hicolor-Schema (16–512 px + scalable SVG) und `video-thumbnailer.desktop` unter `packaging/linux`, Installation von Hand beschrieben | Grundlage für spätere Pakete (AppImage/Flatpak) |
 | 26.11.2026 | README-Banner (1280×320) und GitHub-Social-Preview (1280×640) mit englischem Text („Contact sheets from your videos“), Schrift Inter (SIL OFL), als PNG eingebunden | öffentliches Repo; PNG zeigt überall dieselbe Schrift |
 
+### Oberfläche (Einfach/Erweitert, Darstellung)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 26.11.2026 | Einstellungen in zwei Modi: „Einfach“ (Standard) und „Erweitert“, umschaltbar ganz oben in der Einstellungsspalte; die Wahl wird in `settings.json` gespeichert (`advancedMode`) | Wunsch nach übersichtlicherer Oberfläche |
+| 26.11.2026 | „Einfach“ zeigt: Sprache, Darstellung, Preset-Auswahl, Spalten × Zeilen, Bildbreite, Zeitstempel an/aus, Info-Kopf an/aus, Format/Qualität, Speicherort (mit Ordner bzw. Unterordnername) und den ffmpeg-Status mit Download-Knopf. Alles andere nur unter „Erweitert“, mit Hinweis darauf am Ende | das Nötigste für ein gutes Sheet; ffmpeg-Download muss auch für Einsteiger erreichbar sein |
+| 26.11.2026 | Ausgeblendete Einstellungen bleiben wirksam (sie werden nur nicht angezeigt) und gehören weiterhin zum Preset | ein Wechsel des Modus ändert nie das Ergebnis |
+| 26.11.2026 | Darstellung „Wie System“ (Standard), „Hell“ oder „Dunkel“ über die Theme-Varianten des Fluent-Themes, wirkt sofort und wird gespeichert (`theme`) | Dark-Mode-Wunsch; folgt standardmäßig dem Betriebssystem |
+| 26.11.2026 | Die Darstellung betrifft nur die Oberfläche, nicht die Farben im Sheet (die kommen aus dem Preset) | Sheets sollen unabhängig vom Rechner gleich aussehen |
+
 ## Offen
 
 | Seit | Punkt | Stand |
@@ -81,6 +90,7 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | HDR-Tonemapping mit echten HDR10/HLG-Videos prüfen (Testvideos ohne korrekte Farbmetadaten) | |
 | 26.11.2026 | GUI-Einstellungen für Kontur-/Schattenfarbe, Kopf-Farben und Millisekunden im Zeitstempel fehlen (im Preset-JSON und teils per CLI möglich) | Optionsdialog ist P2 |
 | 26.11.2026 | Live-Vorschau der Einstellungen (P2) | |
+| 26.11.2026 | Aufteilung Einfach/Erweitert nach erster Nutzung prüfen (fehlt im einfachen Modus etwas Wichtiges, z. B. Preset speichern oder Reihenfolge?) | Rückmeldung von Vulli |
 | 26.11.2026 | Social-Preview muss von Hand hochgeladen werden: GitHub → Settings → General → Social preview → `docs/images/social-preview.png` (geht nicht per API/PR) | |
 | 26.11.2026 | Icon-Einbindung (ApplicationIcon, Fenstericon) konnte lokal nicht gebaut werden (kein .NET in der Entwicklungsumgebung); Prüfung über CI und ein Blick auf Windows/Linux/macOS | |
 | 26.11.2026 | macOS-Dock-Icon ohne `.app`-Bundle evtl. generisch; Bundle mit `app.icns` gehört zu „Installer/Pakete später“ | |
