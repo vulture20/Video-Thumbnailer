@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/VideoThumbnailer.Cli/VideoThumbnailer.Cli.csproj" />
+    <Project Path="src/VideoThumbnailer.Core/VideoThumbnailer.Core.csproj" />
+    <Project Path="src/VideoThumbnailer.Gui/VideoThumbnailer.Gui.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/VideoThumbnailer.Tests/VideoThumbnailer.Tests.csproj" />
+  </Folder>
+</Solution>

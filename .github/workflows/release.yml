@@ -1,0 +1,73 @@
+name: Release
+
+# Builds self-contained single-file binaries for all platforms.
+# Runs on tags like v0.1.0 (creates a GitHub release) or manually (artifacts only).
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: win-x64
+            os: windows-latest
+          - rid: win-arm64
+            os: windows-latest
+          - rid: linux-x64
+            os: ubuntu-latest
+          - rid: linux-arm64
+            os: ubuntu-latest
+          - rid: osx-x64
+            os: macos-latest
+          - rid: osx-arm64
+            os: macos-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${GITHUB_REF_NAME#v}"
+          [[ "$GITHUB_REF_TYPE" == "tag" ]] || VERSION="0.0.0-dev"
+          OUT="dist/Video-Thumbnailer-${{ matrix.rid }}"
+          for p in src/VideoThumbnailer.Gui src/VideoThumbnailer.Cli; do
+            dotnet publish "$p" -c Release -r ${{ matrix.rid }} --self-contained \
+              -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true \
+              -p:EnableCompressionInSingleFile=true -p:DebugType=none \
+              -p:Version="${VERSION%%-*}" -p:InformationalVersion="$VERSION" -o "$OUT"
+          done
+          cp LICENSE README.md "$OUT/"
+          cd dist
+          if command -v zip > /dev/null; then zip -qr "Video-Thumbnailer-${{ matrix.rid }}.zip" "Video-Thumbnailer-${{ matrix.rid }}"
+          else 7z a -tzip "Video-Thumbnailer-${{ matrix.rid }}.zip" "Video-Thumbnailer-${{ matrix.rid }}" > /dev/null; fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Video-Thumbnailer-${{ matrix.rid }}
+          path: dist/Video-Thumbnailer-${{ matrix.rid }}.zip
+
+  release:
+    if: github.ref_type == 'tag'
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Checksums
+        run: cd dist && sha256sum *.zip > checksums.sha256
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --generate-notes

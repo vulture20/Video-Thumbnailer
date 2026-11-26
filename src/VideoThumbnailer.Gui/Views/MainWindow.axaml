@@ -1,0 +1,207 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:VideoThumbnailer.Gui.ViewModels"
+        xmlns:settings="using:VideoThumbnailer.Core.Settings"
+        x:Class="VideoThumbnailer.Gui.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="Video-Thumbnailer"
+        Width="1280" Height="820" MinWidth="900" MinHeight="560"
+        DragDrop.AllowDrop="True">
+
+  <Grid ColumnDefinitions="*,Auto,420">
+
+    <!-- ================= Queue ================= -->
+    <DockPanel Grid.Column="0" Margin="10">
+      <WrapPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,8">
+        <Button Content="Add files…" Command="{Binding AddFilesCommand}" Margin="0,0,6,6" />
+        <Button Content="Add folder…" Command="{Binding AddFolderCommand}" Margin="0,0,6,6" />
+        <CheckBox Content="Include subfolders" IsChecked="{Binding Recursive}" Margin="4,0,12,6" />
+        <Button Content="Remove selected" Command="{Binding RemoveSelectedCommand}" Margin="0,0,6,6" />
+        <Button Content="Clear finished" Command="{Binding ClearFinishedCommand}" Margin="0,0,6,6" />
+        <Button Content="Clear all" Command="{Binding ClearAllCommand}" Margin="0,0,6,6" />
+        <Button Content="Retry failed" Command="{Binding RetryFailedCommand}" Margin="0,0,6,6" />
+        <Button Content="Sort ▾" Margin="0,0,6,6">
+          <Button.Flyout>
+            <MenuFlyout>
+              <MenuItem Header="By name" Command="{Binding SortCommand}" CommandParameter="name" />
+              <MenuItem Header="By folder" Command="{Binding SortCommand}" CommandParameter="folder" />
+              <MenuItem Header="By size (largest first)" Command="{Binding SortCommand}" CommandParameter="size" />
+              <MenuItem Header="By status" Command="{Binding SortCommand}" CommandParameter="status" />
+            </MenuFlyout>
+          </Button.Flyout>
+        </Button>
+      </WrapPanel>
+
+      <Grid DockPanel.Dock="Bottom" ColumnDefinitions="Auto,Auto,Auto,*" RowDefinitions="Auto,Auto" Margin="0,8,0,0">
+        <Button Grid.Column="0" Content="Start" Command="{Binding StartCommand}" Classes="accent" MinWidth="90" Margin="0,0,6,0" />
+        <Button Grid.Column="1" Content="{Binding PauseButtonText}" Command="{Binding PauseCommand}" MinWidth="90" Margin="0,0,6,0" />
+        <Button Grid.Column="2" Content="Cancel" Command="{Binding CancelCommand}" MinWidth="90" Margin="0,0,12,0" />
+        <ProgressBar Grid.Column="3" Value="{Binding OverallProgress}" Minimum="0" Maximum="100" VerticalAlignment="Center" Height="8" />
+        <TextBlock Grid.Row="1" Grid.ColumnSpan="4" Text="{Binding StatusText}" Margin="0,6,0,0" TextTrimming="CharacterEllipsis" />
+      </Grid>
+
+      <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4">
+        <Grid>
+          <ListBox x:Name="QueueList" ItemsSource="{Binding Jobs}" SelectionMode="Multiple,Toggle"
+
+                   Background="Transparent" SelectionChanged="OnQueueSelectionChanged" DoubleTapped="OnQueueDoubleTapped">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:JobViewModel">
+                <Grid ColumnDefinitions="*,110" RowDefinitions="Auto,Auto" Background="Transparent"
+                      ToolTip.Tip="{Binding Job.InputPath}">
+                  <TextBlock Grid.Column="0" Text="{Binding FileName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                  <TextBlock Grid.Column="0" Grid.Row="1" Text="{Binding Details}" Classes="hint" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" />
+                  <TextBlock Grid.Column="1" Text="{Binding StatusText}" HorizontalAlignment="Right" />
+                  <ProgressBar Grid.Column="1" Grid.Row="1" Value="{Binding ProgressPercent}" Minimum="0" Maximum="100"
+                               Height="4" MinWidth="80" Margin="10,4,0,0" />
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+          <TextBlock Text="Drop videos or folders here" HorizontalAlignment="Center" VerticalAlignment="Center"
+                     Opacity="0.5" FontSize="18" IsHitTestVisible="False"
+                     IsVisible="{Binding !Jobs.Count}" />
+        </Grid>
+      </Border>
+    </DockPanel>
+
+    <GridSplitter Grid.Column="1" Width="4" ResizeDirection="Columns" Background="Transparent" />
+
+    <!-- ================= Settings ================= -->
+    <ScrollViewer Grid.Column="2" Padding="0,10,14,10">
+      <StackPanel DataContext="{Binding}" Spacing="4">
+
+        <TextBlock Classes="section" Text="Preset" Margin="0,0,0,6" />
+        <ComboBox ItemsSource="{Binding Presets}" SelectedItem="{Binding SelectedPreset}" HorizontalAlignment="Stretch">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="settings:SheetSettings">
+              <TextBlock Text="{Binding Name}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <WrapPanel>
+          <Button Content="Save as…" Command="{Binding SavePresetCommand}" Margin="0,4,6,0" />
+          <Button Content="Delete" Command="{Binding DeletePresetCommand}" Margin="0,4,6,0" />
+          <Button Content="Reset" Command="{Binding ResetToPresetCommand}" Margin="0,4,6,0" ToolTip.Tip="Discard changes and reload the selected preset" />
+          <Button Content="Import…" Command="{Binding ImportPresetCommand}" Margin="0,4,6,0" />
+          <Button Content="Export…" Command="{Binding ExportPresetCommand}" Margin="0,4,6,0" />
+        </WrapPanel>
+
+        <!-- Layout -->
+        <TextBlock Classes="section" Text="Layout" />
+        <Grid ColumnDefinitions="150,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="4">
+          <TextBlock Classes="label" Text="Columns × rows" />
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+            <NumericUpDown Value="{Binding Settings.Columns}" Minimum="1" Maximum="50" Increment="1" FormatString="0" Width="110" />
+            <TextBlock Text="×" VerticalAlignment="Center" />
+            <NumericUpDown Value="{Binding Settings.Rows}" Minimum="1" Maximum="100" Increment="1" FormatString="0" Width="110" />
+          </StackPanel>
+          <TextBlock Grid.Row="1" Classes="label" Text="Sheet width (px)" />
+          <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding Settings.SheetWidth}" Minimum="100" Maximum="32000" Increment="100" FormatString="0" />
+          <TextBlock Grid.Row="2" Classes="label" Text="Gap / margin (px)" />
+          <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="6">
+            <NumericUpDown Value="{Binding Settings.Gap}" Minimum="0" Maximum="500" FormatString="0" Width="110" />
+            <NumericUpDown Value="{Binding Settings.Margin}" Minimum="0" Maximum="500" FormatString="0" Width="110" />
+          </StackPanel>
+          <TextBlock Grid.Row="3" Classes="label" Text="Timeline flow" />
+          <ComboBox Grid.Row="3" Grid.Column="1" ItemsSource="{x:Static vm:SettingsViewModel.Orders}" SelectedItem="{Binding Settings.Order}" HorizontalAlignment="Stretch" />
+          <TextBlock Grid.Row="4" Classes="label" Text="Skip start / end (%)" />
+          <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" Spacing="6">
+            <NumericUpDown Value="{Binding Settings.SkipStartPercent}" Minimum="0" Maximum="45" Increment="0.5" FormatString="0.#" Width="110" />
+            <NumericUpDown Value="{Binding Settings.SkipEndPercent}" Minimum="0" Maximum="45" Increment="0.5" FormatString="0.#" Width="110" />
+          </StackPanel>
+          <TextBlock Grid.Row="5" Classes="label" Text="Background" />
+          <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding Settings.BackgroundColor}" PlaceholderText="#AARRGGBB" />
+          <TextBlock Grid.Row="6" Classes="label" Text="Font family" />
+          <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding Settings.FontFamily}" PlaceholderText="(built-in DejaVu Sans)" />
+          <CheckBox Grid.Row="7" Grid.ColumnSpan="2" Content="Portrait videos: swap columns and rows" IsChecked="{Binding Settings.PortraitSwapGrid}" />
+        </Grid>
+
+        <!-- Timestamps -->
+        <TextBlock Classes="section" Text="Timestamps" />
+        <CheckBox Content="Show timestamp in every tile" IsChecked="{Binding Settings.TimestampEnabled}" />
+        <Grid ColumnDefinitions="150,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="4" IsEnabled="{Binding Settings.TimestampEnabled}">
+          <TextBlock Classes="label" Text="Position" />
+          <ComboBox Grid.Column="1" ItemsSource="{x:Static vm:SettingsViewModel.TimestampPositions}" SelectedItem="{Binding Settings.TimestampPosition}" HorizontalAlignment="Stretch" />
+          <TextBlock Grid.Row="1" Classes="label" Text="Font size" />
+          <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding Settings.TimestampFontSize}" Minimum="4" Maximum="400" FormatString="0" />
+          <TextBlock Grid.Row="2" Classes="label" Text="Color / opacity" />
+          <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="6">
+            <TextBox Text="{Binding Settings.TimestampColor}" Width="120" PlaceholderText="#AARRGGBB" />
+            <NumericUpDown Value="{Binding Settings.TimestampOpacity}" Minimum="0" Maximum="1" Increment="0.1" FormatString="0.0#" Width="110" />
+          </StackPanel>
+          <TextBlock Grid.Row="3" Classes="label" Text="Outline (px)" />
+          <NumericUpDown Grid.Row="3" Grid.Column="1" Value="{Binding Settings.TimestampOutline}" Minimum="0" Maximum="20" Increment="0.5" FormatString="0.#" />
+          <CheckBox Grid.Row="4" Grid.ColumnSpan="2" Content="Drop shadow" IsChecked="{Binding Settings.TimestampShadow}" />
+        </Grid>
+
+        <!-- Header -->
+        <TextBlock Classes="section" Text="Info header" />
+        <CheckBox Content="Show video information" IsChecked="{Binding Settings.HeaderEnabled}" />
+        <Grid ColumnDefinitions="150,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="4" IsEnabled="{Binding Settings.HeaderEnabled}">
+          <TextBlock Classes="label" Text="Position" />
+          <ComboBox Grid.Column="1" ItemsSource="{x:Static vm:SettingsViewModel.HeaderPositions}" SelectedItem="{Binding Settings.HeaderPosition}" HorizontalAlignment="Stretch" />
+          <TextBlock Grid.Row="1" Classes="label" Text="Font size (title / text)" />
+          <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="6">
+            <NumericUpDown Value="{Binding Settings.HeaderTitleFontSize}" Minimum="4" Maximum="400" FormatString="0" Width="110" />
+            <NumericUpDown Value="{Binding Settings.HeaderFontSize}" Minimum="4" Maximum="400" FormatString="0" Width="110" />
+          </StackPanel>
+          <TextBox Grid.Row="2" Grid.ColumnSpan="2" Text="{Binding Settings.HeaderTemplate}" AcceptsReturn="True" TextWrapping="Wrap"
+                   MinHeight="90" FontFamily="monospace" Margin="0,4,0,0" />
+          <TextBlock Grid.Row="3" Grid.ColumnSpan="2" Classes="hint" Text="{Binding Settings.PlaceholderHelp}" />
+        </Grid>
+
+        <!-- Output -->
+        <TextBlock Classes="section" Text="Output" />
+        <Grid ColumnDefinitions="150,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="4">
+          <TextBlock Classes="label" Text="Format / quality" />
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+            <ComboBox ItemsSource="{x:Static vm:SettingsViewModel.Formats}" SelectedItem="{Binding Settings.Format}" Width="110" />
+            <NumericUpDown Value="{Binding Settings.Quality}" Minimum="1" Maximum="100" FormatString="0" Width="110" />
+          </StackPanel>
+          <TextBlock Grid.Row="1" Classes="label" Text="Save to" />
+          <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{x:Static vm:SettingsViewModel.Locations}" SelectedItem="{Binding Settings.Location}" HorizontalAlignment="Stretch" />
+          <TextBlock Grid.Row="2" Classes="label" Text="Output folder" IsVisible="{Binding Settings.IsOutputFolder}" />
+          <Grid Grid.Row="2" Grid.Column="1" ColumnDefinitions="*,Auto" IsVisible="{Binding Settings.IsOutputFolder}">
+            <TextBox Text="{Binding Settings.OutputFolder}" />
+            <Button Grid.Column="1" Content="…" Command="{Binding BrowseOutputFolderCommand}" Margin="4,0,0,0" />
+          </Grid>
+          <CheckBox Grid.Row="3" Grid.ColumnSpan="2" Content="Keep folder structure of added folders" IsChecked="{Binding Settings.KeepFolderStructure}" IsVisible="{Binding Settings.IsOutputFolder}" />
+          <TextBlock Grid.Row="4" Classes="label" Text="Subfolder name" IsVisible="{Binding Settings.IsSubfolder}" />
+          <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding Settings.SubfolderName}" IsVisible="{Binding Settings.IsSubfolder}" />
+          <TextBlock Grid.Row="5" Classes="label" Text="File name pattern" />
+          <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding Settings.FileNamePattern}" ToolTip.Tip="{}{name} {ext} {preset} {cols} {rows} {date} {time}" />
+          <TextBlock Grid.Row="6" Classes="label" Text="If file exists" />
+          <ComboBox Grid.Row="6" Grid.Column="1" ItemsSource="{x:Static vm:SettingsViewModel.OverwriteModes}" SelectedItem="{Binding Settings.Overwrite}" HorizontalAlignment="Stretch" />
+          <CheckBox Grid.Row="7" Grid.ColumnSpan="2" Content="Also save every frame as a single image" IsChecked="{Binding Settings.SaveFrames}" />
+        </Grid>
+
+        <!-- Processing -->
+        <TextBlock Classes="section" Text="Processing" />
+        <Grid ColumnDefinitions="150,*" RowDefinitions="Auto,Auto" RowSpacing="4">
+          <TextBlock Classes="label" Text="ffmpeg processes" />
+          <NumericUpDown Grid.Column="1" Value="{Binding MaxParallelProcesses}" Minimum="1" Maximum="64" FormatString="0" />
+          <TextBlock Grid.Row="1" Classes="label" Text="Videos in parallel" />
+          <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding MaxParallelVideos}" Minimum="1" Maximum="32" FormatString="0" />
+        </Grid>
+
+        <!-- ffmpeg -->
+        <TextBlock Classes="section" Text="ffmpeg" />
+        <TextBlock Text="{Binding Ffmpeg.StatusLine}" TextWrapping="Wrap" />
+        <TextBlock Text="{Binding Ffmpeg.DetailLine}" Classes="hint" />
+        <ProgressBar Value="{Binding Ffmpeg.DownloadPercent}" Minimum="0" Maximum="100" Height="6" IsVisible="{Binding Ffmpeg.IsBusy}" />
+        <WrapPanel IsVisible="{Binding Ffmpeg.CanDownload}">
+          <Button Content="{Binding Ffmpeg.InstallButtonText}" Command="{Binding Ffmpeg.InstallOrUpdateCommand}" Margin="0,4,6,0" />
+          <Button Content="Check for update" Command="{Binding Ffmpeg.CheckForUpdateCommand}" Margin="0,4,6,0" />
+        </WrapPanel>
+        <CheckBox Content="Check for ffmpeg updates weekly" IsChecked="{Binding Ffmpeg.CheckUpdatesAutomatically}" IsVisible="{Binding Ffmpeg.CanDownload}" />
+        <TextBlock Classes="hint" Text="{Binding Ffmpeg.SourceName, StringFormat='Download source: {0}'}" />
+        <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,4,0,0">
+          <TextBox Text="{Binding Ffmpeg.CustomDirectory}" PlaceholderText="Custom ffmpeg folder (optional)" />
+          <Button Grid.Column="1" Content="…" Command="{Binding Ffmpeg.BrowseCustomDirectoryCommand}" Margin="4,0,0,0" />
+          <Button Grid.Column="2" Content="✕" Command="{Binding Ffmpeg.ClearCustomDirectoryCommand}" Margin="4,0,0,0" ToolTip.Tip="Use downloaded / system ffmpeg" />
+        </Grid>
+      </StackPanel>
+    </ScrollViewer>
+  </Grid>
+</Window>

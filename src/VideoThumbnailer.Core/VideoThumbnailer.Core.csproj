@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>VideoThumbnailer.Core</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Keep in sync with the SkiaSharp version Avalonia.Skia depends on. -->
+    <PackageReference Include="SkiaSharp" Version="3.119.4" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="3.119.4" />
+    <PackageReference Include="SharpCompress" Version="0.50.12" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Fonts\DejaVuSans.ttf" LogicalName="VideoThumbnailer.Fonts.DejaVuSans.ttf" />
+    <EmbeddedResource Include="Fonts\DejaVuSans-Bold.ttf" LogicalName="VideoThumbnailer.Fonts.DejaVuSans-Bold.ttf" />
+    <None Include="Fonts\DejaVu-LICENSE.txt" CopyToOutputDirectory="PreserveNewest" Link="licenses\DejaVu-LICENSE.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="VideoThumbnailer.Tests" />
+  </ItemGroup>
+</Project>

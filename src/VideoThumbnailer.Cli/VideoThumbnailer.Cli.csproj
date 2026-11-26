@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>VideoThumbnailer.Cli</RootNamespace>
+    <AssemblyName>vthumb</AssemblyName>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\VideoThumbnailer.Core\VideoThumbnailer.Core.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="VideoThumbnailer.Tests" />
+  </ItemGroup>
+</Project>
