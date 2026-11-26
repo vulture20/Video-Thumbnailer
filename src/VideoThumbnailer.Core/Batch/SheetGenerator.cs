@@ -2,6 +2,7 @@ using SkiaSharp;
 using VideoThumbnailer.Core.Extraction;
 using VideoThumbnailer.Core.Ffmpeg;
 using VideoThumbnailer.Core.Layout;
+using VideoThumbnailer.Core.Localization;
 using VideoThumbnailer.Core.Media;
 using VideoThumbnailer.Core.Output;
 using VideoThumbnailer.Core.Rendering;
@@ -24,7 +25,7 @@ public sealed class SheetGenerator(FfmpegTools tools, SemaphoreSlim processLimit
         {
             switch (s.Output.Overwrite)
             {
-                case OverwriteMode.Skip: return new SheetResult(JobStatus.Skipped, target, "Sheet already exists");
+                case OverwriteMode.Skip: return new SheetResult(JobStatus.Skipped, target, CoreText.T("SheetExists"));
                 case OverwriteMode.Rename: target = OutputPathResolver.MakeUnique(target); break;
             }
         }
@@ -35,7 +36,7 @@ public sealed class SheetGenerator(FfmpegTools tools, SemaphoreSlim processLimit
         try { info = await FfprobeReader.ReadAsync(tools.FfprobePath, videoPath, ct).ConfigureAwait(false); }
         finally { processLimiter.Release(); }
 
-        if (info.Video is null) return new SheetResult(JobStatus.Failed, null, "No video stream found");
+        if (info.Video is null) return new SheetResult(JobStatus.Failed, null, CoreText.T("NoVideoStream"));
         progress?.Report(0.05);
 
         var aspect = info.Video.DisplayAspect;
@@ -73,7 +74,7 @@ public sealed class SheetGenerator(FfmpegTools tools, SemaphoreSlim processLimit
             await Task.WhenAll(tasks).ConfigureAwait(false);
 
             if (frames.All(f => f.Bitmap is null))
-                return new SheetResult(JobStatus.Failed, null, "Could not decode any frame");
+                return new SheetResult(JobStatus.Failed, null, CoreText.T("NoFrameDecoded"));
 
             ct.ThrowIfCancellationRequested();
             using var sheet = SheetRenderer.Render(s, info, layout, frames);
@@ -85,7 +86,7 @@ public sealed class SheetGenerator(FfmpegTools tools, SemaphoreSlim processLimit
 
             progress?.Report(1);
             var missing = frames.Count(f => f.Bitmap is null);
-            return new SheetResult(JobStatus.Done, target, missing > 0 ? $"{missing} frame(s) could not be decoded" : null);
+            return new SheetResult(JobStatus.Done, target, missing > 0 ? CoreText.T("FramesMissing", missing) : null);
         }
         finally
         {

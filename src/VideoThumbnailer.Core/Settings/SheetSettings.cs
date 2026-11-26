@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using VideoThumbnailer.Core.Localization;
 
 namespace VideoThumbnailer.Core.Settings;
 
@@ -56,6 +57,12 @@ public sealed class SheetSettings
     public string BackgroundColor { get; set; } = "#FF1E1E1E";
     /// <summary>Font family for all text. Empty = bundled DejaVu Sans.</summary>
     public string? FontFamily { get; set; }
+    /// <summary>Language of texts drawn into the sheet ("en", "de"); null = same as the application.</summary>
+    public string? TextLanguage { get; set; }
+
+    /// <summary>Language actually used for sheet texts.</summary>
+    [JsonIgnore]
+    public string EffectiveTextLanguage => Lang.Normalize(TextLanguage) ?? Lang.Current;
 
     public TimestampSettings Timestamp { get; set; } = new();
     public HeaderSettings Header { get; set; } = new();
@@ -86,7 +93,7 @@ public sealed class SheetSettings
         Output.Quality = Math.Clamp(Output.Quality, 1, 100);
         if (string.IsNullOrWhiteSpace(Output.FileNamePattern)) Output.FileNamePattern = "{name}";
         if (Output.Location == OutputLocation.OutputFolder && string.IsNullOrWhiteSpace(Output.Folder))
-            errors.Add("Output location is 'OutputFolder' but no output folder is set.");
+            errors.Add(CoreText.T("OutputFolderMissing"));
         if (Output.Location == OutputLocation.SubfolderNextToVideo && string.IsNullOrWhiteSpace(Output.SubfolderName))
             Output.SubfolderName = "thumbnails";
         return errors;
@@ -117,21 +124,19 @@ public sealed class HeaderSettings
     public bool Enabled { get; set; } = true;
     public HeaderPosition Position { get; set; } = HeaderPosition.TopLeft;
     /// <summary>
-    /// Lines of the info header. Placeholders in braces, see docs/INFO-PLACEHOLDERS.md.
-    /// The first line is rendered with <see cref="TitleFontSize"/> in bold.
+    /// Lines of the info header with placeholders in braces (see README). The first line is rendered
+    /// with <see cref="TitleFontSize"/> in bold. Null/empty or a built-in default = default template in the sheet language.
     /// </summary>
-    public string Template { get; set; } = DefaultTemplate;
+    public string? Template { get; set; }
+
+    /// <summary>The template to render for the given language.</summary>
+    public string EffectiveTemplate(string lang) =>
+        CoreText.IsDefaultHeaderTemplate(Template) ? CoreText.DefaultHeaderTemplate(lang) : Template!;
     public float FontSize { get; set; } = 16;
     public float TitleFontSize { get; set; } = 22;
     public string Color { get; set; } = "#FFE6E6E6";
     public string TitleColor { get; set; } = "#FFFFFFFF";
     public float LineSpacing { get; set; } = 1.25f;
-
-    public const string DefaultTemplate =
-        "{filename}\n" +
-        "Size: {size} · Duration: {duration} · Bitrate: {bitrate}\n" +
-        "Video: {vcodec} · {resolution} · {fps} fps · {pixfmt}{hdr}\n" +
-        "Audio: {audio}";
 }
 
 public sealed class OutputSettings

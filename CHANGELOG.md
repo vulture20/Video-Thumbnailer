@@ -11,9 +11,13 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 - README-Banner und Social-Preview-Bild ([#3])
 - Diese `CHANGELOG.md` ([#4])
 - Oberfläche auf Deutsch und Englisch: folgt standardmäßig der Systemsprache, umschaltbar in den Einstellungen, ohne Neustart ([#5])
+- Kommandozeile auf Deutsch und Englisch (Hilfe, Meldungen, Beschreibungen der Basis-Presets); Sprache über `--lang` oder `VTHUMB_LANG`, sonst wie in der GUI eingestellt bzw. Systemsprache ([#6])
+- Texte im Sheet auf Deutsch und Englisch: Standard-Info-Kopf („Größe:“, „Dauer:“), „kein Bild“, „keine“/„k. A.“ und Dezimalkomma; Sprache pro Preset wählbar („Wie Oberfläche“, Deutsch, Englisch), per CLI `--sheet-lang` ([#6])
+- Meldungen der Verarbeitung und des ffmpeg-Downloads in der Oberfläche übersetzt ([#6])
 
 ### Geändert
 - Einstellungsspalte etwas breiter, Beschriftungen brechen bei Bedarf um ([#5])
+- Presets speichern den Standard-Info-Kopf nicht mehr als festen Text, damit er der Sheet-Sprache folgt; ältere Presets mit der englischen Standardvorlage werden genauso behandelt ([#6])
 
 ## [0.1.0] – 2026-11-26
 
@@ -43,3 +47,4 @@ Erste Version.
 [#3]: https://github.com/vulture20/Video-Thumbnailer/pull/3
 [#4]: https://github.com/vulture20/Video-Thumbnailer/pull/4
 [#5]: https://github.com/vulture20/Video-Thumbnailer/pull/5
+[#6]: https://github.com/vulture20/Video-Thumbnailer/pull/6

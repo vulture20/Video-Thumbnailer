@@ -145,7 +145,10 @@
         <!-- Header -->
         <TextBlock Classes="section" Text="{l:T InfoHeader}" />
         <CheckBox Content="{l:T ShowHeader}" IsChecked="{Binding Settings.HeaderEnabled}" />
-        <Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="4" IsEnabled="{Binding Settings.HeaderEnabled}">
+        <Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="4" IsEnabled="{Binding Settings.HeaderEnabled}">
+          <TextBlock Grid.Row="4" Classes="label" Text="{l:T SheetLanguage}" />
+          <ComboBox Grid.Row="4" Grid.Column="1" ItemsSource="{x:Static vm:SettingsViewModel.SheetLanguages}" DisplayMemberBinding="{ReflectionBinding Label}"
+                    SelectedValueBinding="{ReflectionBinding Value}" SelectedValue="{Binding Settings.SheetLanguage, Mode=TwoWay}" HorizontalAlignment="Stretch" />
           <TextBlock Classes="label" Text="{l:T Position}" />
           <ComboBox Grid.Column="1" ItemsSource="{x:Static vm:SettingsViewModel.HeaderPositions}" DisplayMemberBinding="{ReflectionBinding Label}" SelectedValueBinding="{ReflectionBinding Value}" SelectedValue="{Binding Settings.HeaderPosition, Mode=TwoWay}" HorizontalAlignment="Stretch" />
           <TextBlock Grid.Row="1" Classes="label" Text="{l:T HeaderFontSize}" />

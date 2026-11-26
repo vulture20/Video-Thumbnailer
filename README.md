@@ -19,7 +19,7 @@ Free, cross-platform video contact sheet generator with GUI and command line.
 - Warteschlange mit Pause, Abbruch, Fortschritt und paralleler Verarbeitung über alle CPU-Kerne
 - Ausgabe in einen Ordner (optional mit Ordnerstruktur), neben das Video oder in einen Unterordner; Dateinamen-Muster
 - Presets als offene JSON-Dateien, 4 mitgelieferte Basis-Presets
-- Oberfläche auf Deutsch und Englisch (folgt der Systemsprache, umschaltbar)
+- Oberfläche, Kommandozeile und Texte im Sheet auf Deutsch und Englisch (folgt der Systemsprache, umschaltbar)
 - ffmpeg wird nicht mitgeliefert, sondern nach Rückfrage automatisch geladen (mit SHA-256-Prüfung und Update-Funktion). Ein vorhandenes ffmpeg wird automatisch gefunden.
 
 ![Oberfläche](docs/images/gui.png)
@@ -60,6 +60,8 @@ vthumb --columns 5 --rows 6 --no-header --save-preset "5x6 ohne Kopf"
 ```
 
 Ohne `--preset` werden die zuletzt in der Oberfläche benutzten Einstellungen verwendet. Alle Optionen: `vthumb --help`.
+
+Sprache: `--lang de|en|auto` (oder Umgebungsvariable `VTHUMB_LANG`) für Hilfe und Meldungen; ohne Angabe gilt die in der Oberfläche gewählte Sprache, sonst die Systemsprache. `--sheet-lang de|en|auto` legt die Sprache der Texte im Sheet fest (z. B. „Größe:“/„Size:“, Dezimalkomma).
 Exit-Codes: 0 ok, 1 einzelne Videos fehlgeschlagen, 2 Aufruffehler, 3 ffmpeg fehlt, 130 abgebrochen.
 
 ### Platzhalter im Info-Kopf

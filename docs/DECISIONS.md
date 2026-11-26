@@ -42,6 +42,11 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Code und Kommentare auf Englisch, Projektdokumentation auf Deutsch | öffentliches Repo |
 | 26.11.2026 | GUI zweisprachig Deutsch/Englisch (vorgezogen aus P2). Standard ist die Systemsprache (Deutsch, wenn die Oberflächensprache des Systems Deutsch ist, sonst Englisch); in den Einstellungen umschaltbar (Systemsprache/English/Deutsch), wirkt sofort ohne Neustart und wird in `settings.json` gespeichert | Wunsch nach deutscher Oberfläche, Englisch für alle anderen |
 | 26.11.2026 | Übersetzungen als eigene Tabelle im Code (`Localization/Strings.cs`) statt `.resx`; XAML bindet über `{l:T Schlüssel}`. Ein Test prüft, dass jeder benutzte Schlüssel existiert und beide Sprachen dieselben Platzhalter haben | einfach, ohne Satelliten-Assemblies, live umschaltbar, fehlende Texte fallen im Test auf |
+| 26.11.2026 | Kommandozeile ebenfalls Deutsch/Englisch (Hilfe, Meldungen, Beschreibungen der Basis-Presets). Reihenfolge: `--lang de\|en\|auto` > Umgebungsvariable `VTHUMB_LANG` > in der GUI gewählte Sprache > Systemsprache (unter Windows `GetUserDefaultUILanguage`, sonst `LC_ALL`/`LC_MESSAGES`/`LANG`/`LANGUAGE`) | Wunsch: offene Punkte erledigen; gleiche Sprache in GUI und CLI |
+| 26.11.2026 | Texte im Sheet folgen einer eigenen „Sheet-Sprache“ je Preset: Standard „Wie Oberfläche“, wählbar Deutsch/Englisch (GUI, `--sheet-lang`). So kann man z. B. mit deutscher Oberfläche englische Sheets erzeugen | Sheets werden oft weitergegeben; Sprache gehört zum Ergebnis, nicht nur zur Oberfläche |
+| 26.11.2026 | Standard-Info-Kopf je Sprache („Größe:/Dauer:“ bzw. „Size:/Duration:“). Presets speichern ihn nicht als festen Text (`template: null`); die bisherige englische Standardvorlage gilt ebenfalls als Standard. Eigene Vorlagen bleiben unverändert | bestehende Presets/Einstellungen wechseln automatisch die Sprache, eigene Texte werden nicht überschrieben |
+| 26.11.2026 | Deutsche Sheets mit Dezimalkomma (1,50 GB, 23,976 fps) und „kein Bild“, „keine“, „k. A.“ | übliche deutsche Schreibweise |
+| 26.11.2026 | Texte aus Core/CLI in eigenen Tabellen (`CoreText`, `CliText`) wie in der GUI; Tests prüfen beide Sprachen und Platzhalter | einheitlich, ohne `.resx` |
 | 26.11.2026 | Kommandozeile bleibt vorerst Englisch | stabile, skriptfreundliche Ausgabe; siehe offene Punkte |
 
 ### ffmpeg-Bezug
@@ -76,8 +81,6 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | HDR-Tonemapping mit echten HDR10/HLG-Videos prüfen (Testvideos ohne korrekte Farbmetadaten) | |
 | 26.11.2026 | GUI-Einstellungen für Kontur-/Schattenfarbe, Kopf-Farben und Millisekunden im Zeitstempel fehlen (im Preset-JSON und teils per CLI möglich) | Optionsdialog ist P2 |
 | 26.11.2026 | Live-Vorschau der Einstellungen (P2) | |
-| 26.11.2026 | Kommandozeile (Hilfe und Meldungen) ebenfalls übersetzen? | aktuell Englisch |
-| 26.11.2026 | Texte im Sheet selbst (z. B. „Size:“, „Duration:“ im Info-Kopf, „no frame“) kommen aus der Preset-Vorlage bzw. sind Englisch. Deutsche Vorlage oder sprachabhängige Basis-Presets anbieten? | eigene Vorlage ist schon heute möglich |
 | 26.11.2026 | Social-Preview muss von Hand hochgeladen werden: GitHub → Settings → General → Social preview → `docs/images/social-preview.png` (geht nicht per API/PR) | |
 | 26.11.2026 | Icon-Einbindung (ApplicationIcon, Fenstericon) konnte lokal nicht gebaut werden (kein .NET in der Entwicklungsumgebung); Prüfung über CI und ein Blick auf Windows/Linux/macOS | |
 | 26.11.2026 | macOS-Dock-Icon ohne `.app`-Bundle evtl. generisch; Bundle mit `app.icns` gehört zu „Installer/Pakete später“ | |

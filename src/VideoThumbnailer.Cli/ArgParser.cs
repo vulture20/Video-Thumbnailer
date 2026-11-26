@@ -1,4 +1,5 @@
 using System.Globalization;
+using VideoThumbnailer.Core.Localization;
 using VideoThumbnailer.Core.Settings;
 
 namespace VideoThumbnailer.Cli;
@@ -32,13 +33,13 @@ public static class ArgParser
             var a = args[i];
             string Next()
             {
-                if (i + 1 >= args.Count) throw new UsageException($"Option {a} needs a value.");
+                if (i + 1 >= args.Count) throw new UsageException(CliText.T("NeedsValue", a));
                 return args[++i];
             }
             int NextInt() => int.TryParse(Next(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var v)
-                ? v : throw new UsageException($"Option {a} needs a whole number.");
+                ? v : throw new UsageException(CliText.T("NeedsInt", a));
             double NextDouble() => double.TryParse(Next(), NumberStyles.Float, CultureInfo.InvariantCulture, out var v)
-                ? v : throw new UsageException($"Option {a} needs a number.");
+                ? v : throw new UsageException(CliText.T("NeedsNumber", a));
 
             // allow --key=value
             if (a.StartsWith("--", StringComparison.Ordinal) && a.Contains('='))
@@ -99,10 +100,19 @@ public static class ArgParser
                 case "-n": case "--dry-run": o.DryRun = true; break;
                 case "--quiet": o.Quiet = true; break;
                 case "--save-preset": o.SavePresetAs = Next(); break;
+                case "--lang": Next(); break; // handled in CliApp before parsing
+                case "--sheet-lang":
+                {
+                    var v = Next();
+                    var l = Lang.Normalize(v);
+                    if (l is null && v.ToLowerInvariant() is not ("auto" or "system")) throw new UsageException(CliText.T("UnknownLanguage", v));
+                    o.Overrides.Add(s => s.TextLanguage = l);
+                    break;
+                }
                 case "--": o.Inputs.AddRange(args.Skip(i + 1)); i = args.Count; break;
                 default:
                     if (a.StartsWith('-') && a.Length > 1 && !File.Exists(a) && !Directory.Exists(a))
-                        throw new UsageException($"Unknown option: {a}");
+                        throw new UsageException(CliText.T("UnknownOption", a));
                     o.Inputs.Add(a);
                     break;
             }
@@ -115,7 +125,7 @@ public static class ArgParser
         "jpg" or "jpeg" => ImageFormat.Jpeg,
         "png" => ImageFormat.Png,
         "webp" => ImageFormat.Webp,
-        _ => throw new UsageException($"Unknown format '{v}' (jpg, png, webp)."),
+        _ => throw new UsageException(CliText.T("UnknownFormat", v)),
     };
 
     public static TileOrder ParseOrder(string v) => v.ToLowerInvariant() switch
@@ -123,11 +133,11 @@ public static class ArgParser
         "row" or "rows" or "rowmajor" => TileOrder.RowMajor,
         "column" or "columns" or "col" or "columnmajor" => TileOrder.ColumnMajor,
         "random" => TileOrder.Random,
-        _ => throw new UsageException($"Unknown order '{v}' (row, column, random)."),
+        _ => throw new UsageException(CliText.T("UnknownOrder", v)),
     };
 
     public static T ParseEnum<T>(string v, string option) where T : struct, Enum =>
         Enum.TryParse<T>(v.Replace("-", "").Replace("_", ""), ignoreCase: true, out var r)
             ? r
-            : throw new UsageException($"Invalid value '{v}' for {option}. Allowed: {string.Join(", ", Enum.GetNames<T>())}");
+            : throw new UsageException(CliText.T("InvalidValue", v, option, string.Join(", ", Enum.GetNames<T>())));
 }

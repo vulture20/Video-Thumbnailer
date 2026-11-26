@@ -2,6 +2,7 @@ using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text.Json;
 using SharpCompress.Readers;
+using VideoThumbnailer.Core.Localization;
 using VideoThumbnailer.Core.Settings;
 
 namespace VideoThumbnailer.Core.Ffmpeg;
@@ -93,9 +94,9 @@ public sealed class FfmpegInstaller
 
             foreach (var f in files) MakeExecutable(f);
             var check = FfmpegLocator.FromDirectory(staging, FfmpegOrigin.Managed)
-                        ?? throw new InvalidDataException("The downloaded archive did not contain ffmpeg and ffprobe.");
+                        ?? throw new InvalidDataException(CoreText.T("ArchiveMissingBinaries"));
             if (await FfmpegLocator.GetVersionAsync(check.FfmpegPath, ct).ConfigureAwait(false) is null)
-                throw new InvalidDataException("The downloaded ffmpeg does not run on this system.");
+                throw new InvalidDataException(CoreText.T("FfmpegDoesNotRun"));
 
             SwapIn(staging);
             var manifest = new FfmpegManifest
@@ -147,7 +148,7 @@ public sealed class FfmpegInstaller
         await using var fs = File.OpenRead(file);
         var hash = Convert.ToHexStringLower(await SHA256.HashDataAsync(fs, ct).ConfigureAwait(false));
         if (!string.Equals(hash, expectedSha256, StringComparison.OrdinalIgnoreCase))
-            throw new InvalidDataException($"Checksum mismatch for {Path.GetFileName(file)}: expected {expectedSha256}, got {hash}.");
+            throw new InvalidDataException(CoreText.T("ChecksumMismatch", Path.GetFileName(file), expectedSha256, hash));
     }
 
     /// <summary>Extracts the wanted executables (by file name, anywhere in the archive) into <paramref name="dest"/>.</summary>
@@ -184,7 +185,7 @@ public sealed class FfmpegInstaller
         }
         var missing = wanted.Except(written.Select(Path.GetFileName)!, StringComparer.OrdinalIgnoreCase).ToList();
         if (missing.Count > 0)
-            throw new InvalidDataException($"{Path.GetFileName(archive)} does not contain: {string.Join(", ", missing)}");
+            throw new InvalidDataException(CoreText.T("ArchiveMissing", Path.GetFileName(archive), string.Join(", ", missing)));
         return written;
     }
 

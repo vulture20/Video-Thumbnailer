@@ -30,8 +30,10 @@ public sealed class Loc : INotifyPropertyChanged
         {
             _language = value;
             var code = Resolve(value);
+            Core.Localization.Lang.Current = code;
             if (code == _code) return;
             _code = code;
+            Core.Localization.Lang.Current = code;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Item[]"));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Code)));
             LanguageChanged?.Invoke();
@@ -47,18 +49,7 @@ public sealed class Loc : INotifyPropertyChanged
     }
 
     /// <summary>Language used for "System": German if the OS UI language is German, otherwise English.</summary>
-    public static string SystemLanguageCode()
-    {
-        var name = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-        if (string.IsNullOrEmpty(name) || name == "iv")
-        {
-            // Invariant culture (e.g. minimal Linux setups): fall back to the usual environment variables.
-            var env = Environment.GetEnvironmentVariable("LC_ALL") ?? Environment.GetEnvironmentVariable("LC_MESSAGES")
-                      ?? Environment.GetEnvironmentVariable("LANG") ?? "";
-            name = env.Length >= 2 ? env[..2].ToLowerInvariant() : "";
-        }
-        return name == "de" ? "de" : "en";
-    }
+    public static string SystemLanguageCode() => Core.Localization.Lang.Detect();
 
     public static string Resolve(UiLanguage l) => l switch
     {

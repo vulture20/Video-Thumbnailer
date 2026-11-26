@@ -15,8 +15,26 @@ public partial class SettingsViewModel : ObservableObject
     public static Choice[] Formats { get; } = Choice.ForEnum<ImageFormat>("Format");
     public static Choice[] Locations { get; } = Choice.ForEnum<OutputLocation>("Location");
     public static Choice[] OverwriteModes { get; } = Choice.ForEnum<OverwriteMode>("Overwrite");
+    public static Choice[] SheetLanguages { get; } = [new("auto", "SheetLang.auto"), new("en", "SheetLang.en"), new("de", "SheetLang.de")];
 
-    public SettingsViewModel() => Loc.Instance.LanguageChanged += () => OnPropertyChanged(nameof(PlaceholderHelp));
+    public SettingsViewModel() => Loc.Instance.LanguageChanged += () =>
+    {
+        OnPropertyChanged(nameof(PlaceholderHelp));
+        RefreshDefaultTemplate();
+    };
+
+    [ObservableProperty] private string _sheetLanguage = "auto";
+
+    partial void OnSheetLanguageChanged(string value) => RefreshDefaultTemplate();
+
+    private string EffectiveSheetLanguage => Core.Localization.Lang.Normalize(SheetLanguage) ?? Core.Localization.Lang.Current;
+
+    /// <summary>While the header shows a built-in default template, keep it in the language of the sheet.</summary>
+    private void RefreshDefaultTemplate()
+    {
+        if (Core.Localization.CoreText.IsDefaultHeaderTemplate(HeaderTemplate))
+            HeaderTemplate = Core.Localization.CoreText.DefaultHeaderTemplate(EffectiveSheetLanguage);
+    }
 
     // Layout
     [ObservableProperty] private decimal _columns;
@@ -69,13 +87,14 @@ public partial class SettingsViewModel : ObservableObject
         Order = s.Order; PortraitSwapGrid = s.PortraitSwapGrid;
         SkipStartPercent = (decimal)s.SkipStartPercent; SkipEndPercent = (decimal)s.SkipEndPercent;
         BackgroundColor = s.BackgroundColor; FontFamily = s.FontFamily;
+        SheetLanguage = Core.Localization.Lang.Normalize(s.TextLanguage) ?? "auto";
 
         TimestampEnabled = s.Timestamp.Enabled; TimestampPosition = s.Timestamp.Position;
         TimestampFontSize = (decimal)s.Timestamp.FontSize; TimestampColor = s.Timestamp.Color;
         TimestampOpacity = (decimal)s.Timestamp.Opacity; TimestampOutline = (decimal)s.Timestamp.OutlineWidth;
         TimestampShadow = s.Timestamp.Shadow;
 
-        HeaderEnabled = s.Header.Enabled; HeaderPosition = s.Header.Position; HeaderTemplate = s.Header.Template;
+        HeaderEnabled = s.Header.Enabled; HeaderPosition = s.Header.Position; HeaderTemplate = s.Header.EffectiveTemplate(EffectiveSheetLanguage);
         HeaderFontSize = (decimal)s.Header.FontSize; HeaderTitleFontSize = (decimal)s.Header.TitleFontSize;
 
         Format = s.Output.Format; Quality = s.Output.Quality; Location = s.Output.Location;
@@ -93,13 +112,14 @@ public partial class SettingsViewModel : ObservableObject
         s.Gap = (int)Gap; s.Margin = (int)Margin; s.Order = Order; s.PortraitSwapGrid = PortraitSwapGrid;
         s.SkipStartPercent = (double)SkipStartPercent; s.SkipEndPercent = (double)SkipEndPercent;
         s.BackgroundColor = BackgroundColor; s.FontFamily = string.IsNullOrWhiteSpace(FontFamily) ? null : FontFamily;
+        s.TextLanguage = Core.Localization.Lang.Normalize(SheetLanguage);
 
         s.Timestamp.Enabled = TimestampEnabled; s.Timestamp.Position = TimestampPosition;
         s.Timestamp.FontSize = (float)TimestampFontSize; s.Timestamp.Color = TimestampColor;
         s.Timestamp.Opacity = (double)TimestampOpacity; s.Timestamp.OutlineWidth = (float)TimestampOutline;
         s.Timestamp.Shadow = TimestampShadow;
 
-        s.Header.Enabled = HeaderEnabled; s.Header.Position = HeaderPosition; s.Header.Template = HeaderTemplate;
+        s.Header.Enabled = HeaderEnabled; s.Header.Position = HeaderPosition; s.Header.Template = Core.Localization.CoreText.IsDefaultHeaderTemplate(HeaderTemplate) ? null : HeaderTemplate;
         s.Header.FontSize = (float)HeaderFontSize; s.Header.TitleFontSize = (float)HeaderTitleFontSize;
 
         s.Output.Format = Format; s.Output.Quality = (int)Quality; s.Output.Location = Location;
