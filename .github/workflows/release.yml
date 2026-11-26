@@ -2,6 +2,7 @@ name: Release
 
 # Builds self-contained single-file binaries for all platforms.
 # Runs on tags like v0.1.0 (creates a GitHub release) or manually (artifacts only).
+# Files are named Video-Thumbnailer-<version>-<rid>.zip (manual runs: version 0.0.0-dev).
 on:
   push:
     tags: ['v*']
@@ -40,7 +41,8 @@ jobs:
           set -euo pipefail
           VERSION="${GITHUB_REF_NAME#v}"
           [[ "$GITHUB_REF_TYPE" == "tag" ]] || VERSION="0.0.0-dev"
-          OUT="dist/Video-Thumbnailer-${{ matrix.rid }}"
+          NAME="Video-Thumbnailer-${VERSION}-${{ matrix.rid }}"
+          OUT="dist/$NAME"
           for p in src/VideoThumbnailer.Gui src/VideoThumbnailer.Cli; do
             dotnet publish "$p" -c Release -r ${{ matrix.rid }} --self-contained \
               -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true \
@@ -49,12 +51,12 @@ jobs:
           done
           cp LICENSE README.md "$OUT/"
           cd dist
-          if command -v zip > /dev/null; then zip -qr "Video-Thumbnailer-${{ matrix.rid }}.zip" "Video-Thumbnailer-${{ matrix.rid }}"
-          else 7z a -tzip "Video-Thumbnailer-${{ matrix.rid }}.zip" "Video-Thumbnailer-${{ matrix.rid }}" > /dev/null; fi
+          if command -v zip > /dev/null; then zip -qr "$NAME.zip" "$NAME"
+          else 7z a -tzip "$NAME.zip" "$NAME" > /dev/null; fi
       - uses: actions/upload-artifact@v4
         with:
           name: Video-Thumbnailer-${{ matrix.rid }}
-          path: dist/Video-Thumbnailer-${{ matrix.rid }}.zip
+          path: dist/Video-Thumbnailer-*-${{ matrix.rid }}.zip
 
   release:
     if: github.ref_type == 'tag'

@@ -6,6 +6,9 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 
 ## [Unveröffentlicht]
 
+### Geändert
+- Release-Dateien tragen die Version im Namen, z. B. `Video-Thumbnailer-0.3.0-win-x64.zip` (auch der Ordner im ZIP) ([#10])
+
 ## [0.2.0] – 2026-11-26
 
 Zweisprachig (Deutsch/Englisch), Modi „Einfach“/„Erweitert“, Dark-Mode und neue Oberfläche „Leuchttisch“ mit Live-Vorschau.
@@ -64,3 +67,4 @@ Erste Version.
 [#6]: https://github.com/vulture20/Video-Thumbnailer/pull/6
 [#7]: https://github.com/vulture20/Video-Thumbnailer/pull/7
 [#8]: https://github.com/vulture20/Video-Thumbnailer/pull/8
+[#10]: https://github.com/vulture20/Video-Thumbnailer/pull/10
