@@ -208,7 +208,11 @@
               <TextBlock Grid.Row="3" Classes="label" Text="{l:T Background}" />
               <c:ColorField x:Name="BackgroundColorField" Grid.Row="3" Grid.Column="1" Text="{Binding Settings.BackgroundColor}" />
               <TextBlock Grid.Row="4" Classes="label" Text="{l:T FontFamily}" />
-              <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding Settings.FontFamily}" PlaceholderText="{l:T FontFamilyPlaceholder}" />
+              <Grid Grid.Row="4" Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                <TextBox Text="{Binding Settings.FontFamily}" PlaceholderText="{l:T FontFamilyPlaceholder}" />
+                <Button x:Name="PickFontButton" Grid.Column="1" Content="…" Width="26" Height="26" Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"
+                        Command="{Binding PickFontCommand}" ToolTip.Tip="{l:T FontPickerTitle}" />
+              </Grid>
               <CheckBox Grid.Row="5" Grid.ColumnSpan="2" Content="{l:T PortraitSwap}" IsChecked="{Binding Settings.PortraitSwapGrid}" />
             </Grid>
 

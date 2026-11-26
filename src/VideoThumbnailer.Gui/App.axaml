@@ -59,6 +59,7 @@
         <ColorPaletteResources x:Key="Dark" Accent="#3A9EE0" />
       </FluentTheme.Palettes>
     </FluentTheme>
+    <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml" />
 
     <Style Selector="TextBlock.section">
       <Setter Property="FontWeight" Value="SemiBold" />

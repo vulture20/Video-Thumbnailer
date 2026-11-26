@@ -6,6 +6,9 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 
 ## [Unveröffentlicht]
 
+### Hinzugefügt
+- Farbwähler: Klick auf das Farbmuster neben einem Farbfeld öffnet Spektrum, Palette und Regler mit Deckkraft; die Hex-Eingabe bleibt ([#42])
+- Schriftauswahl: „…“ neben der Schriftart öffnet eine durchsuchbare Liste der installierten Schriften, jede in ihrer eigenen Schrift, mit Vorschau von Info-Kopf und Zeitstempel ([#42])
 ### Geändert
 - Dokumentation auf den Stand von v0.5.0 gebracht: erledigte und doppelte offene Punkte in `docs/DECISIONS.md` bereinigt, überholte Entscheidungen markiert, README (Funktionen, Inhalt der ZIPs, Aufbau) aktualisiert; spätere Ideen aus der Spezifikation als Issues #21–#39 ([#41])
 ### Hinzugefügt
@@ -116,6 +119,7 @@ Erste Version.
 [0.1.0]: https://github.com/vulture20/Video-Thumbnailer/releases/tag/v0.1.0
 [#1]: https://github.com/vulture20/Video-Thumbnailer/pull/1
 [#2]: https://github.com/vulture20/Video-Thumbnailer/pull/2
+[#42]: https://github.com/vulture20/Video-Thumbnailer/pull/42
 [#3]: https://github.com/vulture20/Video-Thumbnailer/pull/3
 [#4]: https://github.com/vulture20/Video-Thumbnailer/pull/4
 [#5]: https://github.com/vulture20/Video-Thumbnailer/pull/5

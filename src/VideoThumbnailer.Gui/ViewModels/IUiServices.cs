@@ -10,5 +10,7 @@ public interface IUiServices
     /// <summary>Yes/No question; null button texts use the translated "Yes"/"No".</summary>
     Task<bool> ConfirmAsync(string title, string message, string? yes = null, string? no = null);
     Task ShowMessageAsync(string title, string message);
+    /// <summary>Font selection for the sheet: "" = built-in font, a family name, or null when cancelled.</summary>
+    Task<string?> PickFontAsync(string? current);
     void OpenPath(string path);
 }

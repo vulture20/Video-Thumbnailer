@@ -354,3 +354,72 @@ public class GuiFineOptionTests
         }
     }
 }
+
+public class GuiPickerTests
+{
+    [AvaloniaFact]
+    public void Color_picker_writes_hex_and_follows_the_text()
+    {
+        var window = new Window { Width = 600, Height = 600 };
+        var field = new ColorField { Text = "#FF102030", Width = 200, HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left, VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top };
+        window.Content = field;
+        window.Show();
+        field.PickerButton.Flyout!.ShowAt(field.PickerButton);
+        Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+        Assert.Equal(Avalonia.Media.Color.FromArgb(0xFF, 0x10, 0x20, 0x30), field.Picker.Color);
+
+        field.Picker.Color = Avalonia.Media.Color.FromArgb(0x80, 0xFF, 0x00, 0x00);
+        Assert.Equal("#80FF0000", field.Text);
+        field.Box.Text = "#FF00FF00";
+        Assert.Equal(Avalonia.Media.Color.FromArgb(0xFF, 0x00, 0xFF, 0x00), field.Picker.Color);
+
+        var shot = Environment.GetEnvironmentVariable("VTHUMB_SCREENSHOT_COLOR");
+        if (!string.IsNullOrEmpty(shot))
+        {
+#pragma warning disable CS0618
+            window.CaptureRenderedFrame()?.Save(shot);
+#pragma warning restore CS0618
+        }
+        window.Close();
+    }
+
+    [AvaloniaFact]
+    public async Task Font_picker_lists_installed_fonts_filters_and_returns_choice()
+    {
+        var owner = new Window();
+        owner.Show();
+        var families = VideoThumbnailer.Gui.Views.FontPickerWindow.InstalledFamilies();
+        var picker = new VideoThumbnailer.Gui.Views.FontPickerWindow(null);
+        var result = picker.ShowDialog<string?>(owner);
+        Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+
+        // Built-in font first and selected when nothing is set; all installed families follow.
+        Assert.Null(((VideoThumbnailer.Gui.Views.FontPickerWindow.Entry)picker.List.SelectedItem!).Family);
+        Assert.Equal(families.Count + 1, picker.Visible.Count);
+
+        var shot = Environment.GetEnvironmentVariable("VTHUMB_SCREENSHOT_FONT");
+        if (!string.IsNullOrEmpty(shot))
+        {
+#pragma warning disable CS0618
+            picker.CaptureRenderedFrame()?.Save(shot);
+#pragma warning restore CS0618
+        }
+
+        if (families.Count > 0)
+        {
+            var name = families[^1];
+            picker.Search.Text = name;
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            Assert.All(picker.Visible, e => Assert.Contains(name, e.Label, StringComparison.OrdinalIgnoreCase));
+            picker.List.SelectedItem = picker.Visible.First(e => e.Family == name);
+            picker.Accept();
+            Assert.Equal(name, await result);
+        }
+        else
+        {
+            picker.Accept();
+            Assert.Equal("", await result);
+        }
+        owner.Close();
+    }
+}

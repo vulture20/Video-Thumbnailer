@@ -110,6 +110,8 @@ public partial class MainWindow : Window, IUiServices
     public async Task ShowMessageAsync(string title, string message) =>
         await DialogWindow.ShowAsync(this, title, message, Loc.T("Ok"), null, null);
 
+    public Task<string?> PickFontAsync(string? current) => FontPickerWindow.ShowAsync(this, current);
+
     public void OpenPath(string path)
     {
         try
