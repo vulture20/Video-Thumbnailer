@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using VideoThumbnailer.Core.Input;
 using VideoThumbnailer.Core.Localization;
 using VideoThumbnailer.Core.Media;
 using VideoThumbnailer.Core.Util;
@@ -38,12 +39,12 @@ public static partial class InfoTemplate
         var nf = Lang.NumberFormat(lang);
         return key switch
         {
-            "filename" => Path.GetFileName(i.Path),
-            "name" => Path.GetFileNameWithoutExtension(i.Path),
-            "ext" => Path.GetExtension(i.Path).TrimStart('.'),
-            "folder" => Path.GetDirectoryName(i.Path) ?? "",
-            "path" => i.Path,
-            "title" => i.Title ?? Path.GetFileNameWithoutExtension(i.Path),
+            "filename" => VideoSource.FileName(i.Path),
+            "name" => VideoSource.NameWithoutExtension(i.Path),
+            "ext" => VideoSource.Extension(i.Path),
+            "folder" => VideoSource.Folder(i.Path),
+            "path" => VideoSource.DisplayPath(i.Path),
+            "title" => i.Title ?? VideoSource.NameWithoutExtension(i.Path),
             "container" => i.ContainerFormat ?? na,
             "size" => Formatting.Size(i.FileSize, arg, nf),
             "duration" => Formatting.Duration(i.Duration),

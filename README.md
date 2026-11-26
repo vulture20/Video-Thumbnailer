@@ -10,9 +10,12 @@ Free, cross-platform video contact sheet generator with GUI and command line.
 ## Funktionen
 
 - Einzelne Dateien oder ganze Ordner (rekursiv) per Dialog, Drag & Drop oder Kommandozeile
+- Videos auf einem Webserver per HTTP(S)-Adresse, ohne sie vorher herunterzuladen: ffmpeg lädt nur die Stellen um die Aufnahmezeitpunkte (Knopf mit Weltkugel, Adresse aus dem Browser hineinziehen oder als Argument in der Kommandozeile)
 - Alle Formate, die ffmpeg lesen kann (MP4, MKV, AVI, MOV, WebM, WMV, TS …), inkl. 10-Bit/HDR, AV1, gedrehte und anamorphe Videos
 - Raster aus Spalten × Zeilen, Breite, Abstand, Rand; automatische Kachelhöhe, Anpassung für Hochkant-Videos
 - Reihenfolge zeilenweise, spaltenweise oder zufällig
+- Schwarze oder einfarbige Bilder (Abblende, Schnitt) werden automatisch durch ein gutes Bild kurz davor oder danach ersetzt (abschaltbar, Suchbereich einstellbar)
+- Aufnahmezeitpunkte von Hand: Kachel in der Vorschau anklicken und den Zeitpunkt per Schieberegler, Eingabe oder bildgenau wählen (bei animierten Sheets auch die Länge des Ausschnitts); in der Kommandozeile mit `--times`
 - Zeitstempel in jeder Kachel (5 Positionen, Farbe, Deckkraft, Kontur- und Schattenfarbe, optional mit Millisekunden)
 - Info-Kopf mit frei konfigurierbaren Video-Infos (Name, Größe, Dauer, Auflösung, Codecs, Bitrate, FPS, Audio …), eigene Titel- und Textfarbe
 - Ausgabe als JPG, PNG oder WebP; optional jede Aufnahme als Einzelbild
@@ -50,7 +53,7 @@ Die Prüfsummen aller Dateien stehen in `checksums.sha256`.
 ## Kommandozeile
 
 ```text
-vthumb [Optionen] <Datei|Ordner>...
+vthumb [Optionen] <Datei|Ordner|URL>...
 vthumb presets list|show|import|export|delete
 vthumb ffmpeg status|check|install|update|uninstall
 ```
@@ -73,11 +76,25 @@ vthumb -a mp4 --clip-seconds 3 --fps 10 film.mkv     # -> film.sheet.mp4
 # Zeitstempel gelb mit roter Kontur und Millisekunden, grüner Titel im Info-Kopf
 vthumb --timestamp-color "#FFFF00" --outline-color "#FF0000" --milliseconds --title-color "#00FF00" film.mkv
 
+# Video direkt vom Webserver (nur die nötigen Teile werden geladen), Sheet nach ~/Sheets
+vthumb -o ~/Sheets "https://example.org/videos/vortrag.mp4"
+
+# Zeitpunkte von Hand: Kachel 1 bei 1:00, Kachel 2 automatisch, Kachel 3 bei 5:30 (Ausschnitt 2 s lang)
+vthumb --columns 3 --rows 1 --times "1:00,-,5:30+2" film.mkv
+
+# Schwarze Bilder nicht ersetzen bzw. weiter suchen (Standard: an, ±2 s)
+vthumb --no-skip-black film.mkv
+vthumb --black-search 5 film.mkv
+
 # Eigene Einstellungen als Preset speichern
 vthumb --columns 5 --rows 6 --no-header --save-preset "5x6 ohne Kopf"
 ```
 
 Ohne `--preset` werden die zuletzt in der Oberfläche benutzten Einstellungen verwendet. Jede Einstellung eines Presets lässt sich auch per Option ändern (Raster, Zeitstempel samt Farben, Kontur, Schatten und Millisekunden, Info-Kopf samt Farben und Schriftgrößen, Ausgabe, Animation). Farben als `#RRGGBB` oder `#AARRGGBB` (AA = Deckkraft). Alle Optionen: `vthumb --help`.
+
+**Videos per URL:** `http://` und `https://` werden direkt von ffmpeg gelesen. Schnell geht das, wenn der Server Range-Anfragen unterstützt (übliche Webserver und CDNs tun das); sonst muss ffmpeg bis zur Stelle lesen, und Formate mit Index am Dateiende (manche MP4) lassen sich dann gar nicht öffnen. Nach 30 s ohne Daten wird abgebrochen. Da es „neben dem Video“ nicht gibt, landen die Sheets im Ausgabeordner, ohne einen solchen in der Oberfläche im Bilder-Ordner des Benutzers und in der Kommandozeile im aktuellen Ordner. Name, Endung und `{folder}`/`{path}` stammen aus der Adresse; Benutzername, Passwort und Query-Parameter (oft Zugangsschlüssel) erscheinen nicht im Sheet.
+
+**Zeitpunkte von Hand:** `--times` nimmt eine Liste je Kachel in Zeitfolge (bei „zufällig“ also nicht nach Position): Sekunden, `mm:ss` oder `hh:mm:ss` (mit Nachkommastellen), `-` für automatisch, `+s` für die Länge des Ausschnitts bei animierten Sheets. Die Liste gilt für alle angegebenen Videos und gehört nicht zum Preset. Von Hand gewählte Zeitpunkte werden nie als „schwarz“ ersetzt. In der Oberfläche gelten sie für das Video in der Warteschlange und bleiben bis zum Schließen des Programms erhalten.
 
 Sprache: `--lang de|en|auto` (oder Umgebungsvariable `VTHUMB_LANG`) für Hilfe und Meldungen; ohne Angabe gilt die in der Oberfläche gewählte Sprache, sonst die Systemsprache. `--sheet-lang de|en|auto` legt die Sprache der Texte im Sheet fest (z. B. „Größe:“/„Size:“, Dezimalkomma).
 Exit-Codes: 0 ok, 1 einzelne Videos fehlgeschlagen, 2 Aufruffehler, 3 ffmpeg fehlt, 130 abgebrochen.

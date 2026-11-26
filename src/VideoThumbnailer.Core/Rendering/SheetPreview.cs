@@ -6,7 +6,9 @@ using VideoThumbnailer.Core.Settings;
 namespace VideoThumbnailer.Core.Rendering;
 
 /// <summary>Result of <see cref="SheetPreview.Render"/>: the image plus the size of the real sheet.</summary>
-public sealed record SheetPreviewResult(SKBitmap Bitmap, int SheetWidth, int SheetHeight, int Tiles, int RealFrames = 0) : IDisposable
+/// <param name="TileRects">Tile rectangles in sheet pixels, in timeline order (to find the tile under the mouse).</param>
+public sealed record SheetPreviewResult(SKBitmap Bitmap, int SheetWidth, int SheetHeight, int Tiles, int RealFrames = 0,
+                                        IReadOnlyList<TileRect>? TileRects = null) : IDisposable
 {
     public void Dispose() => Bitmap.Dispose();
 }
@@ -40,10 +42,10 @@ public static class SheetPreview
     };
 
     /// <summary>Capture times of the sheet for these settings and this video (same plan as the real sheet).</summary>
-    public static double[] PlanTimes(SheetSettings settings, MediaInfo info)
+    public static PlannedTime[] PlanTimes(SheetSettings settings, MediaInfo info, IReadOnlyList<ManualTime?>? manual = null)
     {
         var (s, layout) = Prepare(settings, info);
-        return TimestampPlanner.Plan(info.Duration, layout.Tiles.Count, s.SkipStartPercent, s.SkipEndPercent);
+        return TimestampPlanner.Plan(info.Duration, layout.Tiles.Count, s.SkipStartPercent, s.SkipEndPercent, manual);
     }
 
     private static (SheetSettings, GridLayout) Prepare(SheetSettings settings, MediaInfo info)
@@ -52,20 +54,23 @@ public static class SheetPreview
         s.Normalize();
         var aspect = info.Video?.DisplayAspect ?? 16.0 / 9.0;
         // Same seed as SheetGenerator, so "random" order matches the real sheet.
-        var seed = StringComparer.Ordinal.GetHashCode(Path.GetFileName(info.Path));
+        var seed = StringComparer.Ordinal.GetHashCode(Input.VideoSource.FileName(info.Path));
         return (s, GridLayout.Create(s, aspect, SheetRenderer.MeasureHeader(s, info), new Random(seed)));
     }
 
     /// <param name="frame">
-    /// Returns the real frame for a capture time, or null to draw a placeholder. Returned bitmaps stay owned
-    /// by the caller (they are not disposed here). Null provider = placeholders only.
+    /// Returns the real frame for a planned capture time (with the time actually used, e.g. after skipping a black
+    /// frame), or null to draw a placeholder. Returned bitmaps stay owned by the caller (they are not disposed here).
+    /// Null provider = placeholders only.
     /// </param>
     /// <param name="maxWidth">The returned bitmap is scaled down to at most this width (the sheet size is reported unscaled).</param>
-    public static SheetPreviewResult Render(SheetSettings settings, MediaInfo info, int maxWidth = 1400, Func<double, SKBitmap?>? frame = null)
+    /// <param name="manual">Capture times chosen by hand for this video (see <see cref="TimestampPlanner"/>).</param>
+    public static SheetPreviewResult Render(SheetSettings settings, MediaInfo info, int maxWidth = 1400, Func<PlannedTime, CapturedFrame?>? frame = null,
+                                            IReadOnlyList<ManualTime?>? manual = null)
     {
         var (s, layout) = Prepare(settings, info);
         var aspect = info.Video?.DisplayAspect ?? 16.0 / 9.0;
-        var times = TimestampPlanner.Plan(info.Duration, layout.Tiles.Count, s.SkipStartPercent, s.SkipEndPercent);
+        var times = TimestampPlanner.Plan(info.Duration, layout.Tiles.Count, s.SkipStartPercent, s.SkipEndPercent, manual);
 
         var sceneW = Math.Clamp(layout.TileWidth, 16, 320);
         var sceneH = Math.Max(2, (int)Math.Round(sceneW / aspect));
@@ -76,18 +81,23 @@ public static class SheetPreview
         {
             for (var i = 0; i < times.Length; i++)
             {
-                var bmp = frame?.Invoke(times[i]);
-                if (bmp is not null) real++;
-                else scenes.Add(bmp = Scene(i, sceneW, sceneH));
-                frames.Add(new CapturedFrame(times[i], bmp));
+                if (frame?.Invoke(times[i]) is { Bitmap: not null } got)
+                {
+                    real++;
+                    frames.Add(got);
+                    continue;
+                }
+                var scene = Scene(i, sceneW, sceneH);
+                scenes.Add(scene);
+                frames.Add(new CapturedFrame(times[i].Time, scene));
             }
             var full = SheetRenderer.Render(s, info, layout, frames);
             if (full.Width <= maxWidth)
-                return new SheetPreviewResult(full, layout.SheetWidth, layout.SheetHeight, layout.Tiles.Count, real);
+                return new SheetPreviewResult(full, layout.SheetWidth, layout.SheetHeight, layout.Tiles.Count, real, layout.Tiles);
             var h = Math.Max(1, (int)Math.Round((double)full.Height * maxWidth / full.Width));
             var small = full.Resize(new SKImageInfo(maxWidth, h), new SKSamplingOptions(SKCubicResampler.Mitchell)) ?? full;
             if (!ReferenceEquals(small, full)) full.Dispose();
-            return new SheetPreviewResult(small, layout.SheetWidth, layout.SheetHeight, layout.Tiles.Count, real);
+            return new SheetPreviewResult(small, layout.SheetWidth, layout.SheetHeight, layout.Tiles.Count, real, layout.Tiles);
         }
         finally
         {

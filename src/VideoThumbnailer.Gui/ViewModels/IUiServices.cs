@@ -12,5 +12,8 @@ public interface IUiServices
     Task ShowMessageAsync(string title, string message);
     /// <summary>Font selection for the sheet: "" = built-in font, a family name, or null when cancelled.</summary>
     Task<string?> PickFontAsync(string? current);
+    /// <summary>Dialog for the capture time of one tile; changes reach the preview through the editor while it is open.</summary>
+    Task<TileTimeResult> EditTileTimeAsync(TileTimeViewModel editor);
+    /// <summary>Opens a file or folder, or a web address in the browser.</summary>
     void OpenPath(string path);
 }

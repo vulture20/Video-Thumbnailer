@@ -40,7 +40,7 @@ public sealed class BatchProcessor(FfmpegTools tools)
                 job.Update(JobStatus.Running, 0);
                 try
                 {
-                    var result = await generator.GenerateAsync(job.InputPath, job.InputRoot, s, new SyncProgress(job), ct).ConfigureAwait(false);
+                    var result = await generator.GenerateAsync(job.InputPath, job.InputRoot, s, new SyncProgress(job), ct, job.ManualTimes).ConfigureAwait(false);
                     job.Update(result.Status, result.Status == JobStatus.Done ? 1 : null, result.Message ?? "", result.SheetPath ?? "", jsw.Elapsed);
                 }
                 catch (OperationCanceledException) when (ct.IsCancellationRequested)

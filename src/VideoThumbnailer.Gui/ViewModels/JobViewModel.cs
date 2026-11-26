@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using VideoThumbnailer.Core.Batch;
+using VideoThumbnailer.Core.Input;
 using VideoThumbnailer.Gui.Localization;
 
 namespace VideoThumbnailer.Gui.ViewModels;
@@ -11,6 +12,23 @@ public partial class JobViewModel : ObservableObject
     public string FileName { get; }
     public string Folder { get; }
     public long FileSize { get; }
+    /// <summary>Video on a web server (URL), read directly by ffmpeg.</summary>
+    public bool IsRemote { get; }
+    /// <summary>Address or path for the tooltip (URLs without credentials and query).</summary>
+    public string ShownPath => VideoSource.DisplayPath(Job.InputPath);
+
+    /// <summary>Some capture times of this video were chosen by hand.</summary>
+    public bool HasManualTimes => Job.HasManualTimes;
+    public int ManualTimeCount => Job.ManualTimes?.Count(t => t is not null) ?? 0;
+    public string ManualTimesText => Loc.T("JobManualTimes", ManualTimeCount);
+
+    /// <summary>Call after <see cref="ThumbnailJob.ManualTimes"/> changed.</summary>
+    public void RefreshManualTimes()
+    {
+        OnPropertyChanged(nameof(HasManualTimes));
+        OnPropertyChanged(nameof(ManualTimeCount));
+        OnPropertyChanged(nameof(ManualTimesText));
+    }
 
     [ObservableProperty] private JobStatus _status;
     [ObservableProperty] private double _progress;
@@ -20,9 +38,11 @@ public partial class JobViewModel : ObservableObject
     public JobViewModel(ThumbnailJob job)
     {
         Job = job;
-        FileName = Path.GetFileName(job.InputPath);
-        Folder = Path.GetDirectoryName(job.InputPath) ?? "";
-        try { FileSize = new FileInfo(job.InputPath).Length; } catch { FileSize = 0; }
+        FileName = VideoSource.FileName(job.InputPath);
+        Folder = VideoSource.Folder(job.InputPath);
+        IsRemote = VideoSource.IsUrl(job.InputPath);
+        // Remote videos: the size is only known once ffprobe has read them.
+        if (!IsRemote) try { FileSize = new FileInfo(job.InputPath).Length; } catch { FileSize = 0; }
         Refresh();
     }
 
@@ -58,5 +78,6 @@ public partial class JobViewModel : ObservableObject
         OnPropertyChanged(nameof(IsOk));
         OnPropertyChanged(nameof(IsError));
         OnPropertyChanged(nameof(IsActive));
+        RefreshManualTimes();
     }
 }

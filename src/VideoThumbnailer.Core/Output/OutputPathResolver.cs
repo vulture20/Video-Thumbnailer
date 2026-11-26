@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using VideoThumbnailer.Core.Input;
 using VideoThumbnailer.Core.Rendering;
 using VideoThumbnailer.Core.Settings;
 
@@ -9,9 +10,26 @@ public static partial class OutputPathResolver
     [GeneratedRegex(@"\{(?<key>[a-zA-Z]+)\}")]
     private static partial Regex Placeholder();
 
+    /// <summary>
+    /// Folder for sheets of remote videos (URLs) when no output folder is set: there is no "next to the video".
+    /// The GUI uses the user's pictures folder, the command line sets the current directory.
+    /// </summary>
+    public static string RemoteFallbackFolder { get; set; } = DefaultRemoteFallbackFolder();
+
+    private static string DefaultRemoteFallbackFolder()
+    {
+        var pictures = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+        if (!string.IsNullOrEmpty(pictures)) return pictures;
+        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        return string.IsNullOrEmpty(home) ? Environment.CurrentDirectory : home;
+    }
+
     /// <summary>Directory where the sheet for <paramref name="videoPath"/> is written.</summary>
     public static string ResolveDirectory(OutputSettings o, string videoPath, string? inputRoot)
     {
+        // A URL has no folder of its own: always the output folder, or the fallback when none is set.
+        if (VideoSource.IsUrl(videoPath))
+            return string.IsNullOrWhiteSpace(o.Folder) ? RemoteFallbackFolder : Path.GetFullPath(o.Folder);
         var videoDir = Path.GetDirectoryName(Path.GetFullPath(videoPath)) ?? ".";
         switch (o.Location)
         {
@@ -36,8 +54,8 @@ public static partial class OutputPathResolver
         var t = now ?? DateTime.Now;
         var result = Placeholder().Replace(pattern, m => m.Groups["key"].Value.ToLowerInvariant() switch
         {
-            "name" => Path.GetFileNameWithoutExtension(videoPath),
-            "ext" => Path.GetExtension(videoPath).TrimStart('.'),
+            "name" => VideoSource.NameWithoutExtension(videoPath),
+            "ext" => VideoSource.Extension(videoPath),
             "preset" => s.Name,
             "cols" => s.Columns.ToString(),
             "rows" => s.Rows.ToString(),
@@ -47,7 +65,7 @@ public static partial class OutputPathResolver
         });
         foreach (var c in Path.GetInvalidFileNameChars().Append('/').Append('\\'))
             result = result.Replace(c, '_');
-        return string.IsNullOrWhiteSpace(result) ? Path.GetFileNameWithoutExtension(videoPath) : result;
+        return string.IsNullOrWhiteSpace(result) ? VideoSource.NameWithoutExtension(videoPath) : result;
     }
 
     /// <summary>Marker in the name of animated sheets ("movie.sheet.mp4"), so they never replace a video and are skipped when folders are scanned.</summary>

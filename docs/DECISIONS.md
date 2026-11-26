@@ -181,6 +181,36 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 |---|---|---|
 | 26.11.2026 | Die Bilder in `docs/images` (`gui.png`, `gui-de.png`, `gui-dark.png`, `gui-narrow.png`) erzeugt der Test `Readme_screenshots` (headless, echtes Testvideo per ffmpeg): `VTHUMB_README_SHOTS=$PWD/docs/images dotnet test --filter Readme_screenshots` (absoluter Pfad). Neu ist das Bild mit eingeklappter Warteschlange im schmalen Fenster | Bilder lassen sich nach jeder Oberflächenänderung mit einem Befehl neu erzeugen |
 
+### Videos per URL (#21)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 26.11.2026 | Eingabe `http://` und `https://` (keine anderen Protokolle). ffmpeg/ffprobe lesen die Adresse direkt, mit Range-Anfragen springen sie zu den Aufnahmezeitpunkten; es wird nichts zwischengespeichert | kein vollständiger Download, kein eigener HTTP-Code |
+| 26.11.2026 | Oberfläche: Knopf mit Weltkugel neben „+ Dateien…“/„+ Ordner…“ (auch in der eingeklappten Leiste) öffnet ein Eingabefeld, mehrere Adressen durch Leerzeichen getrennt; eine aus dem Browser gezogene Adresse wird ebenfalls übernommen. Kommandozeile: URL statt Datei | kein eigener Dialog nötig; in die 280 px breite Warteschlange passen keine drei beschrifteten Knöpfe |
+| 26.11.2026 | Zeitüberschreitung 30 s ohne Daten (`-rw_timeout`), automatisches Wiederverbinden bis 5 s (`-reconnect`, `-reconnect_on_network_error`). Ein Fehler (Server weg, 404) lässt nur dieses Video fehlschlagen | hängende Server blockieren die Warteschlange nicht |
+| 26.11.2026 | Server ohne Range-Unterstützung werden nicht gesondert behandelt: ffmpeg liest dann bis zur Stelle (langsam); MP4 mit Index am Dateiende lassen sich so nicht öffnen und schlagen mit der ffprobe-Meldung fehl | seltener Fall; ein Download-Modus wäre ein eigenes Thema |
+| 26.11.2026 | Dateiname, Endung, `{name}`/`{ext}` und der Seed für „zufällig“ kommen aus dem letzten Pfadteil der Adresse (URL-dekodiert); `{folder}` ist die Adresse bis zum letzten „/“, `{path}` die ganze Adresse, jeweils **ohne** Benutzername/Passwort, Query und Fragment. Die Dateigröße liefert ffprobe (Content-Length) | Query-Parameter enthalten oft Zugangsschlüssel, die nicht auf einem Bild landen sollen |
+| 26.11.2026 | Ausgabe: „neben dem Video“ und „Unterordner“ gibt es bei URLs nicht; die Sheets gehen in den eingestellten Ausgabeordner, sonst in der Oberfläche in den Bilder-Ordner des Benutzers, in der Kommandozeile in den aktuellen Ordner. Ordnerstruktur beibehalten entfällt | vorhersehbarer Ort ohne Rückfrage |
+| 26.11.2026 | Live-Vorschau funktioniert auch mit URLs (Bilder laden im Hintergrund, bei langsamen Quellen entsprechend später); eine URL wird je Programmlauf nur einmal mit ffprobe gelesen (keine Prüfung auf Änderungen wie bei Dateien) | Vorschau bleibt bedienbar; Änderungsprüfung bräuchte zusätzliche Anfragen |
+
+### Schwarze Bilder überspringen (#22)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 26.11.2026 | Erkennung im Programm am fertig dekodierten Bild statt mit dem ffmpeg-Filter `blackframe`: Helligkeit (Rec. 709) auf einem Raster von höchstens 64 × 64 Punkten. „Leer“ ist ein Bild mit Standardabweichung &lt; 6 (einfarbig, auch weiß oder blau) oder mit Mittelwert &lt; 24 und Standardabweichung &lt; 12 (schwarz/fast schwarz). Abspann (weiße Schrift auf Schwarz) gilt nicht als leer | kein zusätzlicher ffmpeg-Lauf für Bilder, die gut sind; erkennt auch einfarbige Bilder, die `blackframe` nicht sieht |
+| 26.11.2026 | Suche nach einem Ersatz in Schritten von 0,5 s abwechselnd danach und davor (+0,5, −0,5, +1, −1 …) bis zum Suchbereich, Standard ±2 s (einstellbar 0,5–30 s); das erste gute Bild gewinnt. Findet sich keins, bleibt das ursprüngliche Bild | nächstgelegenes Bild verändert die Verteilung am wenigsten |
+| 26.11.2026 | Standardmäßig **an** (`skipBlackFrames`, `blackFrameSearchSeconds` im Preset), auch für bestehende Presets; abschaltbar unter „Erweitert“ (Layout) und mit `--no-skip-black`, Suchbereich mit `--black-search` | die Spezifikation verlangt den automatischen Ersatz; bei guten Bildern kostet er nichts |
+| 26.11.2026 | Der Zeitstempel zeigt den tatsächlich verwendeten Zeitpunkt, ebenso der Name der Einzelbilder | |
+| 26.11.2026 | Animierte Sheets: Ist das erste Bild eines Ausschnitts leer, beginnt der Ausschnitt beim nächsten guten Bild. Live-Vorschau: ersetzt genauso (die Vorschau zeigt also, was im Sheet landet) | gleiche Logik überall |
+| 26.11.2026 | Von Hand gewählte Zeitpunkte (#23) werden nie ersetzt | die Wahl ist Absicht |
+
+### Aufnahmezeitpunkte von Hand (#23)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 26.11.2026 | Zeitpunkte gehören zum einzelnen Video, nicht zum Preset: in der Oberfläche zum Eintrag der Warteschlange (bis zum Schließen des Programms, nicht gespeichert), in der Kommandozeile per `--times` für alle angegebenen Videos | ein Preset gilt für viele Videos; Speichern je Video gehört zur JSON-Begleitdatei (#38) |
+| 26.11.2026 | Zuordnung je Kachel in Zeitfolge (Index 0 = früheste Kachel), nicht nach Position im Raster; leere Einträge bleiben automatisch. Ändern sich Spalten/Zeilen, bleiben die Zeitpunkte am Index stehen (überzählige werden ignoriert, kommen bei mehr Kacheln wieder); bei „zufällig“ wandert die Kachel mit ihrem Zeitpunkt. Zeitpunkte außerhalb des Videos werden auf Anfang/Ende begrenzt | einfache, vorhersehbare Regel, auch für die Kommandozeile |
+| 26.11.2026 | Bedienung: Kachel in der Live-Vorschau anklicken (nur bei echten Bildern eines Videos aus der Warteschlange) öffnet einen Dialog mit Schieberegler über das ganze Video, Zeitfeld (hh:mm:ss, mm:ss oder Sekunden), Schritten ±10 s, ±1 s, ±1 Bild; Tastatur über den Schieberegler (Pfeile 1 s, Bild auf/ab 10 s). Jede Änderung erscheint sofort in der Vorschau; „Abbrechen“ stellt den alten Stand her, „Automatisch“ setzt die Kachel zurück. Über der Vorschau zeigt „✎ n von Hand ✕“ die Anzahl und setzt alle zurück; in der Warteschlange markiert ✎ solche Videos | die Vorschau dient als Bildanzeige des Dialogs, kein zweiter Player nötig |
+| 26.11.2026 | Animierte Sheets: je Kachel optional eine eigene Länge des Ausschnitts (Dialog bzw. `5:30+2`); die Animation dauert so lange wie der längste Ausschnitt, kürzere bleiben auf ihrem letzten Bild stehen | wie bisher bei Ausschnitten, die am Videoende kürzer sind |
+| 26.11.2026 | Kommandozeile: `--times "1:00,5:30+2,-,1:02:10.5"` (Komma oder Semikolon als Trenner; Komma als Dezimalzeichen nur im Dialog) | |
+
 ## Offen
 
 | Seit | Punkt | Stand |
@@ -191,19 +221,14 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Pakete für Windows arm64, Linux arm64 und Intel-Mac werden nur gebaut, nie gestartet (die Runner können sie nicht ausführen) | Rückmeldung von Nutzern mit solchen Geräten |
 | 26.11.2026 | Windows arm64 hat keinen fest hinterlegten ffmpeg-Build (BtbN hebt Builds nur 14 Tage auf, gyan.dev baut kein arm64) | bei einer dauerhaften arm64-Quelle nachziehen |
 | 26.11.2026 | Workflow „ffmpeg pins“ hat seit #19 noch keinen neuen Build eingetragen. Seine Commits mit `GITHUB_TOKEN` starten keine CI; wird `main` geschützt, schlägt sein direkter Push fehl. Die Adresse der Liste (`FfmpegPins.RemoteUrl`) enthält den Repo-Namen | ersten echten Lauf beobachten |
-| 26.11.2026 | Kommandozeile kann nicht alle Einstellungen als Option setzen (u. a. Zeitstempel-Farbe, Deckkraft, Schriftgröße, Kontur, Schatten, Millisekunden, Farben des Info-Kopfs); bisher nur über ein Preset | wird ergänzt |
-| 26.11.2026 | Farbauswahl- und Schriftauswahl-Dialog in der Oberfläche (bisher Hex-Textfelder bzw. Schriftname als Text) | Wunsch von Vulli, wird umgesetzt |
 | 26.11.2026 | Release-Notizen auf GitHub sind die automatisch erzeugte PR-Liste, nicht der CHANGELOG-Abschnitt. Das Release v0.3.0 heißt „v.0.3.0“ (Tippfehler im Titel) | Notizen beim nächsten Release aus dem CHANGELOG übernehmen; Titel von Hand korrigieren |
 
 ## Spätere Ideen (P2/P3, noch ohne Entscheidung)
 
-Aus der Spezifikation, je ein Issue. Erledigt sind aus P2 bereits: Kommandozeile, Live-Vorschau, Deutsch/Englisch, Preset-Import/-Export, „Einfach“/„Erweitert“ statt Optionsdialog, Hintergrundfarbe und animierte Sheets (MP4/WebM/GIF). Die Wahl der Render-Engine (P3) entfällt: ffmpeg ist das einzige Backend.
+Aus der Spezifikation, je ein Issue. Erledigt sind aus P2 bereits: Kommandozeile, Live-Vorschau, Deutsch/Englisch, Preset-Import/-Export, „Einfach“/„Erweitert“ statt Optionsdialog, Hintergrundfarbe, animierte Sheets (MP4/WebM/GIF), Videos per URL (#21), schwarze Bilder überspringen (#22) und Aufnahmezeitpunkte von Hand (#23). Die Wahl der Render-Engine (P3) entfällt: ffmpeg ist das einzige Backend.
 
 | Prio | Idee | Issue |
 |---|---|---|
-| P2 | Remote-Videos per HTTP-URL ohne vollständigen Download | #21 |
-| P2 | Schwarze Frames erkennen und durch benachbarte ersetzen | #22 |
-| P2 | Aufnahmezeitpunkte von Hand wählen | #23 |
 | P2 | Spezial-Raster mit großen und kleinen Kacheln | #24 |
 | P2 | Bildgröße „An Bildschirm anpassen“ | #25 |
 | P2 | Hintergrundbild | #26 |

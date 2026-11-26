@@ -183,6 +183,9 @@
       <Setter Property="FontSize" Value="16" />
     </Style>
 
+    <!-- Preview with real pictures: tiles can be clicked to choose their capture time -->
+    <Style Selector="Image.editable"><Setter Property="Cursor" Value="Hand" /></Style>
+
     <!-- Queue status -->
     <Style Selector="TextBlock.status">
       <Setter Property="FontSize" Value="11" />

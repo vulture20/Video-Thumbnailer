@@ -46,6 +46,8 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private bool _portraitSwapGrid;
     [ObservableProperty] private decimal _skipStartPercent;
     [ObservableProperty] private decimal _skipEndPercent;
+    [ObservableProperty] private bool _skipBlackFrames;
+    [ObservableProperty] private decimal _blackFrameSearchSeconds;
     [ObservableProperty] private string _backgroundColor = "";
     [ObservableProperty] private string? _fontFamily;
 
@@ -110,6 +112,7 @@ public partial class SettingsViewModel : ObservableObject
         Columns = s.Columns; Rows = s.Rows; SheetWidth = s.SheetWidth; Gap = s.Gap; Margin = s.Margin;
         Order = s.Order; PortraitSwapGrid = s.PortraitSwapGrid;
         SkipStartPercent = (decimal)s.SkipStartPercent; SkipEndPercent = (decimal)s.SkipEndPercent;
+        SkipBlackFrames = s.SkipBlackFrames; BlackFrameSearchSeconds = (decimal)s.BlackFrameSearchSeconds;
         BackgroundColor = s.BackgroundColor; FontFamily = s.FontFamily;
         SheetLanguage = Core.Localization.Lang.Normalize(s.TextLanguage) ?? "auto";
 
@@ -141,6 +144,7 @@ public partial class SettingsViewModel : ObservableObject
         s.Columns = (int)Columns; s.Rows = (int)Rows; s.SheetWidth = (int)SheetWidth; s.TileWidth = null;
         s.Gap = (int)Gap; s.Margin = (int)Margin; s.Order = Order; s.PortraitSwapGrid = PortraitSwapGrid;
         s.SkipStartPercent = (double)SkipStartPercent; s.SkipEndPercent = (double)SkipEndPercent;
+        s.SkipBlackFrames = SkipBlackFrames; s.BlackFrameSearchSeconds = (double)BlackFrameSearchSeconds;
         s.BackgroundColor = BackgroundColor; s.FontFamily = string.IsNullOrWhiteSpace(FontFamily) ? null : FontFamily;
         s.TextLanguage = Core.Localization.Lang.Normalize(SheetLanguage);
 

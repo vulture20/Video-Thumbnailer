@@ -10,6 +10,7 @@ using VideoThumbnailer.Core.Batch;
 using VideoThumbnailer.Core.Extraction;
 using VideoThumbnailer.Core.Ffmpeg;
 using VideoThumbnailer.Core.Input;
+using VideoThumbnailer.Core.Layout;
 using VideoThumbnailer.Core.Rendering;
 using VideoThumbnailer.Core.Settings;
 using VideoThumbnailer.Core.Util;
@@ -52,7 +53,12 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private Bitmap? _previewImage;
     [ObservableProperty] private string _previewCaption = "";
     /// <summary>Video whose name and size appear in the preview: the selected one, otherwise the first in the queue.</summary>
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(PreviewTitle))] private JobViewModel? _previewJob;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(PreviewTitle), nameof(HasPreviewManualTimes), nameof(PreviewManualTimesText))] private JobViewModel? _previewJob;
+    /// <summary>The previewed video has capture times chosen by hand (shows the reset button).</summary>
+    public bool HasPreviewManualTimes => PreviewJob?.HasManualTimes == true;
+    public string PreviewManualTimesText => Loc.T("ManualTimesReset", PreviewJob?.ManualTimeCount ?? 0);
+    /// <summary>Tiles can be clicked to choose their time: real pictures of a queued video are shown.</summary>
+    [ObservableProperty] private bool _canEditTiles;
     public string PreviewTitle => PreviewJob?.FileName ?? Loc.T("PreviewSampleName");
     [ObservableProperty] private string _previewNote = Loc.T("PreviewNote");
     /// <summary>Live preview on (default) or off; off stops rendering and every ffmpeg run for the preview.</summary>
@@ -131,6 +137,7 @@ public partial class MainViewModel : ObservableObject
         if (!IsRunning) StatusText = Loc.T("StatusIntro");
         OnPropertyChanged(nameof(PreviewTitle));
         OnPropertyChanged(nameof(QueueTitle));
+        OnPropertyChanged(nameof(PreviewManualTimesText));
         UpdatePreviewTexts();
         SchedulePreview();
     }
@@ -237,7 +244,8 @@ public partial class MainViewModel : ObservableObject
 
     private enum PreviewMode { Sample, NoFfmpeg, Unreadable, Real }
 
-    private sealed record PreviewData(byte[] Png, int Width, int Height, int Columns, int Rows, int Tiles, int RealFrames);
+    private sealed record PreviewData(byte[] Png, int Width, int Height, int Columns, int Rows, int Tiles, int RealFrames,
+                                      IReadOnlyList<TileRect> TileRects, PlannedTime[] Plan, Core.Media.MediaInfo Info, SheetSettings Settings, string? JobPath);
 
     private PreviewSource? _previewSource;
     private CancellationTokenSource? _previewCts;
@@ -271,14 +279,24 @@ public partial class MainViewModel : ObservableObject
         catch { return (SampleFor(job), null, PreviewMode.Unreadable); }
     }
 
-    private static PreviewData BuildPreview(SheetSettings s, Core.Media.MediaInfo info, PreviewSource? source)
+    /// <summary>Black frames are skipped in the preview as on the sheet (window 0 = off).</summary>
+    private static double BlackSearch(SheetSettings s)
     {
-        using var result = SheetPreview.Render(s, info, maxWidth: 1200, source is null ? null : t => source.TryGetFrame(info.Path, t));
+        var n = s.Clone();
+        n.Normalize();
+        return n.SkipBlackFrames ? n.BlackFrameSearchSeconds : 0;
+    }
+
+    private static PreviewData BuildPreview(SheetSettings s, Core.Media.MediaInfo info, PreviewSource? source, IReadOnlyList<ManualTime?>? manual, string? jobPath)
+    {
+        var search = BlackSearch(s);
+        using var result = SheetPreview.Render(s, info, maxWidth: 1200, source is null ? null : p => source.TryGetFrame(info.Path, p, search), manual);
         using var ms = new MemoryStream();
         SheetRenderer.Encode(result.Bitmap, ms, ImageFormat.Png, 100);
         var shown = s.Clone();
         shown.Normalize();
-        return new PreviewData(ms.ToArray(), result.SheetWidth, result.SheetHeight, shown.Columns, shown.Rows, result.Tiles, result.RealFrames);
+        return new PreviewData(ms.ToArray(), result.SheetWidth, result.SheetHeight, shown.Columns, shown.Rows, result.Tiles, result.RealFrames,
+                               result.TileRects ?? [], SheetPreview.PlanTimes(s, info, manual), info, s, jobPath);
     }
 
     private PreviewData? _lastPreview;
@@ -308,6 +326,7 @@ public partial class MainViewModel : ObservableObject
             _ => Loc.T("PreviewNote"),
         };
         PreviewNoteTip = Loc.T(_lastPreviewMode == PreviewMode.Real ? "PreviewNoteRealTip" : "PreviewNoteTip");
+        CanEditTiles = _lastPreviewMode == PreviewMode.Real && d.JobPath is not null;
     }
 
     /// <summary>Renders the preview synchronously from what is known right now (start-up and tests).</summary>
@@ -319,10 +338,11 @@ public partial class MainViewModel : ObservableObject
         {
             var job = PreviewJob;
             var source = CurrentPreviewSource();
+            var manual = job?.Job.ManualTimes;
             if (job is not null && source?.TryGetInfo(job.Job.InputPath) is { Video: not null } known)
-                ApplyPreview(BuildPreview(CurrentSettings(), known, source), PreviewMode.Real);
+                ApplyPreview(BuildPreview(CurrentSettings(), known, source, manual, job.Job.InputPath), PreviewMode.Real);
             else
-                ApplyPreview(BuildPreview(CurrentSettings(), SampleFor(job), null),
+                ApplyPreview(BuildPreview(CurrentSettings(), SampleFor(job), null, manual, job?.Job.InputPath),
                     job is null ? PreviewMode.Sample : source is null ? PreviewMode.NoFfmpeg : PreviewMode.Sample);
         }
         catch (Exception ex) { PreviewCaption = Loc.T("PreviewFailed", ex.Message); }
@@ -341,18 +361,22 @@ public partial class MainViewModel : ObservableObject
         var cts = _previewCts = new CancellationTokenSource();
         var ct = cts.Token;
         var s = CurrentSettings();
+        var job = PreviewJob;
+        var manual = job?.Job.ManualTimes;
+        var jobPath = job?.Job.InputPath;
         try
         {
-            var (info, source, mode) = await ResolvePreviewInfoAsync(PreviewJob, ct);
+            var (info, source, mode) = await ResolvePreviewInfoAsync(job, ct);
             if (generation != _previewGeneration) return;
-            var data = await Task.Run(() => BuildPreview(s, info, source), ct);
+            var data = await Task.Run(() => BuildPreview(s, info, source, manual, jobPath), ct);
             if (generation != _previewGeneration) return;
             ApplyPreview(data, mode);
             if (source is null || data.RealFrames >= data.Tiles) return;
 
-            var times = SheetPreview.PlanTimes(s, info);
+            var times = SheetPreview.PlanTimes(s, info, manual);
+            var search = BlackSearch(s);
             var fresh = 0;
-            var load = Task.Run(() => source.LoadFramesAsync(info, times, () => Interlocked.Exchange(ref fresh, 1), ct), ct);
+            var load = Task.Run(() => source.LoadFramesAsync(info, times, search, () => Interlocked.Exchange(ref fresh, 1), ct), ct);
             while (true)
             {
                 await Task.WhenAny(load, Task.Delay(300, ct));
@@ -360,7 +384,7 @@ public partial class MainViewModel : ObservableObject
                 if (generation != _previewGeneration) return;
                 if (Interlocked.Exchange(ref fresh, 0) == 1 || finished)
                 {
-                    data = await Task.Run(() => BuildPreview(s, info, source), ct);
+                    data = await Task.Run(() => BuildPreview(s, info, source, manual, jobPath), ct);
                     if (generation != _previewGeneration) return;
                     ApplyPreview(data, mode);
                 }
@@ -375,7 +399,105 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
+    // ------------------------------------------------------------------ capture times by hand
+
+    /// <summary>Tile (timeline index) under a point of the preview image, given as fractions (0..1) of its size; -1 if none.</summary>
+    public int TileIndexAt(double fx, double fy)
+    {
+        if (_lastPreview is not { } d || d.Width <= 0 || d.Height <= 0) return -1;
+        var x = fx * d.Width;
+        var y = fy * d.Height;
+        for (var i = 0; i < d.TileRects.Count; i++)
+        {
+            var r = d.TileRects[i];
+            if (x >= r.X && x < r.X + r.Width && y >= r.Y && y < r.Y + r.Height) return i;
+        }
+        return -1;
+    }
+
+    /// <summary>Click on the preview image: opens the time dialog for the tile under the pointer.</summary>
+    public async Task EditTileAtAsync(double fx, double fy)
+    {
+        var index = TileIndexAt(fx, fy);
+        if (index >= 0) await EditTileAsync(index);
+    }
+
+    /// <summary>
+    /// Lets the user choose the capture time of one tile of the previewed video. While the dialog is open every
+    /// change is shown in the preview; Cancel restores the times from before.
+    /// </summary>
+    public async Task EditTileAsync(int index)
+    {
+        if (_lastPreview is not { } d || !CanEditTiles || PreviewJob is not { } job || d.JobPath != job.Job.InputPath) { StatusText = Loc.T("PreviewClickNeedsVideo"); return; }
+        if (index < 0 || index >= d.Plan.Length) return;
+        var before = job.Job.ManualTimes;
+        var planned = d.Plan[index];
+        var current = before is not null && index < before.Count ? before[index] : null;
+        // Start from the time the tile shows now (after a black frame was skipped, that is the time actually used).
+        var shown = _previewSource?.TryGetFrame(d.Info.Path, planned, BlackSearch(d.Settings))?.Time ?? planned.Time;
+        var auto = SheetPreview.PlanTimes(d.Settings, d.Info)[index].Time;
+        var anim = d.Settings.Animation;
+        var editor = new TileTimeViewModel(index, d.Info.Duration, d.Info.Video?.FrameRate ?? 0, auto,
+                                           current ?? new ManualTime(shown), anim.Enabled, anim.ClipSeconds);
+        editor.Changed += t => SetManualTime(job, index, t);
+        var result = await _ui.EditTileTimeAsync(editor);
+        switch (result)
+        {
+            case TileTimeResult.Ok when editor.Current is { } t: SetManualTime(job, index, t); break;
+            case TileTimeResult.Automatic: SetManualTime(job, index, null); break;
+            default: SetManualTimes(job, before); break;
+        }
+    }
+
+    /// <summary>Sets (or with null clears) the manual time of one tile of a video.</summary>
+    public void SetManualTime(JobViewModel job, int index, ManualTime? time)
+    {
+        var list = (job.Job.ManualTimes ?? []).ToList();
+        while (list.Count <= index) list.Add(null);
+        list[index] = time;
+        SetManualTimes(job, list);
+    }
+
+    private void SetManualTimes(JobViewModel job, IReadOnlyList<ManualTime?>? times)
+    {
+        var list = times?.ToList() ?? [];
+        while (list.Count > 0 && list[^1] is null) list.RemoveAt(list.Count - 1);
+        job.Job.ManualTimes = list.Count == 0 ? null : list.ToArray();
+        job.RefreshManualTimes();
+        if (job == PreviewJob)
+        {
+            OnPropertyChanged(nameof(HasPreviewManualTimes));
+            OnPropertyChanged(nameof(PreviewManualTimesText));
+            SchedulePreview();
+        }
+    }
+
+    /// <summary>All capture times of the previewed video back to automatic.</summary>
+    [RelayCommand]
+    private void ResetManualTimes()
+    {
+        if (PreviewJob is { } job) SetManualTimes(job, null);
+    }
+
     // ------------------------------------------------------------------ queue
+
+    /// <summary>Asks for one or more web addresses (separated by spaces or lines) and queues them.</summary>
+    [RelayCommand]
+    private async Task AddUrlAsync()
+    {
+        var text = await _ui.PromptTextAsync(Loc.T("DlgAddUrl"), Loc.T("DlgAddUrlMessage"), "https://");
+        if (string.IsNullOrWhiteSpace(text)) return;
+        AddUrls(text);
+    }
+
+    /// <summary>Queues every http(s) address in <paramref name="text"/>; reports the first entry that is not one.</summary>
+    public void AddUrls(string text)
+    {
+        var parts = text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Where(p => p != "https://" && p != "http://").ToList();
+        var urls = parts.Where(VideoSource.IsUrl).ToList();
+        if (urls.Count > 0) AddPaths(urls);
+        if (parts.FirstOrDefault(p => !VideoSource.IsUrl(p)) is { } bad) StatusText = Loc.T("StatusInvalidUrl", bad);
+    }
 
     public void AddPaths(IEnumerable<string> paths)
     {

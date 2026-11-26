@@ -19,6 +19,8 @@ public sealed class GenerateOptions
     public bool DryRun { get; set; }
     public bool Quiet { get; set; }
     public string? SavePresetAs { get; set; }
+    /// <summary>Capture times by hand (--times), for every input; not part of the preset.</summary>
+    public IReadOnlyList<Core.Layout.ManualTime?>? ManualTimes { get; set; }
     /// <summary>Changes to apply on top of the preset, in command line order.</summary>
     public List<Action<SheetSettings>> Overrides { get; } = [];
 }
@@ -132,6 +134,16 @@ public static class ArgParser
                 case "--overwrite": { var v = ParseEnum<OverwriteMode>(Next(), a); o.Overrides.Add(s => s.Output.Overwrite = v); break; }
                 case "--skip-start": { var v = NextDouble(); o.Overrides.Add(s => s.SkipStartPercent = v); break; }
                 case "--skip-end": { var v = NextDouble(); o.Overrides.Add(s => s.SkipEndPercent = v); break; }
+                case "--times":
+                {
+                    var v = Next();
+                    try { o.ManualTimes = Core.Layout.ManualTime.ParseList(v); }
+                    catch (FormatException ex) { throw new UsageException(CliText.T("InvalidTimes", a, ex.Message)); }
+                    break;
+                }
+                case "--skip-black": o.Overrides.Add(s => s.SkipBlackFrames = true); break;
+                case "--no-skip-black": o.Overrides.Add(s => s.SkipBlackFrames = false); break;
+                case "--black-search": { var v = NextDouble(); o.Overrides.Add(s => { s.SkipBlackFrames = true; s.BlackFrameSearchSeconds = v; }); break; }
                 case "--no-portrait-swap": o.Overrides.Add(s => s.PortraitSwapGrid = false); break;
                 case "--portrait-swap": o.Overrides.Add(s => s.PortraitSwapGrid = true); break;
                 case "--description": { var v = Next(); o.Overrides.Add(s => s.Description = v); break; }
