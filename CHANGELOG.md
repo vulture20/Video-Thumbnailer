@@ -10,6 +10,11 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 - Installer und Pakete, alle unsigniert und vom Release-Workflow gebaut: Windows-Setup (`…-setup.exe`, Startmenü-Eintrag, optional Desktop-Symbol, ohne Administratorrechte, Deinstallation über die Systemsteuerung), Linux-AppImage (Oberfläche, mit `vthumb` als erstem Argument die Kommandozeile) und macOS-DMG mit `Video-Thumbnailer.app` samt Icon im Dock. Die ZIPs gibt es weiterhin; `checksums.sha256` enthält alle Dateien ([#19])
 - Workflow „ffmpeg pins“: sucht wöchentlich nach neueren ffmpeg-Builds, prüft sie und trägt sie direkt in die Liste im Repo ein; die App holt sich die Liste beim Update-Check, neue ffmpeg-Versionen brauchen also kein neues Release ([#19])
 
+- Feinoptionen unter „Erweitert“: Konturfarbe und Schattenfarbe der Zeitstempel, Millisekunden im Zeitstempel (00:12:34.567) sowie Titel- und Textfarbe des Info-Kopfs ([#18])
+- Farbfelder zeigen ein Farbmuster neben dem Wert (mit Schachbrett für Transparenz); ungültige Eingaben werden mit „?“ markiert ([#18])
+
+### Geändert
+- Zeitstempel unter „Erweitert“: Farbe und Deckkraft stehen jetzt in eigenen Zeilen ([#18])
 ### Geändert
 - ffmpeg-Download sicherer: Installiert wird ein fest hinterlegter Build, dessen SHA-256-Prüfsumme in diesem Repo steht (Liste wird von GitHub geladen, eingebaute Kopie als Rückfall) statt auf dem Download-Server; unter macOS wird zusätzlich die Code-Signatur des Herausgebers (Team-ID) geprüft. `vthumb ffmpeg install --latest` lädt auf Wunsch weiterhin den neuesten Build ([#19])
 - ffmpeg-Quellen: Windows x64 jetzt von gyan.dev, Linux von ffmpeg.martin-riedl.de (beide halten ältere Versionen dauerhaft bereit, BtbN nur 14 Tage). Bestehende Installationen bekommen den Wechsel als ffmpeg-Update angeboten ([#19])
@@ -112,5 +117,6 @@ Erste Version.
 [#10]: https://github.com/vulture20/Video-Thumbnailer/pull/10
 [#13]: https://github.com/vulture20/Video-Thumbnailer/pull/13
 [#15]: https://github.com/vulture20/Video-Thumbnailer/pull/15
+[#18]: https://github.com/vulture20/Video-Thumbnailer/pull/18
 [#17]: https://github.com/vulture20/Video-Thumbnailer/pull/17
 [#19]: https://github.com/vulture20/Video-Thumbnailer/pull/19
