@@ -5,6 +5,7 @@
         x:Class="VideoThumbnailer.Gui.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Title="Video-Thumbnailer"
+        Icon="/Assets/app.ico"
         Width="1280" Height="820" MinWidth="900" MinHeight="560"
         DragDrop.AllowDrop="True">
 

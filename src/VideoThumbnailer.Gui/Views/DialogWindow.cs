@@ -45,7 +45,7 @@ public sealed class DialogWindow : Window
 
     public static async Task<Result> ShowAsync(Window owner, string title, string message, string ok, string? cancel, string? input)
     {
-        var dlg = new DialogWindow(title, message, ok, cancel, input);
+        var dlg = new DialogWindow(title, message, ok, cancel, input) { Icon = owner.Icon };
         return await dlg.ShowDialog<Result?>(owner) ?? new Result(false, null);
     }
 }
