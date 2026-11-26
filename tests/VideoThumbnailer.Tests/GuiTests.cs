@@ -74,6 +74,31 @@ public class GuiTests
             Assert.False(vm.Settings.ToSettings("x").Timestamp.Enabled);
             window.FindControl<ToggleSwitch>("TimestampSwitch")!.IsChecked = true;
 
+            // Animated sheet: the switch replaces the image formats by MP4/WebM/GIF.
+            var jpeg = window.FindControl<RadioButton>("FormatJpeg")!;
+            var gif = window.FindControl<RadioButton>("FormatGif")!;
+            Assert.False(gif.IsEffectivelyVisible);
+            window.FindControl<ToggleSwitch>("AnimatedSwitch")!.IsChecked = true;
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            Assert.True(gif.IsEffectivelyVisible);
+            Assert.False(jpeg.IsEffectivelyVisible);
+            gif.IsChecked = true;
+            Assert.False(vm.Settings.HasQuality);
+            var animated = vm.Settings.ToSettings("x");
+            Assert.True(animated.Animation.Enabled);
+            Assert.Equal(AnimationFormat.Gif, animated.Animation.Format);
+            var anim = Environment.GetEnvironmentVariable("VTHUMB_SCREENSHOT_ANIM");
+            if (!string.IsNullOrEmpty(anim))
+            {
+#pragma warning disable CS0618
+                window.CaptureRenderedFrame()?.Save(anim);
+#pragma warning restore CS0618
+            }
+            window.FindControl<RadioButton>("FormatMp4")!.IsChecked = true;
+            window.FindControl<ToggleSwitch>("AnimatedSwitch")!.IsChecked = false;
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            Assert.True(jpeg.IsEffectivelyVisible);
+
             var list = window.FindControl<ListBox>("QueueList");
             Assert.NotNull(list);
 

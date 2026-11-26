@@ -12,13 +12,14 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Öffentliches GitHub-Repo `vulture20/Video-Thumbnailer` | |
 | 26.11.2026 | Lizenz AGPL-3.0 (`AGPL-3.0-only`) | |
 | 26.11.2026 | Plattformen Windows, Linux, macOS ab v1 | |
-| 26.11.2026 | Animierte Sheets (MP4/WebM/GIF …) erst nach v1 | MVP klein halten |
+| 26.11.2026 | Animierte Sheets (MP4/WebM/GIF …) erst nach v1 | MVP klein halten; umgesetzt nach v0.3.0, siehe „Animierte Sheets“ |
 | 26.11.2026 | Kommandozeile ist Teil von v1 | |
 | 26.11.2026 | Arbeit über Pull Requests | |
 | 26.11.2026 | MVP-Umfang bestätigt: alle P1-Punkte der Spezifikation, veröffentlicht als v0.1.0 und unter Windows getestet | von Vulli bestätigt |
 | 26.11.2026 | Release v0.2.0 mit #3–#8 (Icon, CHANGELOG, Deutsch/Englisch in GUI, CLI und Sheet, Einfach/Erweitert, Dark-Mode, Leuchttisch-Oberfläche mit Live-Vorschau). Minor-Version, da neue Funktionen ohne Bruch von Presets/CLI | Wunsch von Vulli |
 | 26.11.2026 | Release-Dateien heißen `Video-Thumbnailer-<Version>-<Plattform>.zip` (z. B. `Video-Thumbnailer-0.3.0-win-x64.zip`), der Ordner im ZIP ebenso; `checksums.sha256` bleibt ohne Version. Gilt ab dem nächsten Release | Wunsch von Vulli: heruntergeladene Dateien sind eindeutig zuzuordnen |
-| 26.11.2026 | Release v0.3.0 mit #10–#12 (echte Vorschaubilder, Versionsnummer in den Dateinamen), als reguläres Release (kein Pre-release), damit GitHub es als „Latest“ anzeigt | Wunsch von Vulli |
+| 26.11.2026 | Release v0.3.0 mit #10–#11 (echte Vorschaubilder, Versionsnummer in den Dateinamen; Tag auf dem Stand nach #11, daher ohne #12–#14), als reguläres Release (kein Pre-release), damit GitHub es als „Latest“ anzeigt | Wunsch von Vulli |
+| 26.11.2026 | #12–#14 (abschaltbare Vorschau, macOS-Download-Fix, einklappbare Warteschlange, kleineres ffmpeg) und die animierten Sheets (#15) erscheinen gemeinsam in v0.4.0; v0.3.0 bleibt wie veröffentlicht | Entscheidung von Vulli: veröffentlichte Versionen nicht nachträglich ändern |
 | 26.11.2026 | Kein Mac für Tests vorhanden: macOS wird nur über CI geprüft. Zusätzlich zu Build und Tests lädt die CI auf macOS ffmpeg über die eingebaute Download-Funktion (martin-riedl.de, mit Prüfsumme) und erstellt damit ein echtes Sheet (als Artefakt abrufbar). Die GUI auf macOS bleibt ungetestet | Vulli hat keinen Mac |
 | 26.11.2026 | `CHANGELOG.md` nach „Keep a Changelog“, auf Deutsch, rückwirkend ab v0.1.0. Jeder PR ergänzt seinen Eintrag unter „Unveröffentlicht“; beim Release wird daraus der Versionsabschnitt | Änderungen nachvollziehbar, Grundlage für Release-Notizen |
 
@@ -118,6 +119,18 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Warteschlange einklappbar: unter 1120 px Fensterbreite klappt sie automatisch zu einer 52 px breiten Leiste (Anzahl, „+“, Ordner, ein Status-Punkt je Video); wird das Fenster wieder breit, klappt sie nur auf, wenn sie automatisch eingeklappt wurde. Von Hand jederzeit mit « / » umschaltbar. Mindestbreite 820 statt 1040 px | Vorschau und Einstellungen behalten im schmalen Fenster ihren Platz; eine Entscheidung von Hand wird nicht überschrieben |
 | 26.11.2026 | ffmpeg unter Windows als BtbN-„gpl-shared“-Build: ffmpeg.exe/ffprobe.exe plus die DLLs aus `bin` (ffplay wird nicht entpackt). Gemessen: 87–90 MB statt 198 MB Download, ca. 200 statt 340 MB installiert. Linux bleibt beim statischen Build (62 MB, shared spart nur ca. 9 MB und bräuchte Bibliothekspfade) | gleicher Funktionsumfang (GPL, zimg, x264/x265-Decoder), etwa halbe Größe. Bestehende Windows-Installationen sehen den Wechsel als Update (andere Prüfsumme) |
 | 26.11.2026 | HDR-Tonemapping geprüft mit echten HDR10- (PQ, BT.2020, 10 bit, HDR10-Metadaten) und HLG-Videos (x265): Farben stimmen, kein Grünstich, nicht ausgewaschen; etwas dunkler und weniger satt als SDR (mittlere Helligkeit ca. 80–85 % der SDR-Fassung), typisch für „hable“. Filter bleibt unverändert; ein Integrationstest sichert das ab (übersprungen ohne libx265/zscale) | größere Eingriffe (z. B. andere Kurve) nur bei Rückmeldung mit echtem Material |
+
+### Animierte Sheets
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 26.11.2026 | Animiertes Sheet = gleiches Raster wie das Standbild, jede Kachel spielt einen kurzen Ausschnitt ab ihrem Zeitpunkt ab; Zeitstempel laufen mit, Info-Kopf bleibt stehen | gleiche Gestaltung und Einstellungen wie beim Standbild |
+| 26.11.2026 | Formate MP4 (H.264, `yuv420p`, `faststart`), WebM (VP9) und GIF (eigene Palette, Bayer-Dithering, Endlosschleife). Ohne Ton | überall abspielbar bzw. für Web/Foren; Ton ergibt bei vielen gleichzeitigen Ausschnitten keinen Sinn |
+| 26.11.2026 | Standard: 3 s je Ausschnitt, 10 Bilder/s (einstellbar 0,5–30 s, 1–60 Bilder/s). Die Qualität (Schieberegler) steuert bei MP4/WebM den CRF-Wert, bei GIF hat sie keine Wirkung | kleine Dateien, flüssig genug für eine Übersicht |
+| 26.11.2026 | Animiert ist ein Schalter im Preset (`animation.enabled`); dann wird statt des Bildes die Animation gespeichert. Einzelbilder („jede Aufnahme speichern“) nur beim Standbild | ein Durchlauf, ein Ergebnis; Standbild und Animation lassen sich über zwei Presets erzeugen |
+| 26.11.2026 | Animierte Sheets heißen immer `<Name>.sheet.<mp4\|webm\|gif>`; Ordner-Scans überspringen solche Dateien | sonst würde `film.mp4` neben dem Video überschrieben bzw. beim nächsten Lauf selbst als Video erkannt |
+| 26.11.2026 | Ablauf: je Kachel ein ffmpeg-Prozess dekodiert den Ausschnitt in Kachelgröße als JPEG-Folge (im Speicher), dann zeichnet der vorhandene Renderer jedes Bild des Sheets und ein weiterer ffmpeg-Prozess kodiert sie | wiederverwendet Layout, Schriften und Zeitstempel-Stil; wenig Speicher (JPEG statt Rohbilder) |
+| 26.11.2026 | Bei Animation wird der Ausschnitt am Ende mit eingeplant (Zeitpunkte enden um die Ausschnittlänge früher), damit die letzte Kachel nicht leerläuft; endet ein Ausschnitt trotzdem früher, bleibt sein letztes Bild stehen | |
+| 26.11.2026 | Live-Vorschau zeigt bei Animation weiterhin ein Standbild (erstes Bild jeder Kachel) | Vorschau bleibt schnell |
 
 ## Offen
 

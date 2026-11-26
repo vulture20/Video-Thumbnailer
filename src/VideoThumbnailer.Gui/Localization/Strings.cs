@@ -126,6 +126,10 @@ internal static class Strings
         ["FileNamePattern"] = new("File name pattern", "Dateinamen-Muster"),
         ["IfFileExists"] = new("If file exists", "Wenn Datei existiert"),
         ["SaveFrames"] = new("Also save every frame as a single image", "Jede Aufnahme zusätzlich als Einzelbild speichern"),
+        ["Animated"] = new("Animated sheet", "Animiertes Sheet"),
+        ["AnimatedTip"] = new("Every tile plays a short clip from its point in time. Saved as MP4, WebM or GIF instead of an image.", "Jede Kachel spielt einen kurzen Ausschnitt ab ihrem Zeitpunkt ab. Gespeichert als MP4, WebM oder GIF statt als Bild."),
+        ["ClipSeconds"] = new("Clip length (s)", "Länge je Ausschnitt (s)"),
+        ["AnimationFps"] = new("Frames per second", "Bilder pro Sekunde"),
 
         // ---- settings: processing
         ["Processing"] = new("Processing", "Verarbeitung"),

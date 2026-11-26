@@ -64,6 +64,7 @@ internal static class CliText
         ["NeedsInt"] = ("Option {0} needs a whole number.", "Option {0} braucht eine ganze Zahl."),
         ["NeedsNumber"] = ("Option {0} needs a number.", "Option {0} braucht eine Zahl."),
         ["UnknownOption"] = ("Unknown option: {0}", "Unbekannte Option: {0}"),
+        ["UnknownAnimationFormat"] = ("Unknown animation format '{0}' (mp4, webm, gif).", "Unbekanntes Animationsformat „{0}“ (mp4, webm, gif)."),
         ["UnknownFormat"] = ("Unknown format '{0}' (jpg, png, webp).", "Unbekanntes Format „{0}“ (jpg, png, webp)."),
         ["UnknownOrder"] = ("Unknown order '{0}' (row, column, random).", "Unbekannte Reihenfolge „{0}“ (row, column, random)."),
         ["InvalidValue"] = ("Invalid value '{0}' for {1}. Allowed: {2}", "Ungültiger Wert „{0}“ für {1}. Erlaubt: {2}"),

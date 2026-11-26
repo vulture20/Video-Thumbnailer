@@ -6,24 +6,31 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 
 ## [Unveröffentlicht]
 
-## [0.3.0] – 2026-11-26
-
-Vorschau mit echten Bildern des gewählten Videos; Versionsnummer in den Release-Dateien.
-
 ### Hinzugefügt
+- Animierte Sheets als MP4, WebM oder GIF: jede Kachel spielt einen kurzen Ausschnitt ab ihrem Zeitpunkt ab, Zeitstempel laufen mit; Schalter „Animiertes Sheet“ in der Ausgabe, Länge je Ausschnitt und Bilder pro Sekunde einstellbar; CLI `-a/--animated mp4|webm|gif`, `--clip-seconds`, `--fps`, `--still` ([#15])
+- Animierte Sheets heißen `<Name>.sheet.mp4` usw. und werden beim Durchsuchen von Ordnern übersprungen ([#15])
+- CI auf macOS erstellt zusätzlich ein animiertes MP4-Sheet mit dem heruntergeladenen ffmpeg ([#15])
 - Schmale Fenster: Die Warteschlange klappt unter 1120 px Breite automatisch zu einer schmalen Leiste ein (Anzahl, Hinzufügen, Status-Punkte) und lässt sich jederzeit von Hand mit « / » ein- und ausklappen; Mindestbreite jetzt 820 statt 1040 px ([#14])
 - Test mit echten HDR10- und HLG-Videos: Tonemapping liefert Farben und Helligkeit nahe am SDR-Bild ([#14])
 - Live-Vorschau abschaltbar (Schalter über der Vorschau, wird gespeichert); ausgeschaltet läuft dafür kein ffmpeg ([#12])
-- Vorschau mit echten Bildern und echten Videodaten des gewählten Videos: Bilder von genau den Zeitpunkten des fertigen Bogens, Info-Kopf mit Größe, Dauer, Auflösung und Codecs. Lädt im Hintergrund und füllt sich nach und nach („Lade Bilder… n von m“); ohne ffmpeg oder bei nicht lesbaren Dateien weiter mit Beispielbildern ([#11])
 
 ### Geändert
 - ffmpeg-Download unter Windows deutlich kleiner: „shared“-Build von BtbN (ca. 90 statt 198 MB Download, ca. 200 statt 340 MB auf der Platte). Bestehende Installationen bekommen den Wechsel als ffmpeg-Update angeboten ([#14])
-- Release-Dateien tragen die Version im Namen, z. B. `Video-Thumbnailer-0.3.0-win-x64.zip` (auch der Ordner im ZIP) ([#10])
 - CI prüft auf macOS den echten ffmpeg-Download (ffmpeg.martin-riedl.de) und erstellt damit ein Test-Sheet ([#13])
 
 ### Behoben
 - macOS: ffmpeg-Download schlug mit „404“ fehl, weil der Download-Dienst keine HEAD-Anfragen beantwortet; Fehlermeldungen nennen jetzt die betroffene Adresse ([#13])
 - Vorschau erkennt, wenn sich eine Videodatei auf der Festplatte geändert hat (Größe oder Änderungszeit), und liest sie neu ([#12])
+
+## [0.3.0] – 2026-11-26
+
+Vorschau mit echten Bildern des gewählten Videos; Versionsnummer in den Release-Dateien. (Veröffentlicht vom Stand nach #11; #12–#14 folgen im nächsten Release.)
+
+### Hinzugefügt
+- Vorschau mit echten Bildern und echten Videodaten des gewählten Videos: Bilder von genau den Zeitpunkten des fertigen Bogens, Info-Kopf mit Größe, Dauer, Auflösung und Codecs. Lädt im Hintergrund und füllt sich nach und nach („Lade Bilder… n von m“); ohne ffmpeg oder bei nicht lesbaren Dateien weiter mit Beispielbildern ([#11])
+
+### Geändert
+- Release-Dateien tragen die Version im Namen, z. B. `Video-Thumbnailer-0.3.0-win-x64.zip` (auch der Ordner im ZIP) ([#10])
 
 ## [0.2.0] – 2026-11-26
 
@@ -89,3 +96,4 @@ Erste Version.
 [#14]: https://github.com/vulture20/Video-Thumbnailer/pull/14
 [#10]: https://github.com/vulture20/Video-Thumbnailer/pull/10
 [#13]: https://github.com/vulture20/Video-Thumbnailer/pull/13
+[#15]: https://github.com/vulture20/Video-Thumbnailer/pull/15

@@ -80,6 +80,15 @@ public static class ArgParser
                 case "--background": { var v = Next(); o.Overrides.Add(s => s.BackgroundColor = v); break; }
                 case "--font": { var v = Next(); o.Overrides.Add(s => s.FontFamily = v); break; }
                 case "-f": case "--format": { var v = ParseFormat(Next()); o.Overrides.Add(s => s.Output.Format = v); break; }
+                case "-a": case "--animated":
+                {
+                    var v = ParseAnimationFormat(Next());
+                    o.Overrides.Add(s => { s.Animation.Enabled = true; s.Animation.Format = v; });
+                    break;
+                }
+                case "--still": o.Overrides.Add(s => s.Animation.Enabled = false); break;
+                case "--clip-seconds": { var v = NextDouble(); o.Overrides.Add(s => s.Animation.ClipSeconds = v); break; }
+                case "--fps": { var v = NextInt(); o.Overrides.Add(s => s.Animation.FramesPerSecond = v); break; }
                 case "-q": case "--quality": { var v = NextInt(); o.Overrides.Add(s => s.Output.Quality = v); break; }
                 case "--pattern": { var v = Next(); o.Overrides.Add(s => s.Output.FileNamePattern = v); break; }
                 case "--order": { var v = ParseOrder(Next()); o.Overrides.Add(s => s.Order = v); break; }
@@ -126,6 +135,14 @@ public static class ArgParser
         "png" => ImageFormat.Png,
         "webp" => ImageFormat.Webp,
         _ => throw new UsageException(CliText.T("UnknownFormat", v)),
+    };
+
+    public static AnimationFormat ParseAnimationFormat(string v) => v.ToLowerInvariant().TrimStart('.') switch
+    {
+        "mp4" or "h264" => AnimationFormat.Mp4,
+        "webm" or "vp9" => AnimationFormat.Webm,
+        "gif" => AnimationFormat.Gif,
+        _ => throw new UsageException(CliText.T("UnknownAnimationFormat", v)),
     };
 
     public static TileOrder ParseOrder(string v) => v.ToLowerInvariant() switch

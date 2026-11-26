@@ -76,12 +76,23 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private OverwriteMode _overwrite;
     [ObservableProperty] private bool _saveFrames;
 
+    // Animated sheet
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsStill), nameof(HasQuality))] private bool _animated;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsMp4), nameof(IsWebm), nameof(IsGif), nameof(HasQuality))] private AnimationFormat _animationFormat;
+    [ObservableProperty] private decimal _clipSeconds;
+    [ObservableProperty] private decimal _animationFps;
+
+    public bool IsStill => !Animated;
+    public bool IsMp4 { get => AnimationFormat == AnimationFormat.Mp4; set { if (value) AnimationFormat = AnimationFormat.Mp4; } }
+    public bool IsWebm { get => AnimationFormat == AnimationFormat.Webm; set { if (value) AnimationFormat = AnimationFormat.Webm; } }
+    public bool IsGif { get => AnimationFormat == AnimationFormat.Gif; set { if (value) AnimationFormat = AnimationFormat.Gif; } }
+
     // Format buttons and quality slider in the output section.
     public bool IsJpeg { get => Format == ImageFormat.Jpeg; set { if (value) Format = ImageFormat.Jpeg; } }
     public bool IsPng { get => Format == ImageFormat.Png; set { if (value) Format = ImageFormat.Png; } }
     public bool IsWebp { get => Format == ImageFormat.Webp; set { if (value) Format = ImageFormat.Webp; } }
-    /// <summary>PNG is lossless, so the quality slider only applies to JPG and WebP.</summary>
-    public bool HasQuality => Format != ImageFormat.Png;
+    /// <summary>PNG is lossless and GIF has a fixed palette, so the quality slider applies to JPG, WebP, MP4 and WebM.</summary>
+    public bool HasQuality => Animated ? AnimationFormat != AnimationFormat.Gif : Format != ImageFormat.Png;
     public double QualityValue { get => (double)Quality; set => Quality = Math.Clamp((decimal)Math.Round(value), 1, 100); }
 
     public bool IsOutputFolder => Location == OutputLocation.OutputFolder;
@@ -109,6 +120,9 @@ public partial class SettingsViewModel : ObservableObject
         OutputFolder = s.Output.Folder; KeepFolderStructure = s.Output.KeepFolderStructure;
         SubfolderName = s.Output.SubfolderName; FileNamePattern = s.Output.FileNamePattern;
         Overwrite = s.Output.Overwrite; SaveFrames = s.Output.SaveFrames;
+
+        Animated = s.Animation.Enabled; AnimationFormat = s.Animation.Format;
+        ClipSeconds = (decimal)s.Animation.ClipSeconds; AnimationFps = s.Animation.FramesPerSecond;
     }
 
     /// <summary>Builds settings from the current values. Fields the GUI does not show are kept from the loaded preset.</summary>
@@ -134,6 +148,9 @@ public partial class SettingsViewModel : ObservableObject
         s.Output.Folder = OutputFolder; s.Output.KeepFolderStructure = KeepFolderStructure;
         s.Output.SubfolderName = SubfolderName; s.Output.FileNamePattern = FileNamePattern;
         s.Output.Overwrite = Overwrite; s.Output.SaveFrames = SaveFrames;
+
+        s.Animation.Enabled = Animated; s.Animation.Format = AnimationFormat;
+        s.Animation.ClipSeconds = (double)ClipSeconds; s.Animation.FramesPerSecond = (int)AnimationFps;
         return s;
     }
 }

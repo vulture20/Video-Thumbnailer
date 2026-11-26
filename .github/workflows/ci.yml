@@ -46,12 +46,14 @@ jobs:
             -c:v libx264 -pix_fmt yuv420p -c:a aac "$RUNNER_TEMP/smoke.mp4"
           $CLI --lang en --ffmpeg "$BIN" -o "$RUNNER_TEMP/smoke-out" "$RUNNER_TEMP/smoke.mp4"
           test -s "$RUNNER_TEMP/smoke-out/smoke.jpg"
+          $CLI --lang en --ffmpeg "$BIN" -a mp4 --clip-seconds 1 -o "$RUNNER_TEMP/smoke-out" "$RUNNER_TEMP/smoke.mp4"
+          test -s "$RUNNER_TEMP/smoke-out/smoke.sheet.mp4"
       - name: Upload smoke-test sheet (macOS)
         if: runner.os == 'macOS'
         uses: actions/upload-artifact@v4
         with:
           name: smoke-sheet-macos
-          path: ${{ runner.temp }}/smoke-out/smoke.jpg
+          path: ${{ runner.temp }}/smoke-out/smoke*
           if-no-files-found: ignore
       - name: Upload GUI screenshot
         if: always()
