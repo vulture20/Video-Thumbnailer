@@ -7,13 +7,13 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 ## [Unveröffentlicht]
 
 ### Hinzugefügt
-- Schmale Fenster: Die Warteschlange klappt unter 1120 px Breite automatisch zu einer schmalen Leiste ein (Anzahl, Hinzufügen, Status-Punkte) und lässt sich jederzeit von Hand mit « / » ein- und ausklappen; Mindestbreite jetzt 820 statt 1040 px ([#13])
-- Test mit echten HDR10- und HLG-Videos: Tonemapping liefert Farben und Helligkeit nahe am SDR-Bild ([#13])
+- Schmale Fenster: Die Warteschlange klappt unter 1120 px Breite automatisch zu einer schmalen Leiste ein (Anzahl, Hinzufügen, Status-Punkte) und lässt sich jederzeit von Hand mit « / » ein- und ausklappen; Mindestbreite jetzt 820 statt 1040 px ([#14])
+- Test mit echten HDR10- und HLG-Videos: Tonemapping liefert Farben und Helligkeit nahe am SDR-Bild ([#14])
 - Live-Vorschau abschaltbar (Schalter über der Vorschau, wird gespeichert); ausgeschaltet läuft dafür kein ffmpeg ([#12])
 - Vorschau mit echten Bildern und echten Videodaten des gewählten Videos: Bilder von genau den Zeitpunkten des fertigen Bogens, Info-Kopf mit Größe, Dauer, Auflösung und Codecs. Lädt im Hintergrund und füllt sich nach und nach („Lade Bilder… n von m“); ohne ffmpeg oder bei nicht lesbaren Dateien weiter mit Beispielbildern ([#11])
 
 ### Geändert
-- ffmpeg-Download unter Windows deutlich kleiner: „shared“-Build von BtbN (ca. 90 statt 198 MB Download, ca. 200 statt 340 MB auf der Platte). Bestehende Installationen bekommen den Wechsel als ffmpeg-Update angeboten ([#13])
+- ffmpeg-Download unter Windows deutlich kleiner: „shared“-Build von BtbN (ca. 90 statt 198 MB Download, ca. 200 statt 340 MB auf der Platte). Bestehende Installationen bekommen den Wechsel als ffmpeg-Update angeboten ([#14])
 - Release-Dateien tragen die Version im Namen, z. B. `Video-Thumbnailer-0.3.0-win-x64.zip` (auch der Ordner im ZIP) ([#10])
 
 ### Behoben
@@ -79,5 +79,5 @@ Erste Version.
 [#8]: https://github.com/vulture20/Video-Thumbnailer/pull/8
 [#11]: https://github.com/vulture20/Video-Thumbnailer/pull/11
 [#12]: https://github.com/vulture20/Video-Thumbnailer/pull/12
-[#13]: https://github.com/vulture20/Video-Thumbnailer/pull/13
+[#14]: https://github.com/vulture20/Video-Thumbnailer/pull/14
 [#10]: https://github.com/vulture20/Video-Thumbnailer/pull/10
