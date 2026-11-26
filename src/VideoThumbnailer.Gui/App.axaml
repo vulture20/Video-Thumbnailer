@@ -1,13 +1,71 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="using:VideoThumbnailer.Gui.Controls"
              x:Class="VideoThumbnailer.Gui.App"
              RequestedThemeVariant="Default">
+  <!--
+    Look "Leuchttisch" (see docs/DECISIONS.md): calm, slightly bluish neutrals; blue from the icon for selection and
+    progress, orange from the icon only for "Start". Colors are theme resources so light and dark stay in sync.
+  -->
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="PageBrush" Color="#F3F5F8" />
+          <SolidColorBrush x:Key="PanelBrush" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="SunkenBrush" Color="#E9EDF2" />
+          <SolidColorBrush x:Key="LineBrush" Color="#DBE1E9" />
+          <SolidColorBrush x:Key="MutedBrush" Color="#5F6B80" />
+          <SolidColorBrush x:Key="SelectionBrush" Color="#E1F0FC" />
+          <SolidColorBrush x:Key="BrandBlueBrush" Color="#2585D0" />
+          <SolidColorBrush x:Key="GoBrush" Color="#E2711A" />
+          <SolidColorBrush x:Key="GoHoverBrush" Color="#CC6312" />
+          <SolidColorBrush x:Key="GoForegroundBrush" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="OkBrush" Color="#1B8A57" />
+          <SolidColorBrush x:Key="ErrorBrush" Color="#C8392F" />
+          <SolidColorBrush x:Key="GlyphBrush" Color="#A9B3C1" />
+          <RadialGradientBrush x:Key="TableBrush" GradientOrigin="50%,40%" Center="50%,40%" RadiusX="75%" RadiusY="75%">
+            <GradientStop Offset="0" Color="#FFFFFF" />
+            <GradientStop Offset="1" Color="#E3E8EE" />
+          </RadialGradientBrush>
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="PageBrush" Color="#161A21" />
+          <SolidColorBrush x:Key="PanelBrush" Color="#1D222B" />
+          <SolidColorBrush x:Key="SunkenBrush" Color="#12151B" />
+          <SolidColorBrush x:Key="LineBrush" Color="#2B323E" />
+          <SolidColorBrush x:Key="MutedBrush" Color="#97A2B4" />
+          <SolidColorBrush x:Key="SelectionBrush" Color="#1B3347" />
+          <SolidColorBrush x:Key="BrandBlueBrush" Color="#5BB8F5" />
+          <SolidColorBrush x:Key="GoBrush" Color="#F7892E" />
+          <SolidColorBrush x:Key="GoHoverBrush" Color="#FF9B47" />
+          <SolidColorBrush x:Key="GoForegroundBrush" Color="#15181E" />
+          <SolidColorBrush x:Key="OkBrush" Color="#4CC38A" />
+          <SolidColorBrush x:Key="ErrorBrush" Color="#F06B60" />
+          <SolidColorBrush x:Key="GlyphBrush" Color="#4A5466" />
+          <RadialGradientBrush x:Key="TableBrush" GradientOrigin="50%,40%" Center="50%,40%" RadiusX="75%" RadiusY="75%">
+            <GradientStop Offset="0" Color="#1F2530" />
+            <GradientStop Offset="1" Color="#11141A" />
+          </RadialGradientBrush>
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </Application.Resources>
+
   <Application.Styles>
-    <FluentTheme />
+    <FluentTheme>
+      <FluentTheme.Palettes>
+        <ColorPaletteResources x:Key="Light" Accent="#2585D0" />
+        <ColorPaletteResources x:Key="Dark" Accent="#3A9EE0" />
+      </FluentTheme.Palettes>
+    </FluentTheme>
+
     <Style Selector="TextBlock.section">
       <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="FontSize" Value="15" />
-      <Setter Property="Margin" Value="0,14,0,6" />
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="LetterSpacing" Value="0.6" />
+      <Setter Property="Foreground" Value="{DynamicResource MutedBrush}" />
+      <Setter Property="Margin" Value="0,16,0,6" />
     </Style>
     <Style Selector="TextBlock.label">
       <Setter Property="VerticalAlignment" Value="Center" />
@@ -15,9 +73,162 @@
       <Setter Property="Margin" Value="0,0,8,0" />
     </Style>
     <Style Selector="TextBlock.hint">
-      <Setter Property="Opacity" Value="0.7" />
+      <Setter Property="Foreground" Value="{DynamicResource MutedBrush}" />
       <Setter Property="FontSize" Value="12" />
       <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+    <Style Selector="TextBlock.caption">
+      <Setter Property="Foreground" Value="{DynamicResource MutedBrush}" />
+      <Setter Property="FontSize" Value="12" />
+    </Style>
+    <Style Selector="Border.divider">
+      <Setter Property="Height" Value="1" />
+      <Setter Property="Background" Value="{DynamicResource LineBrush}" />
+      <Setter Property="Margin" Value="0,10" />
+    </Style>
+
+    <!-- Segmented switch built from radio buttons (mode, output format) -->
+    <Style Selector="Border.segment">
+      <Setter Property="Background" Value="{DynamicResource SunkenBrush}" />
+      <Setter Property="CornerRadius" Value="7" />
+      <Setter Property="Padding" Value="3" />
+    </Style>
+    <Style Selector="RadioButton.seg">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Name="bd" Background="Transparent" CornerRadius="5" Padding="8,5" BorderThickness="1" BorderBrush="Transparent">
+            <ContentPresenter Content="{TemplateBinding Content}" HorizontalAlignment="Center"
+                              TextElement.FontWeight="SemiBold" Foreground="{DynamicResource MutedBrush}" Name="cp" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="RadioButton.seg:pointerover /template/ ContentPresenter#cp">
+      <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+    </Style>
+    <Style Selector="RadioButton.seg:checked /template/ Border#bd">
+      <Setter Property="Background" Value="{DynamicResource PanelBrush}" />
+      <Setter Property="BoxShadow" Value="0 1 2 0 #26000000" />
+    </Style>
+    <Style Selector="RadioButton.seg:checked /template/ ContentPresenter#cp">
+      <Setter Property="Foreground" Value="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+    </Style>
+    <Style Selector="RadioButton.seg:focus-visible /template/ Border#bd">
+      <Setter Property="BorderBrush" Value="{DynamicResource BrandBlueBrush}" />
+    </Style>
+
+    <!-- Format buttons in the output section: outlined, blue when chosen -->
+    <Style Selector="RadioButton.choice">
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Name="bd" Background="{DynamicResource PanelBrush}" CornerRadius="6" Padding="6,6"
+                  BorderThickness="1" BorderBrush="{DynamicResource LineBrush}">
+            <ContentPresenter Content="{TemplateBinding Content}" HorizontalAlignment="Center"
+                              TextElement.FontWeight="SemiBold" Foreground="{DynamicResource MutedBrush}" Name="cp" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="RadioButton.choice:pointerover /template/ Border#bd">
+      <Setter Property="BorderBrush" Value="{DynamicResource MutedBrush}" />
+    </Style>
+    <Style Selector="RadioButton.choice:checked /template/ Border#bd">
+      <Setter Property="BorderBrush" Value="{DynamicResource BrandBlueBrush}" />
+      <Setter Property="Background" Value="{DynamicResource SelectionBrush}" />
+    </Style>
+    <Style Selector="RadioButton.choice:checked /template/ ContentPresenter#cp">
+      <Setter Property="Foreground" Value="{DynamicResource BrandBlueBrush}" />
+    </Style>
+    <Style Selector="RadioButton.choice:focus-visible /template/ Border#bd">
+      <Setter Property="BorderThickness" Value="2" />
+    </Style>
+
+    <!-- Start button: the only orange control -->
+    <Style Selector="Button.go">
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="Padding" Value="16,7" />
+    </Style>
+    <Style Selector="Button.go /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource GoBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource GoForegroundBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource GoBrush}" />
+    </Style>
+    <Style Selector="Button.go:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource GoHoverBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource GoForegroundBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource GoHoverBrush}" />
+    </Style>
+    <Style Selector="Button.go:pressed /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource GoHoverBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource GoForegroundBrush}" />
+    </Style>
+    <Style Selector="Button.go:disabled /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource GoBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource GoForegroundBrush}" />
+      <Setter Property="Opacity" Value="0.45" />
+    </Style>
+
+    <!-- Plain icon-like buttons (gear, queue menu) -->
+    <Style Selector="Button.icon">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="7,4" />
+      <Setter Property="Foreground" Value="{DynamicResource MutedBrush}" />
+      <Setter Property="FontSize" Value="16" />
+    </Style>
+
+    <!-- Queue status -->
+    <Style Selector="TextBlock.status">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{DynamicResource MutedBrush}" />
+    </Style>
+    <Style Selector="TextBlock.status.ok"><Setter Property="Foreground" Value="{DynamicResource OkBrush}" /></Style>
+    <Style Selector="TextBlock.status.err"><Setter Property="Foreground" Value="{DynamicResource ErrorBrush}" /></Style>
+    <Style Selector="TextBlock.status.run"><Setter Property="Foreground" Value="{DynamicResource BrandBlueBrush}" /></Style>
+    <Style Selector="Ellipse.dot"><Setter Property="Fill" Value="{DynamicResource MutedBrush}" /></Style>
+    <Style Selector="Ellipse.dot.ok"><Setter Property="Fill" Value="{DynamicResource OkBrush}" /></Style>
+    <Style Selector="Ellipse.dot.err"><Setter Property="Fill" Value="{DynamicResource ErrorBrush}" /></Style>
+    <Style Selector="Ellipse.dot.run"><Setter Property="Fill" Value="{DynamicResource BrandBlueBrush}" /></Style>
+
+    <!-- Preset tiles -->
+    <Style Selector="ListBox.presets ListBoxItem">
+      <Setter Property="Padding" Value="4,7,4,6" />
+      <Setter Property="Margin" Value="0,0,6,6" />
+      <Setter Property="CornerRadius" Value="7" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="ListBox.presets ListBoxItem:selected">
+      <Setter Property="BorderBrush" Value="{DynamicResource BrandBlueBrush}" />
+    </Style>
+    <Style Selector="ListBox.presets ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource SelectionBrush}" />
+    </Style>
+    <Style Selector="ListBox.presets ListBoxItem:selected c|GridGlyph">
+      <Setter Property="Brush" Value="{DynamicResource BrandBlueBrush}" />
+    </Style>
+    <Style Selector="c|GridGlyph">
+      <Setter Property="Brush" Value="{DynamicResource GlyphBrush}" />
+    </Style>
+
+    <!-- Queue entries -->
+    <Style Selector="ListBox.queue ListBoxItem">
+      <Setter Property="Padding" Value="12,8" />
+      <Setter Property="BorderThickness" Value="3,0,0,0" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+    <Style Selector="ListBox.queue ListBoxItem:selected">
+      <Setter Property="BorderBrush" Value="{DynamicResource BrandBlueBrush}" />
+    </Style>
+    <Style Selector="ListBox.queue ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource SelectionBrush}" />
     </Style>
   </Application.Styles>
 </Application>

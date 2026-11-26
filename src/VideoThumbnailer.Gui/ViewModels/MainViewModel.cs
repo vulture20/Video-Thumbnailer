@@ -2,12 +2,14 @@ using Avalonia;
 using Avalonia.Styling;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using VideoThumbnailer.Core.Batch;
 using VideoThumbnailer.Core.Ffmpeg;
 using VideoThumbnailer.Core.Input;
+using VideoThumbnailer.Core.Rendering;
 using VideoThumbnailer.Core.Settings;
 using VideoThumbnailer.Core.Util;
 using VideoThumbnailer.Gui.Localization;
@@ -23,6 +25,8 @@ public partial class MainViewModel : ObservableObject
     private CancellationTokenSource? _cts;
     private readonly Stopwatch _runClock = new();
     private readonly DispatcherTimer _clockTimer;
+    private readonly DispatcherTimer _previewTimer = new() { Interval = TimeSpan.FromMilliseconds(150) };
+    private int _previewGeneration;
 
     public ObservableCollection<JobViewModel> Jobs { get; } = [];
     public ObservableCollection<JobViewModel> SelectedJobs { get; } = [];
@@ -42,6 +46,14 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private double _overallProgress;
     [ObservableProperty] private string _statusText = Loc.T("StatusIntro");
     [ObservableProperty] private UiLanguage _language;
+
+    // ---- live preview (center of the window)
+    [ObservableProperty] private Bitmap? _previewImage;
+    [ObservableProperty] private string _previewCaption = "";
+    /// <summary>Video whose name and size appear in the preview: the selected one, otherwise the first in the queue.</summary>
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(PreviewTitle))] private JobViewModel? _previewJob;
+    public string PreviewTitle => PreviewJob?.FileName ?? Loc.T("PreviewSampleName");
+    public string QueueTitle => Loc.T("QueueTitle", Jobs.Count);
 
     public static Choice[] Languages { get; } = Choice.ForEnum<UiLanguage>("Lang");
     public static Choice[] Themes { get; } = Choice.ForEnum<UiTheme>("Theme");
@@ -84,6 +96,10 @@ public partial class MainViewModel : ObservableObject
         OnPropertyChanged(nameof(PauseButtonText));
         foreach (var j in Jobs) j.Refresh();
         if (!IsRunning) StatusText = Loc.T("StatusIntro");
+        OnPropertyChanged(nameof(PreviewTitle));
+        OnPropertyChanged(nameof(QueueTitle));
+        if (_lastPreview is { } p) PreviewCaption = Loc.T("PreviewCaption", p.Columns, p.Rows, p.Tiles, p.Width, p.Height);
+        SchedulePreview();
     }
 
     public MainViewModel(IUiServices ui)
@@ -102,8 +118,16 @@ public partial class MainViewModel : ObservableObject
         MaxParallelVideos = _app.MaxParallelVideos ?? Math.Max(1, BatchOptions.DefaultParallelism / 2);
         ReloadPresets(_app.LastPreset);
         Settings.Load(_app.LastSettings ?? SelectedPreset ?? BuiltInPresets.Default);
-        Jobs.CollectionChanged += (_, _) => UpdateStats();
+        Jobs.CollectionChanged += (_, _) =>
+        {
+            UpdateStats();
+            OnPropertyChanged(nameof(QueueTitle));
+            if (PreviewJob is null || !Jobs.Contains(PreviewJob)) PreviewJob = Jobs.FirstOrDefault();
+        };
         _clockTimer = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Background, (_, _) => UpdateStats());
+        _previewTimer.Tick += (_, _) => { _previewTimer.Stop(); _ = UpdatePreviewAsync(); };
+        Settings.PropertyChanged += (_, _) => SchedulePreview();
+        RenderPreviewNow();
     }
 
     /// <summary>Called once the window is shown.</summary>
@@ -143,6 +167,76 @@ public partial class MainViewModel : ObservableObject
         SelectedPreset = Presets.FirstOrDefault(p => string.Equals(p.Name, select, StringComparison.OrdinalIgnoreCase))
                          ?? Presets.FirstOrDefault(p => p.Name == "Standard") ?? Presets.FirstOrDefault();
         _suppressPresetLoad = false;
+    }
+
+    // ------------------------------------------------------------------ preview
+
+    partial void OnPreviewJobChanged(JobViewModel? value) => SchedulePreview();
+
+    /// <summary>Re-renders the preview shortly after the last change (several changes in a row render once).</summary>
+    private void SchedulePreview()
+    {
+        _previewTimer.Stop();
+        _previewTimer.Start();
+    }
+
+    private sealed record PreviewData(byte[] Png, int Width, int Height, int Columns, int Rows, int Tiles);
+
+    private (SheetSettings Settings, Core.Media.MediaInfo Info) PreviewInput()
+    {
+        var job = PreviewJob;
+        var info = job is null
+            ? SheetPreview.SampleInfo(Loc.T("PreviewSampleName"))
+            : job.FileSize > 0 ? SheetPreview.SampleInfo(job.Job.InputPath, job.FileSize) : SheetPreview.SampleInfo(job.Job.InputPath);
+        return (CurrentSettings(), info);
+    }
+
+    private static PreviewData BuildPreview(SheetSettings s, Core.Media.MediaInfo info)
+    {
+        using var result = SheetPreview.Render(s, info, maxWidth: 1200);
+        using var ms = new MemoryStream();
+        SheetRenderer.Encode(result.Bitmap, ms, ImageFormat.Png, 100);
+        var shown = s.Clone();
+        shown.Normalize();
+        return new PreviewData(ms.ToArray(), result.SheetWidth, result.SheetHeight, shown.Columns, shown.Rows, result.Tiles);
+    }
+
+    private PreviewData? _lastPreview;
+
+    private void ApplyPreview(PreviewData d)
+    {
+        _lastPreview = d;
+        var old = PreviewImage;
+        PreviewImage = new Bitmap(new MemoryStream(d.Png));
+        old?.Dispose();
+        PreviewCaption = Loc.T("PreviewCaption", d.Columns, d.Rows, d.Tiles, d.Width, d.Height);
+    }
+
+    /// <summary>Renders the preview synchronously (start-up and tests).</summary>
+    public void RenderPreviewNow()
+    {
+        _previewGeneration++;
+        try
+        {
+            var (s, info) = PreviewInput();
+            ApplyPreview(BuildPreview(s, info));
+        }
+        catch (Exception ex) { PreviewCaption = Loc.T("PreviewFailed", ex.Message); }
+    }
+
+    private async Task UpdatePreviewAsync()
+    {
+        var generation = ++_previewGeneration;
+        try
+        {
+            var (s, info) = PreviewInput();
+            var data = await Task.Run(() => BuildPreview(s, info));
+            if (generation == _previewGeneration) ApplyPreview(data);
+        }
+        catch (Exception ex)
+        {
+            if (generation == _previewGeneration) PreviewCaption = Loc.T("PreviewFailed", ex.Message);
+        }
     }
 
     // ------------------------------------------------------------------ queue

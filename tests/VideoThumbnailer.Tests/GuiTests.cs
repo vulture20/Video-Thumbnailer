@@ -44,13 +44,35 @@ public class GuiTests
             Assert.Contains(vm.Presets, p => p.Name == "Standard");
             Assert.Equal(4, vm.Settings.Columns);
 
+            // The live preview is rendered from the start (sample name until a video is queued).
+            Assert.NotNull(vm.PreviewImage);
+            Assert.Contains("4 × 5", vm.PreviewCaption);
+
             vm.AddPaths([videos]);
             Assert.Equal(2, vm.Jobs.Count);
             Assert.True(vm.StartCommand.CanExecute(null));
+            Assert.Equal("a.mp4", vm.PreviewTitle);
+            Assert.Contains("2", vm.QueueTitle);
 
             vm.SelectedPreset = vm.Presets.First(p => p.Name == "Compact");
             Assert.Equal(3, vm.Settings.Columns);
             Assert.Equal(3, vm.Settings.ToSettings("x").Rows);
+            vm.RenderPreviewNow();
+            Assert.Contains("3 × 3 = 9", vm.PreviewCaption);
+
+            // Preset tiles select presets; output format buttons and quality slider reach the settings.
+            var tiles = window.FindControl<ListBox>("PresetTiles")!;
+            Assert.Same(vm.SelectedPreset, tiles.SelectedItem);
+            window.FindControl<RadioButton>("FormatPng")!.IsChecked = true;
+            Assert.Equal(ImageFormat.Png, vm.Settings.ToSettings("x").Output.Format);
+            Assert.False(vm.Settings.HasQuality);
+            window.FindControl<RadioButton>("FormatJpeg")!.IsChecked = true;
+            Assert.Equal(ImageFormat.Jpeg, vm.Settings.Format);
+            window.FindControl<Slider>("QualitySlider")!.Value = 75;
+            Assert.Equal(75, vm.Settings.ToSettings("x").Output.Quality);
+            window.FindControl<ToggleSwitch>("TimestampSwitch")!.IsChecked = false;
+            Assert.False(vm.Settings.ToSettings("x").Timestamp.Enabled);
+            window.FindControl<ToggleSwitch>("TimestampSwitch")!.IsChecked = true;
 
             var list = window.FindControl<ListBox>("QueueList");
             Assert.NotNull(list);
@@ -69,7 +91,7 @@ public class GuiTests
             vm.Language = UiLanguage.German;
             Avalonia.Threading.Dispatcher.UIThread.RunJobs();
             var addFiles = window.GetVisualDescendants().OfType<Button>().First(b => b.Command == vm.AddFilesCommand);
-            Assert.Equal("Dateien hinzufügen…", addFiles.Content);
+            Assert.Equal("+ Dateien…", addFiles.Content);
             Assert.Equal("Zeilenweise", SettingsViewModel.Orders[0].Label);
             Assert.Equal("Pause", vm.PauseButtonText);
             var de = Environment.GetEnvironmentVariable("VTHUMB_SCREENSHOT_DE");
@@ -81,7 +103,7 @@ public class GuiTests
             }
             vm.Language = UiLanguage.English;
             Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-            Assert.Equal("Add files…", addFiles.Content);
+            Assert.Equal("+ Files…", addFiles.Content);
             Assert.Equal("English", AppSettings.Load().Language ?? "English"); // saved on close below
 
             // Changing a combo box value through the bound Choice list reaches the settings.

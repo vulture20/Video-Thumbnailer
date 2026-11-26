@@ -39,6 +39,10 @@ public partial class JobViewModel : ObservableObject
 
     public string Details => string.IsNullOrEmpty(Message) ? (OutputPath ?? Folder) : Message!;
     public bool IsFinished => Job.IsFinished;
+    // Used as style classes for the colored status in the queue.
+    public bool IsOk => Status == JobStatus.Done;
+    public bool IsError => Status == JobStatus.Failed;
+    public bool IsActive => Status == JobStatus.Running;
     public double ProgressPercent => Progress * 100;
 
     public void Refresh()
@@ -51,5 +55,8 @@ public partial class JobViewModel : ObservableObject
         OnPropertyChanged(nameof(Details));
         OnPropertyChanged(nameof(IsFinished));
         OnPropertyChanged(nameof(ProgressPercent));
+        OnPropertyChanged(nameof(IsOk));
+        OnPropertyChanged(nameof(IsError));
+        OnPropertyChanged(nameof(IsActive));
     }
 }

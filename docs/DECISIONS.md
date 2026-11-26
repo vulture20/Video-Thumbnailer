@@ -73,11 +73,25 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 ### Oberfläche (Einfach/Erweitert, Darstellung)
 | Datum | Entscheidung | Begründung / Anmerkung |
 |---|---|---|
-| 26.11.2026 | Einstellungen in zwei Modi: „Einfach“ (Standard) und „Erweitert“, umschaltbar ganz oben in der Einstellungsspalte; die Wahl wird in `settings.json` gespeichert (`advancedMode`) | Wunsch nach übersichtlicherer Oberfläche |
-| 26.11.2026 | „Einfach“ zeigt: Sprache, Darstellung, Preset-Auswahl, Spalten × Zeilen, Bildbreite, Zeitstempel an/aus, Info-Kopf an/aus, Format/Qualität, Speicherort (mit Ordner bzw. Unterordnername) und den ffmpeg-Status mit Download-Knopf. Alles andere nur unter „Erweitert“, mit Hinweis darauf am Ende | das Nötigste für ein gutes Sheet; ffmpeg-Download muss auch für Einsteiger erreichbar sein |
+| 26.11.2026 | Einstellungen in zwei Modi: „Einfach“ (Standard) und „Erweitert“, umschaltbar ganz oben in der Einstellungsspalte (seit #8 als Segment-Umschalter); die Wahl wird in `settings.json` gespeichert (`advancedMode`) | Wunsch nach übersichtlicherer Oberfläche |
+| 26.11.2026 | „Einfach“ zeigt: Preset-Kacheln, Spalten, Zeilen, Bildbreite, Zeitstempel an/aus, Info-Kopf an/aus, Format/Qualität, Speicherort (mit Ordner bzw. Unterordnername). Sprache und Darstellung stehen im Zahnrad-Menü, ffmpeg-Status und Download-Knopf in der Fußleiste (beides in jedem Modus). Alles andere nur unter „Erweitert“, mit Hinweis darauf am Ende (angepasst mit #8) | das Nötigste für ein gutes Sheet; ffmpeg-Download muss auch für Einsteiger erreichbar sein |
 | 26.11.2026 | Ausgeblendete Einstellungen bleiben wirksam (sie werden nur nicht angezeigt) und gehören weiterhin zum Preset | ein Wechsel des Modus ändert nie das Ergebnis |
 | 26.11.2026 | Darstellung „Wie System“ (Standard), „Hell“ oder „Dunkel“ über die Theme-Varianten des Fluent-Themes, wirkt sofort und wird gespeichert (`theme`) | Dark-Mode-Wunsch; folgt standardmäßig dem Betriebssystem |
 | 26.11.2026 | Die Darstellung betrifft nur die Oberfläche, nicht die Farben im Sheet (die kommen aus dem Preset) | Sheets sollen unabhängig vom Rechner gleich aussehen |
+
+### Oberfläche „Leuchttisch“ (#8)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 26.11.2026 | Neues Fensterlayout nach Konzept B „Leuchttisch“ (von Vulli aus drei Entwürfen gewählt; A „Aufgeräumt“ und C „Drei Schritte“ verworfen): Warteschlange links (280 px), Vorschau in der Mitte, Einstellungen rechts (350 px), Fußleiste mit ffmpeg-Status, Gesamtfortschritt, Pause, Abbrechen und Start. Mindestbreite des Fensters 1040 px | Ergebnis vor dem Start sehen; Stapelverarbeitung bleibt sichtbar. C ist für wiederholte Arbeit zu langsam |
+| 26.11.2026 | Live-Vorschau wird mit dem echten `SheetRenderer` gezeichnet (`SheetPreview` im Core): Raster, Abstände, Info-Kopf, Zeitstempel, Farben und Größe entsprechen dem Ergebnis. Statt Videobildern gemalte Platzhalter-Szenen, Videodaten im Kopf sind Beispielwerte (Dateiname und -größe vom gewählten Video). Neuberechnung 150 ms nach der letzten Änderung im Hintergrund, auf höchstens 1200 px Breite verkleinert. Darunter Bildanzahl und Bogengröße in Pixeln | eine Logik für Vorschau und Ergebnis, kein zweiter Zeichencode; schnell genug ohne ffmpeg |
+| 26.11.2026 | Die Vorschau zeigt das zuletzt in der Warteschlange ausgewählte Video, sonst das erste, ohne Videos „Beispielvideo.mp4“ | |
+| 26.11.2026 | Presets als Kacheln (4 pro Zeile) mit Rastersymbol aus Spalten × Zeilen; Beschreibung als Tooltip | Wahl auf einen Blick statt Namen in einer Liste |
+| 26.11.2026 | „Ausgabe“ in der Gestaltung von Entwurf A (Wunsch von Vulli): Format als drei Knöpfe JPG/PNG/WebP, Qualität als Schieberegler 1–100 (bei PNG gesperrt, da verlustfrei), darunter „Speichern in“ | |
+| 26.11.2026 | Zeitstempel und Info-Kopf als Schalter (ToggleSwitch) statt Häkchen | |
+| 26.11.2026 | Sprache und Darstellung in einem Zahnrad-Menü oben rechts in der Einstellungsspalte | Programmeinstellungen, keine Bogen-Einstellungen; hält die Spalte frei |
+| 26.11.2026 | Warteschlange: sichtbar nur „+ Dateien…“, „+ Ordner…“ und „Unterordner einbeziehen“; Auswahl entfernen, Erledigte/Alle leeren, Fehlgeschlagene wiederholen und Sortieren im Menü „⋯“. Je Video farbiger Status (grau wartet, blau läuft mit Fortschritt, grün fertig, rot Fehler) | weniger Knöpfe, Zustand auf einen Blick |
+| 26.11.2026 | Eigene Farben als Theme-Ressourcen für hell und dunkel, abgeleitet aus dem Icon: leicht bläuliche Grautöne, Blau (#2585D0 hell / #5BB8F5 dunkel) für Auswahl, Fortschritt und Akzent, Orange (#E2711A / #F7892E) ausschließlich für den Start-Knopf | einheitlicher Auftritt mit Icon und Banner; Orange heißt „Los“ |
+| 26.11.2026 | Paarfelder unter „Erweitert“ (Abstand/Rand, Anfang/Ende, Schriftgrößen, Deckkraft) ohne Auf/Ab-Pfeile, Eingabe per Tastatur oder Mausrad | sonst in der 350-px-Spalte zu schmal |
 
 ## Offen
 
@@ -89,7 +103,9 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Code-Signierung (Windows) und Notarisierung/App-Bundle (macOS) fehlen; macOS zeigt beim ersten Start eine Gatekeeper-Warnung | Installer/Pakete (MSI, .app/.dmg, AppImage/Flatpak) später |
 | 26.11.2026 | HDR-Tonemapping mit echten HDR10/HLG-Videos prüfen (Testvideos ohne korrekte Farbmetadaten) | |
 | 26.11.2026 | GUI-Einstellungen für Kontur-/Schattenfarbe, Kopf-Farben und Millisekunden im Zeitstempel fehlen (im Preset-JSON und teils per CLI möglich) | Optionsdialog ist P2 |
-| 26.11.2026 | Live-Vorschau der Einstellungen (P2) | |
+| 26.11.2026 | Live-Vorschau mit echten Einzelbildern und echten Videodaten des gewählten Videos (Stufe 2; Stufe 1 mit Platzhalterbildern ist mit #8 umgesetzt). Braucht ffprobe/ffmpeg im Hintergrund und einen Cache | |
+| 26.11.2026 | Schmale Fenster: Unter etwa 1040 px Breite könnte die Warteschlange zu einer Leiste einklappen (im Konzept vorgesehen, noch nicht gebaut; derzeit Mindestbreite 1040 px) | |
+| 26.11.2026 | Neue Oberfläche auf Windows und macOS ansehen (Schriften, Schalter, Zahnrad- und „⋯“-Symbol, Titelleiste); gebaut und getestet nur unter Linux (headless) | Rückmeldung von Vulli |
 | 26.11.2026 | Aufteilung Einfach/Erweitert nach erster Nutzung prüfen (fehlt im einfachen Modus etwas Wichtiges, z. B. Preset speichern oder Reihenfolge?) | Rückmeldung von Vulli |
 | 26.11.2026 | Social-Preview muss von Hand hochgeladen werden: GitHub → Settings → General → Social preview → `docs/images/social-preview.png` (geht nicht per API/PR) | |
 | 26.11.2026 | Icon-Einbindung (ApplicationIcon, Fenstericon) konnte lokal nicht gebaut werden (kein .NET in der Entwicklungsumgebung); Prüfung über CI und ein Blick auf Windows/Linux/macOS | |

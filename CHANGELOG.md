@@ -16,10 +16,17 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 - Meldungen der Verarbeitung und des ffmpeg-Downloads in der Oberfläche übersetzt ([#6])
 - Einstellungen in den Modi „Einfach“ (Standard, nur das Wichtigste) und „Erweitert“ (alle Einstellungen) ([#7])
 - Dark-Mode: Darstellung „Wie System“, „Hell“ oder „Dunkel“, wirkt sofort ([#7])
+- Live-Vorschau des Kontaktbogens in der Mitte des Fensters: wird mit dem echten Renderer gezeichnet (Raster, Info-Kopf, Zeitstempel, Farben), nur die Bilder sind Platzhalter; darunter Bildanzahl und Größe des Bogens in Pixeln ([#8])
+- Presets als Kacheln mit kleinem Rastersymbol ([#8])
 
 ### Geändert
 - Einstellungsspalte etwas breiter, Beschriftungen brechen bei Bedarf um ([#5])
 - Presets speichern den Standard-Info-Kopf nicht mehr als festen Text, damit er der Sheet-Sprache folgt; ältere Presets mit der englischen Standardvorlage werden genauso behandelt ([#6])
+- Neue Oberfläche „Leuchttisch“: Warteschlange links, Vorschau in der Mitte, Einstellungen rechts, Fußleiste mit ffmpeg-Status, Fortschritt, Pause, Abbrechen und Start; eigene Farben aus dem Icon (Blau für Auswahl, Orange nur für Start) in hell und dunkel ([#8])
+- Warteschlange: nur noch „+ Dateien…“, „+ Ordner…“ und „Unterordner einbeziehen“ sichtbar; Leeren, Wiederholen und Sortieren im Menü „⋯“; farbiger Status je Video ([#8])
+- Sprache und Darstellung im Zahnrad-Menü oben rechts statt in der Einstellungsspalte; „Einfach“/„Erweitert“ als Umschalter ([#8])
+- Ausgabe: Format als drei Knöpfe (JPG/PNG/WebP), Qualität als Schieberegler (bei PNG gesperrt); Zeitstempel und Info-Kopf als Schalter ([#8])
+- ffmpeg-Status und Download-Knopf im einfachen Modus in der Fußleiste; die ausführlichen ffmpeg-Einstellungen nur unter „Erweitert“ ([#8])
 
 ## [0.1.0] – 2026-11-26
 
@@ -51,3 +58,4 @@ Erste Version.
 [#5]: https://github.com/vulture20/Video-Thumbnailer/pull/5
 [#6]: https://github.com/vulture20/Video-Thumbnailer/pull/6
 [#7]: https://github.com/vulture20/Video-Thumbnailer/pull/7
+[#8]: https://github.com/vulture20/Video-Thumbnailer/pull/8

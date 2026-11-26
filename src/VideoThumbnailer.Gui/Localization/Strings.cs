@@ -21,6 +21,25 @@ internal static class Strings
         ["SortBySize"] = new("By size (largest first)", "Nach Größe (größte zuerst)"),
         ["SortByStatus"] = new("By status", "Nach Status"),
         ["DropHere"] = new("Drop videos or folders here", "Videos oder Ordner hierher ziehen"),
+        ["AddFilesShort"] = new("+ Files…", "+ Dateien…"),
+        ["AddFolderShort"] = new("+ Folder…", "+ Ordner…"),
+        ["QueueTitle"] = new("QUEUE · {0}", "WARTESCHLANGE · {0}"),
+        ["QueueMenuTip"] = new("More queue actions", "Weitere Aktionen für die Warteschlange"),
+        ["DropZone"] = new("or drop videos and folders here", "oder Videos und Ordner hierher ziehen"),
+
+        // ---- preview
+        ["PreviewLabel"] = new("PREVIEW", "VORSCHAU"),
+        ["PreviewSampleName"] = new("sample-video.mp4", "Beispielvideo.mp4"),
+        ["PreviewNote"] = new("Sample pictures, real layout", "Beispielbilder, echtes Layout"),
+        ["PreviewNoteTip"] = new("Header, timestamps, colors and size are exactly as in the result. The pictures and video data are placeholders.", "Info-Kopf, Zeitstempel, Farben und Größe sind genau wie im Ergebnis. Bilder und Videodaten sind Platzhalter."),
+        ["PreviewCaption"] = new("{0} × {1} = {2} pictures  ·  sheet {3} × {4} px", "{0} × {1} = {2} Bilder  ·  Bogen {3} × {4} px"),
+        ["PreviewFailed"] = new("Preview not possible: {0}", "Vorschau nicht möglich: {0}"),
+        ["SettingsTip"] = new("Language and appearance", "Sprache und Darstellung"),
+        ["Quality"] = new("Quality", "Qualität"),
+        ["Format"] = new("Format", "Format"),
+        ["Columns"] = new("Columns", "Spalten"),
+        ["Rows"] = new("Rows", "Zeilen"),
+        ["StartAll"] = new("▶  Start", "▶  Starten"),
 
         // ---- run controls
         ["Start"] = new("Start", "Start"),
@@ -108,6 +127,8 @@ internal static class Strings
         ["ModeSimple"] = new("Simple", "Einfach"),
         ["ModeAdvanced"] = new("Advanced", "Erweitert"),
         ["SimpleHint"] = new("More settings (overlays, file names, processing, ffmpeg) under \u201cAdvanced\u201d.", "Weitere Einstellungen (Einblendungen, Dateinamen, Verarbeitung, ffmpeg) unter \u201eErweitert\u201c."),
+        ["ShowTimestampsShort"] = new("Timestamps", "Zeitstempel"),
+        ["ShowHeaderShort"] = new("Info header", "Info-Kopf"),
 
         // ---- enum values
         ["Order.RowMajor"] = new("Row by row", "Zeilenweise"),
