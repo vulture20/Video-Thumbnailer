@@ -15,6 +15,7 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Animierte Sheets (MP4/WebM/GIF …) erst nach v1 | MVP klein halten |
 | 26.11.2026 | Kommandozeile ist Teil von v1 | |
 | 26.11.2026 | Arbeit über Pull Requests | |
+| 26.11.2026 | `CHANGELOG.md` nach „Keep a Changelog“, auf Deutsch, rückwirkend ab v0.1.0. Jeder PR ergänzt seinen Eintrag unter „Unveröffentlicht“; beim Release wird daraus der Versionsabschnitt | Änderungen nachvollziehbar, Grundlage für Release-Notizen |
 
 ### Technik
 | Datum | Entscheidung | Begründung / Anmerkung |
@@ -77,7 +78,7 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Icon-Einbindung (ApplicationIcon, Fenstericon) konnte lokal nicht gebaut werden (kein .NET in der Entwicklungsumgebung); Prüfung über CI und ein Blick auf Windows/Linux/macOS | |
 | 26.11.2026 | macOS-Dock-Icon ohne `.app`-Bundle evtl. generisch; Bundle mit `app.icns` gehört zu „Installer/Pakete später“ | |
 
-## Umfang v1 (Stand dieses PRs)
+## Umfang v0.1.0
 
 Umgesetzt (P1):
 - Dateien und Ordner hinzufügen (Dialog, Drag & Drop, Kommandozeile), rekursiv umschaltbar
