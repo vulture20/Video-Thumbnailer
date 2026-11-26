@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
+using VideoThumbnailer.Core.Localization;
 using VideoThumbnailer.Core.Util;
 
 namespace VideoThumbnailer.Core.Media;
@@ -11,7 +12,7 @@ public static class FfprobeReader
         string[] args = ["-v", "error", "-print_format", "json", "-show_format", "-show_streams", videoPath];
         var result = await ProcessRunner.RunAsync(ffprobePath, args, ct).ConfigureAwait(false);
         if (result.ExitCode != 0)
-            throw new InvalidDataException($"ffprobe failed ({result.ExitCode}): {result.StdErr.Trim()}");
+            throw new InvalidDataException(CoreText.T("FfprobeFailed", result.ExitCode, result.StdErr.Trim()));
         return Parse(System.Text.Encoding.UTF8.GetString(result.StdOut), videoPath);
     }
 

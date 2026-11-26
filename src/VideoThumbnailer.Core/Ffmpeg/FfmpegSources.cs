@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using VideoThumbnailer.Core.Localization;
 
 namespace VideoThumbnailer.Core.Ffmpeg;
 
@@ -70,7 +71,7 @@ public sealed partial class BtbNSource(string target) : IFfmpegSource
     {
         var text = await http.GetStringAsync(BaseUrl + "checksums.sha256", ct).ConfigureAwait(false);
         return SelectRelease(FfmpegSources.ParseChecksums(text))
-               ?? throw new InvalidOperationException($"No suitable ffmpeg build for '{target}' found in the latest BtbN release.");
+               ?? throw new InvalidOperationException(CoreText.T("NoSuitableBuild", target));
     }
 
     internal FfmpegRelease? SelectRelease(IReadOnlyDictionary<string, string> checksums)
@@ -117,7 +118,7 @@ public sealed class MartinRiedlSource(string arch) : IFfmpegSource
             var shaText = await http.GetStringAsync(finalUrl + ".sha256", ct).ConfigureAwait(false);
             var sha = shaText.Trim().Split((char[])[' ', '\t', '\n'], StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()?.ToLowerInvariant();
             if (sha is null || sha.Length != 64)
-                throw new InvalidOperationException($"No valid SHA-256 checksum published for {finalUrl}.");
+                throw new InvalidOperationException(CoreText.T("NoChecksum", finalUrl));
             assets.Add(new FfmpegAsset(tool + ".zip", finalUrl, sha, ArchiveKind.Zip, [tool]));
         }
         // The resolved URL contains the version/date folder; use it as a human readable version.

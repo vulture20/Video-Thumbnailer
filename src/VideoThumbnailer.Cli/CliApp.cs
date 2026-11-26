@@ -3,6 +3,7 @@ using VideoThumbnailer.Core;
 using VideoThumbnailer.Core.Batch;
 using VideoThumbnailer.Core.Ffmpeg;
 using VideoThumbnailer.Core.Input;
+using VideoThumbnailer.Core.Localization;
 using VideoThumbnailer.Core.Output;
 using VideoThumbnailer.Core.Settings;
 using VideoThumbnailer.Core.Util;
@@ -17,6 +18,7 @@ public static class CliApp
     {
         try
         {
+            args = ApplyLanguage(args);
             if (args.Length == 0 || args[0] is "-h" or "--help" or "help")
             {
                 Console.WriteLine(HelpText.Main);
@@ -36,10 +38,33 @@ public static class CliApp
         }
         catch (UsageException ex)
         {
-            Console.Error.WriteLine("Error: " + ex.Message);
-            Console.Error.WriteLine("Run 'vthumb --help' for usage.");
+            Console.Error.WriteLine(CliText.T("Error", ex.Message));
+            Console.Error.WriteLine(CliText.T("SeeHelp"));
             return ExitUsage;
         }
+    }
+
+    /// <summary>
+    /// Sets <see cref="Lang.Current"/>: --lang option, then VTHUMB_LANG, then the GUI language from settings.json,
+    /// then the system language. Removes --lang from the arguments.
+    /// </summary>
+    internal static string[] ApplyLanguage(string[] args)
+    {
+        string? chosen = null;
+        var rest = new List<string>();
+        for (var i = 0; i < args.Length; i++)
+        {
+            if (args[i] == "--lang" && i + 1 < args.Length) { chosen = args[++i]; continue; }
+            if (args[i].StartsWith("--lang=", StringComparison.Ordinal)) { chosen = args[i][7..]; continue; }
+            rest.Add(args[i]);
+        }
+        var lang = Lang.Normalize(chosen) ?? Lang.Normalize(Environment.GetEnvironmentVariable("VTHUMB_LANG"));
+        if (lang is null && (chosen is null || Lang.Normalize(chosen) is null && chosen.ToLowerInvariant() is not ("auto" or "system")))
+            lang = Lang.Normalize(AppSettings.Load().Language);
+        Lang.Current = lang ?? Lang.Detect();
+        if (chosen is not null && Lang.Normalize(chosen) is null && chosen.ToLowerInvariant() is not ("auto" or "system"))
+            throw new UsageException(CliText.T("UnknownLanguage", chosen));
+        return rest.ToArray();
     }
 
     // ------------------------------------------------------------------ generate
@@ -51,7 +76,7 @@ public static class CliApp
 
         SheetSettings settings;
         if (o.Preset is not null)
-            settings = store.Find(o.Preset)?.Clone() ?? throw new UsageException($"Preset not found: {o.Preset}");
+            settings = store.Find(o.Preset)?.Clone() ?? throw new UsageException(CliText.T("PresetNotFound", o.Preset));
         else
             settings = app.LastSettings?.Clone() ?? BuiltInPresets.Default; // spec: without preset use last GUI settings
         foreach (var apply in o.Overrides) apply(settings);
@@ -62,18 +87,18 @@ public static class CliApp
         {
             settings.Name = o.SavePresetAs;
             var path = store.Save(settings);
-            Console.WriteLine($"Preset saved: {path}");
+            Console.WriteLine(CliText.T("PresetSaved", path));
             if (o.Inputs.Count == 0) return ExitOk;
         }
 
-        if (o.Inputs.Count == 0) throw new UsageException("No input files or folders given.");
+        if (o.Inputs.Count == 0) throw new UsageException(CliText.T("NoInputs"));
         var missing = o.Inputs.Where(p => !File.Exists(p) && !Directory.Exists(p)).ToList();
-        foreach (var m in missing) Console.Error.WriteLine($"Warning: not found: {m}");
+        foreach (var m in missing) Console.Error.WriteLine(CliText.T("NotFoundWarning", m));
 
         var inputs = VideoScanner.Scan(o.Inputs, o.Recursive ?? app.Recursive);
         if (inputs.Count == 0)
         {
-            Console.Error.WriteLine("No video files found.");
+            Console.Error.WriteLine(CliText.T("NoVideos"));
             return ExitFailures;
         }
 
@@ -81,7 +106,7 @@ public static class CliApp
         {
             foreach (var v in inputs)
                 Console.WriteLine($"{v.Path}\n  -> {OutputPathResolver.ResolveSheetPath(settings, v.Path, v.Root)}");
-            Console.WriteLine($"{inputs.Count} video(s), preset '{settings.Name}'.");
+            Console.WriteLine(CliText.T("DryRunSummary", inputs.Count, settings.Name));
             return ExitOk;
         }
 
@@ -98,7 +123,7 @@ public static class CliApp
         {
             if (cts.IsCancellationRequested) return; // second Ctrl+C: hard exit
             e.Cancel = true;
-            Console.Error.WriteLine("\nCancelling… (press Ctrl+C again to abort immediately)");
+            Console.Error.WriteLine("\n" + CliText.T("Cancelling"));
             cts.Cancel();
         };
 
@@ -123,19 +148,22 @@ public static class CliApp
                     var w = jb.Status == JobStatus.Failed ? Console.Error : Console.Out;
                     w.WriteLine($"[{n}/{jobs.Count}] {tag} {jb.InputPath}{(string.IsNullOrEmpty(detail) ? "" : " -> " + detail)}");
                     if (jb.Status == JobStatus.Done && !string.IsNullOrEmpty(jb.Message))
-                        Console.WriteLine("       note: " + jb.Message);
+                        Console.WriteLine(CliText.T("Note", jb.Message));
                 }
             };
         }
 
         if (!o.Quiet)
-            Console.WriteLine($"Processing {jobs.Count} video(s) with preset '{settings.Name}' " +
-                              $"({options.MaxParallelProcesses} ffmpeg processes, {options.MaxParallelVideos} videos in parallel)…");
+            Console.WriteLine(CliText.T("Processing", jobs.Count, settings.Name, options.MaxParallelProcesses, options.MaxParallelVideos));
 
         var stats = await new BatchProcessor(tools).RunAsync(jobs, settings, options, cts.Token);
         if (!o.Quiet || stats.Failed > 0)
-            Console.WriteLine($"Done in {Formatting.Duration(stats.Elapsed.TotalSeconds)}: {stats.Done} created, {stats.Skipped} skipped, " +
-                              $"{stats.Failed} failed{(stats.Cancelled > 0 ? $", {stats.Cancelled} cancelled" : "")}.");
+        {
+            var elapsed = Formatting.Duration(stats.Elapsed.TotalSeconds);
+            Console.WriteLine(stats.Cancelled > 0
+                ? CliText.T("SummaryCancelled", elapsed, stats.Done, stats.Skipped, stats.Failed, stats.Cancelled)
+                : CliText.T("Summary", elapsed, stats.Done, stats.Skipped, stats.Failed));
+        }
         if (cts.IsCancellationRequested) return ExitCancelled;
         return stats.Failed > 0 ? ExitFailures : ExitOk;
     }
@@ -148,8 +176,7 @@ public static class CliApp
         var installer = FfmpegInstaller.ForCurrentPlatform();
         if (installer is null)
         {
-            Console.Error.WriteLine("ffmpeg was not found and there is no automatic download for this platform. " +
-                                    "Install ffmpeg and ffprobe and put them on PATH, or pass --ffmpeg <folder>.");
+            Console.Error.WriteLine(CliText.T("NoFfmpegNoDownload"));
             return null;
         }
 
@@ -157,16 +184,16 @@ public static class CliApp
         {
             if (Console.IsInputRedirected)
             {
-                Console.Error.WriteLine("ffmpeg was not found. Run 'vthumb ffmpeg install' or pass --yes to download it automatically.");
+                Console.Error.WriteLine(CliText.T("NoFfmpegNonInteractive"));
                 return null;
             }
-            Console.Write($"ffmpeg was not found. Download it now from {installer.Source.Homepage} (about 100–150 MB) into\n  {installer.InstallRoot}\n? [Y/n] ");
+            Console.Write(CliText.T("AskDownload", installer.Source.Homepage, installer.InstallRoot));
             var answer = Console.ReadLine()?.Trim().ToLowerInvariant();
             app.FfmpegDownloadAsked = true;
             app.Save();
             if (answer is "n" or "no" or "nein")
             {
-                Console.Error.WriteLine("Without ffmpeg no sheets can be created.");
+                Console.Error.WriteLine(CliText.T("WithoutFfmpeg"));
                 return null;
             }
         }
@@ -177,7 +204,7 @@ public static class CliApp
     {
         try
         {
-            Console.WriteLine($"Source: {installer.Source.Name}");
+            Console.WriteLine(CliText.T("Source", installer.Source.Name));
             var lastPct = -1;
             var progress = new Progress<DownloadProgress>(p =>
             {
@@ -185,16 +212,16 @@ public static class CliApp
                 var pct = (int)(100 * p.BytesReceived / p.TotalBytes.Value);
                 if (pct / 10 == lastPct / 10) return;
                 lastPct = pct;
-                Console.WriteLine($"  {p.File}: {pct}% of {Formatting.Size(p.TotalBytes.Value)}");
+                Console.WriteLine(CliText.T("DownloadProgress", p.File, pct, Formatting.Size(p.TotalBytes.Value, null, Lang.NumberFormat(Lang.Current))));
             });
             var tools = await installer.InstallAsync(release, progress);
             var version = await FfmpegLocator.GetVersionAsync(tools.FfmpegPath);
-            Console.WriteLine($"Installed (SHA-256 verified): {version}\n  {Path.GetDirectoryName(tools.FfmpegPath)}");
+            Console.WriteLine(CliText.T("Installed", version, Path.GetDirectoryName(tools.FfmpegPath)));
             return tools;
         }
         catch (Exception ex) when (ex is HttpRequestException or InvalidDataException or InvalidOperationException or IOException or TaskCanceledException)
         {
-            Console.Error.WriteLine("ffmpeg download failed: " + ex.Message);
+            Console.Error.WriteLine(CliText.T("DownloadFailed", ex.Message));
             return null;
         }
     }
@@ -213,49 +240,47 @@ public static class CliApp
                 var tools = FfmpegLocator.Locate(app.FfmpegDirectory);
                 if (tools is null)
                 {
-                    Console.WriteLine("ffmpeg: not found");
+                    Console.WriteLine(CliText.T("FfmpegNotFound"));
                     return ExitNoFfmpeg;
                 }
-                Console.WriteLine($"ffmpeg:  {tools.FfmpegPath}\nffprobe: {tools.FfprobePath}\norigin:  {tools.Origin}");
-                Console.WriteLine("version: " + (await FfmpegLocator.GetVersionAsync(tools.FfmpegPath) ?? "unknown (cannot run)"));
+                Console.WriteLine(CliText.T("StatusPaths", tools.FfmpegPath, tools.FfprobePath, CliText.T("Origin." + tools.Origin)));
+                Console.WriteLine(CliText.T("StatusVersion", await FfmpegLocator.GetVersionAsync(tools.FfmpegPath) ?? CliText.T("VersionUnknown")));
                 if (tools.Origin == FfmpegOrigin.Managed && installer?.ReadManifest() is { } m)
-                    Console.WriteLine($"source:  {m.Source}, build {m.Version}, installed {m.InstalledAt:yyyy-MM-dd}");
+                    Console.WriteLine(CliText.T("StatusSource", m.Source, m.Version, m.InstalledAt.ToString("yyyy-MM-dd")));
                 return ExitOk;
             }
             case "install" or "update" or "check":
             {
-                if (installer is null) { Console.Error.WriteLine("No automatic ffmpeg download for this platform."); return ExitNoFfmpeg; }
+                if (installer is null) { Console.Error.WriteLine(CliText.T("NoDownloadForPlatform")); return ExitNoFfmpeg; }
                 FfmpegUpdateInfo info;
                 try { info = await installer.CheckForUpdateAsync(); }
                 catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException or TaskCanceledException)
                 {
-                    Console.Error.WriteLine("Could not query the ffmpeg download source: " + ex.Message);
+                    Console.Error.WriteLine(CliText.T("QueryFailed", ex.Message));
                     return ExitFailures;
                 }
                 var installed = info.Installed;
-                Console.WriteLine($"Installed: {(installed is null ? "none (managed)" : $"{installed.Version} ({installed.Source})")}");
-                Console.WriteLine($"Latest:    {info.Latest.Version} ({info.Latest.SourceName})");
+                Console.WriteLine(CliText.T("InstalledLine", installed is null ? CliText.T("InstalledNone") : $"{installed.Version} ({installed.Source})"));
+                Console.WriteLine(CliText.T("LatestLine", info.Latest.Version, info.Latest.SourceName));
                 app.LastFfmpegUpdateCheck = DateTimeOffset.UtcNow;
                 app.Save();
                 if (sub == "check")
                 {
-                    Console.WriteLine(installed is null ? "No managed ffmpeg installed. Run 'vthumb ffmpeg install' to download it."
-                        : info.UpdateAvailable ? "An update is available. Run 'vthumb ffmpeg update'." : "Up to date.");
+                    Console.WriteLine(CliText.T(installed is null ? "NoManaged" : info.UpdateAvailable ? "UpdateAvailable" : "UpToDate"));
                     return ExitOk;
                 }
                 if (!info.UpdateAvailable && !args.Contains("--force"))
                 {
-                    Console.WriteLine("Up to date. Use --force to reinstall.");
+                    Console.WriteLine(CliText.T("UpToDateForce"));
                     return ExitOk;
                 }
                 return await InstallAsync(installer, info.Latest) is null ? ExitFailures : ExitOk;
             }
             case "uninstall":
-                if (installer?.Uninstall() == true) Console.WriteLine("Managed ffmpeg removed.");
-                else Console.WriteLine("No managed ffmpeg installed.");
+                Console.WriteLine(CliText.T(installer?.Uninstall() == true ? "ManagedRemoved" : "NoManagedInstalled"));
                 return ExitOk;
             default:
-                throw new UsageException($"Unknown ffmpeg command '{sub}' (status, check, install, update, uninstall).");
+                throw new UsageException(CliText.T("UnknownFfmpegCommand", sub));
         }
     }
 
@@ -269,41 +294,41 @@ public static class CliApp
         {
             case "list":
                 foreach (var p in store.LoadAll())
-                    Console.WriteLine($"{p.Name,-16} {(PresetStore.IsBuiltIn(p.Name) ? "[built-in] " : "")}{p.Description}");
-                Console.WriteLine($"\nUser presets: {store.Directory}");
+                    Console.WriteLine($"{p.Name,-16} {(PresetStore.IsBuiltIn(p.Name) ? CliText.T("BuiltIn") : "")}{BuiltInPresets.Describe(p)}");
+                Console.WriteLine("\n" + CliText.T("UserPresets", store.Directory));
                 return ExitOk;
             case "show":
             {
-                var name = args.ElementAtOrDefault(1) ?? throw new UsageException("presets show <name>");
-                var p = store.Find(name) ?? throw new UsageException($"Preset not found: {name}");
+                var name = args.ElementAtOrDefault(1) ?? throw new UsageException(CliText.T("Usage", "presets show <name>"));
+                var p = store.Find(name) ?? throw new UsageException(CliText.T("PresetNotFound", name));
                 Console.WriteLine(JsonSerializer.Serialize(p, SettingsJson.Options));
                 return ExitOk;
             }
             case "export":
             {
-                var name = args.ElementAtOrDefault(1) ?? throw new UsageException("presets export <name> <file>");
-                var file = args.ElementAtOrDefault(2) ?? throw new UsageException("presets export <name> <file>");
-                var p = store.Find(name) ?? throw new UsageException($"Preset not found: {name}");
+                var name = args.ElementAtOrDefault(1) ?? throw new UsageException(CliText.T("Usage", "presets export <name> <file>"));
+                var file = args.ElementAtOrDefault(2) ?? throw new UsageException(CliText.T("Usage", "presets export <name> <file>"));
+                var p = store.Find(name) ?? throw new UsageException(CliText.T("PresetNotFound", name));
                 PresetStore.SaveFile(p, file);
-                Console.WriteLine($"Exported to {file}");
+                Console.WriteLine(CliText.T("ExportedTo", file));
                 return ExitOk;
             }
             case "import":
             {
-                var file = args.ElementAtOrDefault(1) ?? throw new UsageException("presets import <file>");
+                var file = args.ElementAtOrDefault(1) ?? throw new UsageException(CliText.T("Usage", "presets import <file>"));
                 var p = PresetStore.LoadFile(file);
-                Console.WriteLine($"Imported '{p.Name}' to {store.Save(p)}");
+                Console.WriteLine(CliText.T("ImportedTo", p.Name, store.Save(p)));
                 return ExitOk;
             }
             case "delete":
             {
-                var name = args.ElementAtOrDefault(1) ?? throw new UsageException("presets delete <name>");
-                if (PresetStore.IsBuiltIn(name)) throw new UsageException("Built-in presets cannot be deleted.");
-                Console.WriteLine(store.Delete(name) ? $"Deleted '{name}'." : $"No user preset named '{name}'.");
+                var name = args.ElementAtOrDefault(1) ?? throw new UsageException(CliText.T("Usage", "presets delete <name>"));
+                if (PresetStore.IsBuiltIn(name)) throw new UsageException(CliText.T("BuiltInNoDelete"));
+                Console.WriteLine(store.Delete(name) ? CliText.T("Deleted", name) : CliText.T("NoUserPreset", name));
                 return ExitOk;
             }
             default:
-                throw new UsageException($"Unknown presets command '{sub}' (list, show, import, export, delete).");
+                throw new UsageException(CliText.T("UnknownPresetsCommand", sub));
         }
     }
 }

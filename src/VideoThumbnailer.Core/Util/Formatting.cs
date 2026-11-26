@@ -18,13 +18,14 @@ public static class Formatting
         return millis ? core + "." + ts.Milliseconds.ToString("000", Inv) : core;
     }
 
-    public static string Size(long bytes, string? unit = null)
+    public static string Size(long bytes, string? unit = null, IFormatProvider? nf = null)
     {
+        nf ??= Inv;
         double b = bytes;
-        string U(double v, string u) => v.ToString(v >= 100 ? "0" : "0.00", Inv) + " " + u;
+        string U(double v, string u) => v.ToString(v >= 100 ? "0" : "0.00", nf) + " " + u;
         switch (unit?.ToUpperInvariant())
         {
-            case "B": case "BYTES": return bytes.ToString("N0", Inv) + " B";
+            case "B": case "BYTES": return bytes.ToString("N0", nf) + " B";
             case "KB": return U(b / 1024, "KB");
             case "MB": return U(b / (1024 * 1024), "MB");
             case "GB": return U(b / (1024d * 1024 * 1024), "GB");
@@ -36,14 +37,15 @@ public static class Formatting
         return i == 0 ? bytes + " B" : U(b, units[i]);
     }
 
-    public static string Bitrate(long? bitsPerSecond)
+    public static string Bitrate(long? bitsPerSecond, IFormatProvider? nf = null, string notAvailable = "n/a")
     {
-        if (bitsPerSecond is null or <= 0) return "n/a";
+        if (bitsPerSecond is null or <= 0) return notAvailable;
+        nf ??= Inv;
         var v = bitsPerSecond.Value;
         return v >= 1_000_000
-            ? (v / 1_000_000d).ToString("0.00", Inv) + " Mbit/s"
-            : (v / 1000d).ToString("0", Inv) + " kbit/s";
+            ? (v / 1_000_000d).ToString("0.00", nf) + " Mbit/s"
+            : (v / 1000d).ToString("0", nf) + " kbit/s";
     }
 
-    public static string Number(double v, string format = "0.###") => v.ToString(format, Inv);
+    public static string Number(double v, string format = "0.###", IFormatProvider? nf = null) => v.ToString(format, nf ?? Inv);
 }

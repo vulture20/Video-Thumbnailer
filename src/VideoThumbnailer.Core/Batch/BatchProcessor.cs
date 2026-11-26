@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using VideoThumbnailer.Core.Ffmpeg;
+using VideoThumbnailer.Core.Localization;
 using VideoThumbnailer.Core.Settings;
 
 namespace VideoThumbnailer.Core.Batch;
@@ -34,7 +35,7 @@ public sealed class BatchProcessor(FfmpegTools tools)
             new ParallelOptions { MaxDegreeOfParallelism = Math.Max(1, options.MaxParallelVideos), CancellationToken = CancellationToken.None },
             async (job, _) =>
             {
-                if (ct.IsCancellationRequested) { job.Update(JobStatus.Cancelled, message: "Cancelled"); return; }
+                if (ct.IsCancellationRequested) { job.Update(JobStatus.Cancelled, message: CoreText.T("Cancelled")); return; }
                 var jsw = Stopwatch.StartNew();
                 job.Update(JobStatus.Running, 0);
                 try
@@ -44,7 +45,7 @@ public sealed class BatchProcessor(FfmpegTools tools)
                 }
                 catch (OperationCanceledException) when (ct.IsCancellationRequested)
                 {
-                    job.Update(JobStatus.Cancelled, message: "Cancelled", elapsed: jsw.Elapsed);
+                    job.Update(JobStatus.Cancelled, message: CoreText.T("Cancelled"), elapsed: jsw.Elapsed);
                 }
                 catch (Exception ex)
                 {

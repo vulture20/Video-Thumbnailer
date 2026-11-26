@@ -55,14 +55,22 @@ public class MediaTests
     public void Info_template_expands_placeholders()
     {
         var info = TestUtil.SampleInfo();
-        var text = InfoTemplate.Expand("{filename}|{size:GB}|{duration}|{resolution}|{fps}|{vcodec}{hdr}|{audio}|{unknown}", info);
+        var text = InfoTemplate.Expand("{filename}|{size:GB}|{duration}|{resolution}|{fps}|{vcodec}{hdr}|{audio}|{unknown}", info, "en");
         Assert.Equal("My Movie.mkv|1.50 GB|01:23:45|1920×1080|23.976|hevc · HDR|eac3 · 48000 Hz · 5.1(side) · 640 kbit/s · ger|{unknown}", text);
+    }
+
+    [Fact]
+    public void Info_template_uses_german_number_format()
+    {
+        var info = TestUtil.SampleInfo();
+        Assert.Equal("1,50 GB|23,976", InfoTemplate.Expand("{size:GB}|{fps}", info, "de"));
     }
 
     [Fact]
     public void Info_template_without_audio()
     {
         var info = new MediaInfo { Path = "a.mp4", Duration = 1, Video = new VideoStreamInfo { Codec = "vp9", Width = 2, Height = 2 } };
-        Assert.Equal("none / n/a", InfoTemplate.Expand("{audio} / {acodec}", info));
+        Assert.Equal("none / n/a", InfoTemplate.Expand("{audio} / {acodec}", info, "en"));
+        Assert.Equal("keine / k. A.", InfoTemplate.Expand("{audio} / {acodec}", info, "de"));
     }
 }

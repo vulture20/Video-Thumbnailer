@@ -1,5 +1,6 @@
 using SkiaSharp;
 using VideoThumbnailer.Core.Layout;
+using VideoThumbnailer.Core.Localization;
 using VideoThumbnailer.Core.Media;
 using VideoThumbnailer.Core.Settings;
 using VideoThumbnailer.Core.Util;
@@ -81,7 +82,8 @@ public static class SheetRenderer
 
     private static List<string> HeaderLines(SheetSettings s, MediaInfo info)
     {
-        var lines = InfoTemplate.Expand(s.Header.Template ?? "", info)
+        var lang = s.EffectiveTextLanguage;
+        var lines = InfoTemplate.Expand(s.Header.EffectiveTemplate(lang), info, lang)
             .Split('\n')
             .Select(l => l.TrimEnd())
             .ToList();
@@ -175,7 +177,7 @@ public static class SheetRenderer
         canvas.DrawRect(dest, p);
         using var font = new SKFont(FontProvider.Get(s.FontFamily, false), Math.Max(10, dest.Height / 8));
         using var tp = new SKPaint { Color = new SKColor(160, 160, 160), IsAntialias = true };
-        canvas.DrawText("no frame", dest.MidX, dest.MidY + font.Size / 3, SKTextAlign.Center, font, tp);
+        canvas.DrawText(CoreText.TIn(s.EffectiveTextLanguage, "Sheet.NoFrame"), dest.MidX, dest.MidY + font.Size / 3, SKTextAlign.Center, font, tp);
     }
 
     internal static string Ellipsize(string text, SKFont font, float maxWidth)

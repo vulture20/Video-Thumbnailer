@@ -1,3 +1,5 @@
+using VideoThumbnailer.Core.Localization;
+
 namespace VideoThumbnailer.Core.Settings;
 
 public static class BuiltInPresets
@@ -39,4 +41,12 @@ public static class BuiltInPresets
     ];
 
     public static SheetSettings Default => All[0].Clone();
+
+    /// <summary>Description in the current language for built-in presets, otherwise the stored description.</summary>
+    public static string Describe(SheetSettings preset, string? lang = null)
+    {
+        var builtIn = All.FirstOrDefault(p => string.Equals(p.Name, preset.Name, StringComparison.OrdinalIgnoreCase));
+        if (builtIn is null || preset.Description != builtIn.Description) return preset.Description ?? "";
+        return CoreText.TIn(lang ?? Lang.Current, "Preset." + builtIn.Name);
+    }
 }
