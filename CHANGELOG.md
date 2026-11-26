@@ -14,6 +14,7 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 - ffmpeg-Download sicherer: Installiert wird ein fest hinterlegter Build, dessen SHA-256-Prüfsumme in diesem Repo steht (Liste wird von GitHub geladen, eingebaute Kopie als Rückfall) statt auf dem Download-Server; unter macOS wird zusätzlich die Code-Signatur des Herausgebers (Team-ID) geprüft. `vthumb ffmpeg install --latest` lädt auf Wunsch weiterhin den neuesten Build ([#19])
 - ffmpeg-Quellen: Windows x64 jetzt von gyan.dev, Linux von ffmpeg.martin-riedl.de (beide halten ältere Versionen dauerhaft bereit, BtbN nur 14 Tage). Bestehende Installationen bekommen den Wechsel als ffmpeg-Update angeboten ([#19])
 - CI prüft den echten ffmpeg-Download jetzt auf Windows, Linux und macOS ([#19])
+- Copyright und Herausgeber in den Programmdateien (EXE-Eigenschaften): „Copyright (C) 2026 Thorsten Schröpel“ statt „Video-Thumbnailer contributors“; ebenso in der README ([#17])
 
 ## [0.4.0] – 2026-11-26
 
@@ -111,4 +112,5 @@ Erste Version.
 [#10]: https://github.com/vulture20/Video-Thumbnailer/pull/10
 [#13]: https://github.com/vulture20/Video-Thumbnailer/pull/13
 [#15]: https://github.com/vulture20/Video-Thumbnailer/pull/15
+[#17]: https://github.com/vulture20/Video-Thumbnailer/pull/17
 [#19]: https://github.com/vulture20/Video-Thumbnailer/pull/19

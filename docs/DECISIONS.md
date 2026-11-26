@@ -11,6 +11,7 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Clean-Room-Neuentwicklung auf Basis von ffmpeg, eigene UI; kein Code, keine Assets und keine Dateiformate aus kommerziellen Produkten | Rechtssicherheit, eigene Gestaltung |
 | 26.11.2026 | Öffentliches GitHub-Repo `vulture20/Video-Thumbnailer` | |
 | 26.11.2026 | Lizenz AGPL-3.0 (`AGPL-3.0-only`) | |
+| 26.11.2026 | Rechteinhaber ist Thorsten Schröpel: `Copyright (C) 2026 Thorsten Schröpel`, ebenso Autor/Herausgeber (`Authors`, `Company`) in den Programmdateien | Wunsch von Vulli; zeigt sich in den Datei-Eigenschaften der EXE |
 | 26.11.2026 | Plattformen Windows, Linux, macOS ab v1 | |
 | 26.11.2026 | Animierte Sheets (MP4/WebM/GIF …) erst nach v1 | MVP klein halten; umgesetzt nach v0.3.0, siehe „Animierte Sheets“ |
 | 26.11.2026 | Kommandozeile ist Teil von v1 | |
