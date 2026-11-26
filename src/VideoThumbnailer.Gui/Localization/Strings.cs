@@ -106,14 +106,21 @@ internal static class Strings
         ["ShowTimestamps"] = new("Show timestamp in every tile", "Zeitstempel in jeder Kachel anzeigen"),
         ["Position"] = new("Position", "Position"),
         ["FontSize"] = new("Font size", "Schriftgröße"),
-        ["ColorOpacity"] = new("Color / opacity", "Farbe / Deckkraft"),
         ["Outline"] = new("Outline (px)", "Kontur (px)"),
         ["DropShadow"] = new("Drop shadow", "Schlagschatten"),
+        ["Color"] = new("Color", "Farbe"),
+        ["Opacity"] = new("Opacity", "Deckkraft"),
+        ["OutlineColor"] = new("Outline color", "Konturfarbe"),
+        ["ShadowColor"] = new("Shadow color", "Schattenfarbe"),
+        ["Milliseconds"] = new("Show milliseconds (00:12:34.567)", "Millisekunden anzeigen (00:12:34.567)"),
+        ["ColorInvalid"] = new("Not a color. Use #RRGGBB or #AARRGGBB (AA = opacity); the sheet uses the default color.", "Keine gültige Farbe. Bitte #RRGGBB oder #AARRGGBB (AA = Deckkraft); der Bogen nimmt solange die Standardfarbe."),
 
         // ---- settings: header
         ["InfoHeader"] = new("Info header", "Info-Kopf"),
         ["ShowHeader"] = new("Show video information", "Video-Informationen anzeigen"),
         ["HeaderFontSize"] = new("Font size (title / text)", "Schriftgröße (Titel / Text)"),
+        ["HeaderTitleColor"] = new("Title color", "Farbe Titel"),
+        ["HeaderTextColor"] = new("Text color", "Farbe Text"),
         ["Placeholders"] = new("Placeholders: {0}", "Platzhalter: {0}"),
 
         // ---- settings: output

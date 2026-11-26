@@ -133,6 +133,13 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Bei Animation wird der Ausschnitt am Ende mit eingeplant (Zeitpunkte enden um die Ausschnittlänge früher), damit die letzte Kachel nicht leerläuft; endet ein Ausschnitt trotzdem früher, bleibt sein letztes Bild stehen | |
 | 26.11.2026 | Live-Vorschau zeigt bei Animation weiterhin ein Standbild (erstes Bild jeder Kachel) | Vorschau bleibt schnell |
 
+### Feinoptionen in der Oberfläche (#18)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 26.11.2026 | Konturfarbe, Schattenfarbe, Millisekunden (Zeitstempel) und Titel-/Textfarbe (Info-Kopf) sind in der GUI einstellbar, nur im Modus „Erweitert“ (Wunsch von Vulli). Kein eigener Optionsdialog: die Felder stehen bei ihrem Abschnitt | wer sie braucht, ist ohnehin in „Erweitert“; Einfach bleibt schlank |
+| 26.11.2026 | Farben bleiben Textfelder (#RRGGBB oder #AARRGGBB, AA = Deckkraft) mit Farbmuster daneben (Schachbrett zeigt Transparenz), kein Farbwähler. Ungültige Werte bleiben stehen, werden mit „?“ markiert, und der Bogen nimmt solange die Standardfarbe. Geprüft wird mit demselben Parser wie beim Rendern | kein zusätzliches Paket (Avalonia-ColorPicker ist eigenständig); die Werte passen 1:1 zum Preset-JSON |
+| 26.11.2026 | Schattenfarbe ist nur bei aktivem Schlagschatten bearbeitbar; Farbe/Deckkraft und Kontur/Konturfarbe stehen in getrennten Zeilen | in der 350 px breiten Spalte passen #AARRGGBB-Werte sonst nicht ganz hinein |
+
 ## Offen
 
 | Seit | Punkt | Stand |
@@ -140,7 +147,6 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | macOS-Quelle (martin-riedl.de): wird seit v0.3.0 in der CI auf macOS geprüft (Download, Prüfsumme, Sheet); ein Test auf einem echten Mac (GUI, Gatekeeper) fehlt weiterhin | kein Mac vorhanden, nur CI |
 | 26.11.2026 | Prüfsumme kommt vom selben Server wie der Download; schützt nicht gegen einen kompromittierten Anbieter. Stärker wären Signaturen (GPG) oder fest hinterlegte Hashes | bewusst akzeptiert für v1 |
 | 26.11.2026 | Code-Signierung (Windows) und Notarisierung/App-Bundle (macOS) fehlen; macOS zeigt beim ersten Start eine Gatekeeper-Warnung | Installer/Pakete (MSI, .app/.dmg, AppImage/Flatpak) später |
-| 26.11.2026 | GUI-Einstellungen für Kontur-/Schattenfarbe, Kopf-Farben und Millisekunden im Zeitstempel fehlen (im Preset-JSON und teils per CLI möglich) | Optionsdialog ist P2 |
 | 26.11.2026 | ffmpeg-Download unter Windows (neuer „shared“-Build, #14) auf einem echten Windows testen: Installation, Update einer bestehenden Installation, Verarbeitung | in der Entwicklungsumgebung nur unter Linux mit nachgebautem Archiv getestet |
 | 26.11.2026 | HDR mit echtem Kamera-/Streaming-Material ansehen (Test lief mit erzeugten HDR10/HLG-Videos); bei zu dunklen Bildern Kurve oder Weißpunkt anpassen | Rückmeldung von Vulli |
 | 26.11.2026 | Neue Oberfläche auf Windows und macOS ansehen (Schriften, Schalter, Zahnrad- und „⋯“-Symbol, Titelleiste); gebaut und getestet nur unter Linux (headless) | Rückmeldung von Vulli |
