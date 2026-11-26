@@ -133,6 +133,9 @@ jobs:
     needs: publish
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          path: src
       - uses: actions/download-artifact@v4
         with:
           path: dist
@@ -143,9 +146,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         # Works for a pushed tag as well as for a release created in the GitHub web UI.
+        # Release notes come from the version's section in CHANGELOG.md (replacing what was typed in the web UI);
+        # without such a section the existing/generated notes stay.
         run: |
+          NOTES=(--generate-notes)
+          if python3 src/tools/release-notes.py "$GITHUB_REF_NAME" src/CHANGELOG.md > notes.md; then NOTES=(--notes-file notes.md); fi
           if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
             gh release upload "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --clobber
+            if [ "${NOTES[0]}" = --notes-file ]; then gh release edit "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" "${NOTES[@]}"; fi
           else
-            gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" --generate-notes
+            gh release create "$GITHUB_REF_NAME" dist/* --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" \
+              "${NOTES[@]}"
           fi
