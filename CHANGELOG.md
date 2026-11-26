@@ -6,14 +6,20 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 
 ## [Unveröffentlicht]
 
+## [0.3.0] – 2026-11-26
+
+Vorschau mit echten Bildern des gewählten Videos; Versionsnummer in den Release-Dateien.
+
 ### Hinzugefügt
 - Live-Vorschau abschaltbar (Schalter über der Vorschau, wird gespeichert); ausgeschaltet läuft dafür kein ffmpeg ([#12])
 - Vorschau mit echten Bildern und echten Videodaten des gewählten Videos: Bilder von genau den Zeitpunkten des fertigen Bogens, Info-Kopf mit Größe, Dauer, Auflösung und Codecs. Lädt im Hintergrund und füllt sich nach und nach („Lade Bilder… n von m“); ohne ffmpeg oder bei nicht lesbaren Dateien weiter mit Beispielbildern ([#11])
 
 ### Geändert
 - Release-Dateien tragen die Version im Namen, z. B. `Video-Thumbnailer-0.3.0-win-x64.zip` (auch der Ordner im ZIP) ([#10])
+- CI prüft auf macOS den echten ffmpeg-Download (ffmpeg.martin-riedl.de) und erstellt damit ein Test-Sheet ([#13])
 
 ### Behoben
+- macOS: ffmpeg-Download schlug mit „404“ fehl, weil der Download-Dienst keine HEAD-Anfragen beantwortet; Fehlermeldungen nennen jetzt die betroffene Adresse ([#13])
 - Vorschau erkennt, wenn sich eine Videodatei auf der Festplatte geändert hat (Größe oder Änderungszeit), und liest sie neu ([#12])
 
 ## [0.2.0] – 2026-11-26
@@ -63,7 +69,8 @@ Erste Version.
 ### Geändert
 - Release-Workflow hängt die Dateien auch an ein im Browser angelegtes Release an ([#2])
 
-[Unveröffentlicht]: https://github.com/vulture20/Video-Thumbnailer/compare/v0.2.0...HEAD
+[Unveröffentlicht]: https://github.com/vulture20/Video-Thumbnailer/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/vulture20/Video-Thumbnailer/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/vulture20/Video-Thumbnailer/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/vulture20/Video-Thumbnailer/releases/tag/v0.1.0
 [#1]: https://github.com/vulture20/Video-Thumbnailer/pull/1
@@ -77,3 +84,4 @@ Erste Version.
 [#11]: https://github.com/vulture20/Video-Thumbnailer/pull/11
 [#12]: https://github.com/vulture20/Video-Thumbnailer/pull/12
 [#10]: https://github.com/vulture20/Video-Thumbnailer/pull/10
+[#13]: https://github.com/vulture20/Video-Thumbnailer/pull/13
