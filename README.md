@@ -122,6 +122,8 @@ Entscheidungen und offene Punkte: [docs/DECISIONS.md](docs/DECISIONS.md) · Änd
 
 ## Lizenz
 
+Copyright (C) 2026 Thorsten Schröpel
+
 [GNU Affero General Public License v3.0](LICENSE).
 Die mitgelieferte Schrift DejaVu Sans steht unter einer eigenen freien Lizenz (`licenses/DejaVu-LICENSE.txt`).
 ffmpeg ist nicht Bestandteil dieses Programms und wird separat unter seiner eigenen Lizenz (GPL) bezogen.

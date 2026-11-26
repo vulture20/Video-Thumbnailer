@@ -6,8 +6,10 @@
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <Version>0.4.0</Version>
-    <Authors>Video-Thumbnailer contributors</Authors>
-    <Copyright>Copyright (C) 2026 Video-Thumbnailer contributors</Copyright>
+    <Authors>Thorsten Schröpel</Authors>
+    <Company>Thorsten Schröpel</Company>
+    <Product>Video-Thumbnailer</Product>
+    <Copyright>Copyright (C) 2026 Thorsten Schröpel</Copyright>
     <PackageLicenseExpression>AGPL-3.0-only</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/vulture20/Video-Thumbnailer</RepositoryUrl>
   </PropertyGroup>
