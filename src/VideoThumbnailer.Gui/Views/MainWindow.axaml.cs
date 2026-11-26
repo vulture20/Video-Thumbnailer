@@ -38,6 +38,9 @@ public partial class MainWindow : Window, IUiServices
         if (Vm is null) return;
         foreach (var r in e.RemovedItems.OfType<JobViewModel>()) Vm.SelectedJobs.Remove(r);
         foreach (var a in e.AddedItems.OfType<JobViewModel>()) Vm.SelectedJobs.Add(a);
+        // The preview follows the most recently selected video.
+        if (e.AddedItems.OfType<JobViewModel>().LastOrDefault() is { } latest) Vm.PreviewJob = latest;
+        else if (Vm.SelectedJobs.Count > 0) Vm.PreviewJob = Vm.SelectedJobs[^1];
     }
 
     private void OnQueueDoubleTapped(object? sender, TappedEventArgs e)

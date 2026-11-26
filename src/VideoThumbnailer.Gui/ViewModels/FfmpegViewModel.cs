@@ -27,6 +27,9 @@ public partial class FfmpegViewModel : ObservableObject
 
     public FfmpegTools? Tools { get; private set; }
     public bool CanDownload => _installer is not null;
+    public bool IsReady => Tools is not null;
+    /// <summary>Simple mode shows the download button in the footer only while ffmpeg is missing.</summary>
+    public bool ShowFooterDownload => Tools is null && CanDownload;
     public string SourceName => _installer?.Source.Name ?? Loc.T("FfmpegNoSource");
     public string SourceLine => Loc.T("FfmpegSource", SourceName);
     public string InstallButtonText => Loc.T(UpdateAvailable ? "FfmpegInstallUpdate" : Tools?.Origin == FfmpegOrigin.Managed ? "FfmpegReinstall" : "FfmpegDownload");
@@ -78,6 +81,8 @@ public partial class FfmpegViewModel : ObservableObject
                 : Tools.FfmpegPath;
         }
         OnPropertyChanged(nameof(InstallButtonText));
+        OnPropertyChanged(nameof(IsReady));
+        OnPropertyChanged(nameof(ShowFooterDownload));
     }
 
     /// <summary>First start: ask once whether ffmpeg should be downloaded; afterwards check for updates weekly.</summary>

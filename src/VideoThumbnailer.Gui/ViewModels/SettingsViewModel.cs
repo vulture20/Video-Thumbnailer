@@ -66,8 +66,8 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private decimal _headerTitleFontSize;
 
     // Output
-    [ObservableProperty] private ImageFormat _format;
-    [ObservableProperty] private decimal _quality;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsJpeg), nameof(IsPng), nameof(IsWebp), nameof(HasQuality))] private ImageFormat _format;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(QualityValue))] private decimal _quality;
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsOutputFolder), nameof(IsSubfolder))] private OutputLocation _location;
     [ObservableProperty] private string? _outputFolder;
     [ObservableProperty] private bool _keepFolderStructure;
@@ -75,6 +75,14 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private string _fileNamePattern = "";
     [ObservableProperty] private OverwriteMode _overwrite;
     [ObservableProperty] private bool _saveFrames;
+
+    // Format buttons and quality slider in the output section.
+    public bool IsJpeg { get => Format == ImageFormat.Jpeg; set { if (value) Format = ImageFormat.Jpeg; } }
+    public bool IsPng { get => Format == ImageFormat.Png; set { if (value) Format = ImageFormat.Png; } }
+    public bool IsWebp { get => Format == ImageFormat.Webp; set { if (value) Format = ImageFormat.Webp; } }
+    /// <summary>PNG is lossless, so the quality slider only applies to JPG and WebP.</summary>
+    public bool HasQuality => Format != ImageFormat.Png;
+    public double QualityValue { get => (double)Quality; set => Quality = Math.Clamp((decimal)Math.Round(value), 1, 100); }
 
     public bool IsOutputFolder => Location == OutputLocation.OutputFolder;
     public bool IsSubfolder => Location == OutputLocation.SubfolderNextToVideo;
