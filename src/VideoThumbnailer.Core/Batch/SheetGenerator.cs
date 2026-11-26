@@ -72,17 +72,18 @@ public sealed class SheetGenerator(FfmpegTools tools, SemaphoreSlim processLimit
                 SKBitmap? bmp;
                 var t = p.Time;
                 var window = p.Manual ? 0 : search;
+                var (fw, fh) = layout.FrameSize(i);
                 try
                 {
                     if (fullFrames is not null)
                     {
                         (var full, t) = await _extractor.ExtractNonBlankAsync(info, t, null, null, window, ct).ConfigureAwait(false);
                         fullFrames[i] = full;
-                        bmp = full?.Resize(new SKImageInfo(layout.TileWidth, layout.TileHeight), new SKSamplingOptions(SKCubicResampler.Mitchell));
+                        bmp = full?.Resize(new SKImageInfo(fw, fh), new SKSamplingOptions(SKCubicResampler.Mitchell));
                     }
                     else
                     {
-                        (bmp, t) = await _extractor.ExtractNonBlankAsync(info, t, layout.TileWidth, layout.TileHeight, window, ct).ConfigureAwait(false);
+                        (bmp, t) = await _extractor.ExtractNonBlankAsync(info, t, fw, fh, window, ct).ConfigureAwait(false);
                     }
                 }
                 finally { processLimiter.Release(); }
@@ -105,7 +106,7 @@ public sealed class SheetGenerator(FfmpegTools tools, SemaphoreSlim processLimit
 
             progress?.Report(1);
             var missing = frames.Count(f => f.Bitmap is null);
-            return new SheetResult(JobStatus.Done, target, missing > 0 ? CoreText.T("FramesMissing", missing) : null);
+            return new SheetResult(JobStatus.Done, target, Notes(s, missing));
         }
         finally
         {
@@ -129,13 +130,14 @@ public sealed class SheetGenerator(FfmpegTools tools, SemaphoreSlim processLimit
             try
             {
                 var seconds = ClipLength(p, a);
-                var clip = await _clips.ExtractAsync(info, p.Time, seconds, a.FramesPerSecond, layout.TileWidth, layout.TileHeight, ct).ConfigureAwait(false);
+                var (fw, fh) = layout.FrameSize(i);
+                var clip = await _clips.ExtractAsync(info, p.Time, seconds, a.FramesPerSecond, fw, fh, ct).ConfigureAwait(false);
                 // Clip starts on a black frame: start it at the nearest good frame instead.
                 if (!p.Manual && search > 0 && clip.Count > 0 && BlankFrames.IsBlank(clip[0])
-                    && await _extractor.FindNonBlankAsync(info, p.Time, search, layout.TileWidth, layout.TileHeight, ct).ConfigureAwait(false) is { } found)
+                    && await _extractor.FindNonBlankAsync(info, p.Time, search, fw, fh, ct).ConfigureAwait(false) is { } found)
                 {
                     found.Bitmap.Dispose();
-                    var moved = await _clips.ExtractAsync(info, found.Time, seconds, a.FramesPerSecond, layout.TileWidth, layout.TileHeight, ct).ConfigureAwait(false);
+                    var moved = await _clips.ExtractAsync(info, found.Time, seconds, a.FramesPerSecond, fw, fh, ct).ConfigureAwait(false);
                     if (moved.Count > 0) { clip = moved; times[i] = found.Time; }
                 }
                 clips[i] = clip;
@@ -196,7 +198,17 @@ public sealed class SheetGenerator(FfmpegTools tools, SemaphoreSlim processLimit
 
         progress?.Report(1);
         var missing = clips.Count(c => c.Count == 0);
-        return new SheetResult(JobStatus.Done, target, missing > 0 ? CoreText.T("FramesMissing", missing) : null);
+        return new SheetResult(JobStatus.Done, target, Notes(s, missing));
+    }
+
+    /// <summary>Remarks for a finished sheet: missing frames, background picture that could not be read.</summary>
+    private static string? Notes(SheetSettings s, int missingFrames)
+    {
+        var notes = new List<string>();
+        if (missingFrames > 0) notes.Add(CoreText.T("FramesMissing", missingFrames));
+        if (s.BackgroundImage.Enabled && BackgroundImageCache.Get(s.BackgroundImage.Path) is null)
+            notes.Add(CoreText.T("BackgroundImageMissing", s.BackgroundImage.Path));
+        return notes.Count > 0 ? string.Join("; ", notes) : null;
     }
 
     /// <summary>Clip length of one tile: chosen by hand or the setting, within the allowed range.</summary>

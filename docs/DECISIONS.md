@@ -211,6 +211,35 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Animierte Sheets: je Kachel optional eine eigene Länge des Ausschnitts (Dialog bzw. `5:30+2`); die Animation dauert so lange wie der längste Ausschnitt, kürzere bleiben auf ihrem letzten Bild stehen | wie bisher bei Ausschnitten, die am Videoende kürzer sind |
 | 26.11.2026 | Kommandozeile: `--times "1:00,5:30+2,-,1:02:10.5"` (Komma oder Semikolon als Trenner; Komma als Dezimalzeichen nur im Dialog) | |
 
+### Spezial-Raster mit großen und kleinen Kacheln (#24)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 26.11.2026 | Eigenes, offenes Format als JSON im Preset (`template`): Raster aus `columns` × `rows` Feldern im Seitenverhältnis des Videos, dazu eine Liste `tiles` mit linkem oberen Feld (`x`, `y`) und Größe (`size`). Eine Kachel ist immer quadratisch in Feldern (`size` × `size`), Felder ohne Kachel bleiben Hintergrund. Ohne `template` gilt wie bisher das einfache Raster aus Spalten × Zeilen | quadratische Felder halten jedes Bild im Seitenverhältnis des Videos, ohne Verzerren oder Zuschneiden; das Format ist einfach genug für den späteren Baukasten-Editor (#36) und von Hand schreibbar |
+| 26.11.2026 | Eine große Kachel überspannt auch die Abstände dazwischen; ihr Bild wird in ihrer Größe aufgenommen (nicht hochskaliert). Weil die Abstände Breite und Höhe nicht genau im Verhältnis vergrößern, wird das Bild um wenige Pixel mittig beschnitten | scharfe große Bilder; der Beschnitt liegt unter 1 % |
+| 26.11.2026 | Reihenfolge der Zeitpunkte: nach dem linken oberen Feld jeder Kachel, zeilenweise (bzw. spaltenweise bei „spaltenweise“); „zufällig“ mischt wie bisher. Eine große Kachel kommt also dort dran, wo sie beginnt, und zeigt keinen besonderen Zeitpunkt. Zeitpunkte von Hand (#23) gelten je Kachel in dieser Zeitfolge | gleiche, vorhersehbare Regel wie beim einfachen Raster; wer der großen Kachel einen bestimmten Moment geben will, wählt ihn von Hand |
+| 26.11.2026 | Vier eingebaute Vorlagen: „Groß oben“ (4 × 6 Felder, eine große Kachel oben in der Mitte, 21 Bilder), „Groß Mitte“ (4 × 4, große Kachel in der Mitte, 13 Bilder), „Zwei groß“ (4 × 5, zwei große oben, 14 Bilder), „Groß zuerst“ (5 × 5, das erste Bild 3 × 3 groß oben links, 17 Bilder). Am Preset ändert sich nichts: die vier Basis-Presets bleiben beim einfachen Raster | eine Handvoll typischer Aufteilungen; Standardverhalten bleibt gleich |
+| 26.11.2026 | Oberfläche: Kachelreihe „Layout“ (auch im Modus „Einfach“) mit Symbol wie bei den Presets: „Raster“ plus die eingebauten Vorlagen; ein Preset mit eigener Vorlage bekommt eine zusätzliche Kachel mit deren Namen. Bei einer Vorlage sind Spalten und Zeilen ausgegraut; die Preset-Kacheln zeigen ihre Vorlage. Unter der Vorschau steht „Groß oben = 21 Bilder“ statt „4 × 5 = 20 Bilder“ | gleiche Bedienung wie bei den Presets |
+| 26.11.2026 | Hochkant-Videos: Die Vorlage wird wie das einfache Raster gedreht (Spalten und Zeilen getauscht), wenn „Hochkant-Videos: tauschen“ an ist und sie mehr Zeilen als Spalten hat | gleiche Regel wie bisher |
+| 26.11.2026 | Kommandozeile: `--layout big-top|big-center|two-big|big-first`, eine JSON-Datei (nur die Vorlage oder ein ganzes Preset) oder `grid` für das einfache Raster. Ungültige Vorlagen (überlappend, außerhalb, leer, mehr als 1000 Kacheln) werden beim Start mit einer Meldung abgelehnt. `{cols}`/`{rows}` im Dateinamen nennen die Felder der Vorlage | |
+
+### Bildgröße „An Bildschirm anpassen“ (#25)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 26.11.2026 | Neue Einstellung „Bildgröße“ (`fitToScreen`): „Feste Breite“ (`Off`, Standard, wie bisher), „Bildschirmbreite“ (`Width`: Sheet so breit wie der Bildschirm) und „An Bildschirm anpassen“ (`WidthAndHeight`: so groß wie möglich, ohne dass Breite oder Höhe über den Bildschirm hinausgehen; das Sheet ist dann ggf. schmaler) | die Spezifikation nennt Breite „und ggf. Höhe“; beides ist nützlich |
+| 26.11.2026 | Im Preset wird der Modus gespeichert, nicht die ausgerechnete Zahl; `sheetWidth` bleibt als feste Ersatzbreite erhalten | ein Preset passt sich so auf jedem Rechner an |
+| 26.11.2026 | Maßgeblich ist der Bildschirm, auf dem das Programmfenster gerade ist (bei mehreren Monitoren), und zwar dessen nutzbare Fläche ohne Taskleiste/Dock in **physischen Pixeln** (bei 150 % Skalierung auf einem 4K-Monitor also 3840 px breit, nicht 2560). Wird das Fenster auf einen anderen Bildschirm geschoben, zieht die Vorschau mit | Bildbetrachter zeigen „100 %“ meist Pixel für Pixel; so ist das Sheet scharf und passt ohne Scrollen |
+| 26.11.2026 | Kommandozeile und Betrieb ohne Bildschirm: `--screen BxH` gibt die Größe vor; ohne die Option gilt der Bildschirm, den die Oberfläche zuletzt gesehen hat (in `settings.json`, `lastScreen`); ist keiner bekannt, gilt die feste Breite aus dem Preset, mit Hinweis. Modus per `--fit-screen off|width|both` | Headless-Läufe bleiben vorhersagbar, ohne dass jedes Mal eine Größe angegeben werden muss |
+| 26.11.2026 | Eine feste Kachelbreite (`tileWidth`, `--tile-width`) gilt nur bei „Feste Breite“; bei „Bildschirmbreite“ und „An Bildschirm anpassen“ wird sie ignoriert | der Bildschirm bestimmt die Größe |
+
+### Hintergrundbild (#26)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 26.11.2026 | Bild hinter den Kacheln (`backgroundImage.path`), gezeichnet über der Hintergrundfarbe. Darstellung „Füllen“ (Standard: bedeckt das Sheet, an den Seiten abgeschnitten), „Strecken“, „Kacheln“ (Originalgröße wiederholt), „Zentriert“ (Originalgröße) | die vier Arten aus dem Issue; „Füllen“ verzerrt nicht und lässt keine Ränder |
+| 26.11.2026 | Ein Regler „Deckkraft“ (0–1, Standard **0,5**) statt getrennter Werte für Deckkraft und Abdunkeln: das Bild wird mit der Hintergrundfarbe gemischt, bei dunkler Farbe also abgedunkelt, bei heller aufgehellt | ein Regler reicht für Lesbarkeit von Zeitstempeln und Info-Kopf; 0,5 ist auf dem dunklen Standardhintergrund gut lesbar |
+| 26.11.2026 | Pfad im Preset: die Oberfläche speichert absolute Pfade. Relative Pfade in einer Preset-Datei gelten relativ zum Ordner dieser Datei (beim Laden in absolute umgewandelt), auf der Kommandozeile relativ zum aktuellen Ordner. Beim Export wird ein Bild im Ordner der Exportdatei (oder darunter) relativ gespeichert, sonst absolut; das Bild selbst wird nicht eingebettet oder mitkopiert | Preset und Bild lassen sich zusammen weitergeben, ohne die Preset-Datei aufzublähen |
+| 26.11.2026 | Fehlt das Bild oder ist es nicht lesbar, entsteht das Sheet mit der Hintergrundfarbe und der Eintrag bekommt einen Hinweis; die Kommandozeile prüft `--background-image` sofort | ein verschobenes Bild soll keinen Stapellauf scheitern lassen |
+| 26.11.2026 | Oberfläche nur unter „Erweitert“ (Zeile „Hintergrundbild“ mit „…“ und ✕, darunter Darstellung und Deckkraft); Kommandozeile `--background-image <Datei|none>`, `--background-mode`, `--background-opacity`. Auch animierte Sheets bekommen das Bild (einmal gelesen, nicht je Einzelbild) | |
+
 ## Offen
 
 | Seit | Punkt | Stand |
@@ -225,13 +254,10 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 
 ## Spätere Ideen (P2/P3, noch ohne Entscheidung)
 
-Aus der Spezifikation, je ein Issue. Erledigt sind aus P2 bereits: Kommandozeile, Live-Vorschau, Deutsch/Englisch, Preset-Import/-Export, „Einfach“/„Erweitert“ statt Optionsdialog, Hintergrundfarbe, animierte Sheets (MP4/WebM/GIF), Videos per URL (#21), schwarze Bilder überspringen (#22) und Aufnahmezeitpunkte von Hand (#23). Die Wahl der Render-Engine (P3) entfällt: ffmpeg ist das einzige Backend.
+Aus der Spezifikation, je ein Issue. Erledigt sind aus P2 bereits: Kommandozeile, Live-Vorschau, Deutsch/Englisch, Preset-Import/-Export, „Einfach“/„Erweitert“ statt Optionsdialog, Hintergrundfarbe, animierte Sheets (MP4/WebM/GIF), Videos per URL (#21), schwarze Bilder überspringen (#22), Aufnahmezeitpunkte von Hand (#23), Spezial-Raster (#24), „An Bildschirm anpassen“ (#25) und Hintergrundbild (#26). Die Wahl der Render-Engine (P3) entfällt: ffmpeg ist das einzige Backend.
 
 | Prio | Idee | Issue |
 |---|---|---|
-| P2 | Spezial-Raster mit großen und kleinen Kacheln | #24 |
-| P2 | Bildgröße „An Bildschirm anpassen“ | #25 |
-| P2 | Hintergrundbild | #26 |
 | P2 | Kachel-Effekte: Rahmen, Schlagschatten, Graustufen, abgeschnittene Ecken | #27 |
 | P2 | Eigener Kommentartext | #28 |
 | P2 | Wasserzeichen (Bild oder Text) | #29 |

@@ -22,6 +22,14 @@ public static class CoreText
         ["NoChecksum"] = ("No valid SHA-256 checksum published for {0}.", "Für {0} ist keine gültige SHA-256-Prüfsumme veröffentlicht."),
         ["ArchiveMissing"] = ("{0} does not contain: {1}", "{0} enthält nicht: {1}"),
 
+        ["TemplateSize"] = ("Grid template '{0}': columns must be 1-50 and rows 1-100.", "Raster-Vorlage „{0}“: Spalten müssen 1–50 und Zeilen 1–100 sein."),
+        ["TemplateEmpty"] = ("Grid template '{0}' has no tiles.", "Raster-Vorlage „{0}“ hat keine Kacheln."),
+        ["TemplateTooMany"] = ("Grid template '{0}' has more than {1} tiles.", "Raster-Vorlage „{0}“ hat mehr als {1} Kacheln."),
+        ["TemplateTileOutside"] = ("Grid template '{0}': tile at {1},{2} (size {3}) lies outside the grid.", "Raster-Vorlage „{0}“: Kachel bei {1},{2} (Größe {3}) liegt außerhalb des Rasters."),
+        ["TemplateTileOverlap"] = ("Grid template '{0}': tile at {1},{2} overlaps another tile.", "Raster-Vorlage „{0}“: Kachel bei {1},{2} überdeckt eine andere Kachel."),
+        ["TemplateIgnored"] = ("The grid template is not usable, the plain grid is used instead.", "Die Raster-Vorlage ist nicht verwendbar, es gilt das einfache Raster."),
+        ["BackgroundImageMissing"] = ("Background image not found or not readable: {0}", "Hintergrundbild nicht gefunden oder nicht lesbar: {0}"),
+
         // built-in preset descriptions
         ["Preset.Standard"] = ("4 × 5 tiles, 1920 px wide, JPG, info header and timestamps", "4 × 5 Kacheln, 1920 px breit, JPG, Info-Kopf und Zeitstempel"),
         ["Preset.Compact"] = ("3 × 3 tiles, 1280 px wide, small header", "3 × 3 Kacheln, 1280 px breit, kleiner Kopf"),

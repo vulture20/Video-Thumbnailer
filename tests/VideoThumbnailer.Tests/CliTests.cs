@@ -57,7 +57,21 @@ public class CliTests
         ["output.framesFolderPattern"] = ["--frames-folder", "f"],
         ["animation.enabled"] = ["-a", "gif"], ["animation.format"] = ["-a", "webm"],
         ["animation.clipSeconds"] = ["--clip-seconds", "5"], ["animation.framesPerSecond"] = ["--fps", "20"],
+        ["template"] = ["--layout", "big-top"], ["fitToScreen"] = ["--fit-screen", "both"],
+        ["backgroundImage.path"] = ["--background-image", SomeImage], ["backgroundImage.mode"] = ["--background-mode", "tile"],
+        ["backgroundImage.opacity"] = ["--background-opacity", "80"],
     };
+
+    /// <summary>An existing file for --background-image (the option checks that it exists).</summary>
+    private static string SomeImage
+    {
+        get
+        {
+            var path = Path.Combine(Path.GetTempPath(), "vthumb-cli-test-bg.png");
+            if (!File.Exists(path)) File.WriteAllBytes(path, [0x89, 0x50, 0x4E, 0x47]);
+            return path;
+        }
+    }
 
     // Not settings of the sheet: the preset's file format version and its name (set with --save-preset).
     private static readonly string[] NotOptions = ["schemaVersion", "name"];

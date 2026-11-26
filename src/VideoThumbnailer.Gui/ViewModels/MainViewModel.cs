@@ -316,7 +316,9 @@ public partial class MainViewModel : ObservableObject
     private void UpdatePreviewTexts()
     {
         if (_lastPreview is not { } d) return;
-        PreviewCaption = Loc.T("PreviewCaption", d.Columns, d.Rows, d.Tiles, d.Width, d.Height);
+        PreviewCaption = d.Settings.Template is { IsValid: true } t
+            ? Loc.T("PreviewCaptionTemplate", BuiltInTemplates.IsBuiltIn(t) ? Loc.T("Layout." + t.Name) : t.Name, d.Tiles, d.Width, d.Height)
+            : Loc.T("PreviewCaption", d.Columns, d.Rows, d.Tiles, d.Width, d.Height);
         PreviewNote = _lastPreviewMode switch
         {
             PreviewMode.Real when d.RealFrames >= d.Tiles => Loc.T("PreviewNoteReal"),
@@ -528,6 +530,28 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task PickBackgroundImageAsync()
+    {
+        var file = await _ui.PickImageFileAsync(Settings.BackgroundImagePath);
+        if (file is not null) Settings.BackgroundImagePath = file;
+    }
+
+    [RelayCommand]
+    private void ClearBackgroundImage() => Settings.BackgroundImagePath = null;
+
+    /// <summary>
+    /// The window moved to another screen or the screen changed: "fit to screen" sheets follow it. The size is also
+    /// remembered for the command line.
+    /// </summary>
+    public void OnScreenChanged(ScreenSize? screen)
+    {
+        if (screen is null || screen == ScreenFitting.Current) return;
+        ScreenFitting.Current = screen;
+        _app.LastScreen = screen;
+        if (Settings.FitToScreen != ScreenFit.Off) SchedulePreview();
+    }
+
+    [RelayCommand]
     private async Task AddFolderAsync()
     {
         var folder = await _ui.PickFolderAsync(Loc.T("DlgAddFolder"));
@@ -705,7 +729,7 @@ public partial class MainViewModel : ObservableObject
         var s = CurrentSettings();
         var file = await _ui.PickPresetFileAsync(save: true, PresetStore.SafeFileNameForExport(s.Name));
         if (file is null) return;
-        PresetStore.SaveFile(s, file);
+        PresetStore.ExportFile(s, file);
         StatusText = Loc.T("StatusPresetExported", file);
     }
 

@@ -1,4 +1,6 @@
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using VideoThumbnailer.Core.Layout;
 using VideoThumbnailer.Gui.Localization;
 using VideoThumbnailer.Core.Settings;
 
@@ -15,6 +17,8 @@ public partial class SettingsViewModel : ObservableObject
     public static Choice[] Formats { get; } = Choice.ForEnum<ImageFormat>("Format");
     public static Choice[] Locations { get; } = Choice.ForEnum<OutputLocation>("Location");
     public static Choice[] OverwriteModes { get; } = Choice.ForEnum<OverwriteMode>("Overwrite");
+    public static Choice[] ScreenFits { get; } = Choice.ForEnum<ScreenFit>("Fit");
+    public static Choice[] BackgroundModes { get; } = Choice.ForEnum<BackgroundImageMode>("BgMode");
     public static Choice[] SheetLanguages { get; } = [new("auto", "SheetLang.auto"), new("en", "SheetLang.en"), new("de", "SheetLang.de")];
 
     public SettingsViewModel() => Loc.Instance.LanguageChanged += () =>
@@ -37,6 +41,18 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     // Layout
+    /// <summary>Plain grid, the built-in special grids and (if any) the special grid of the loaded preset.</summary>
+    public ObservableCollection<LayoutChoice> Layouts { get; } = [LayoutChoice.Plain(), .. LayoutChoice.BuiltIns()];
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsPlainGrid))] private LayoutChoice? _selectedLayout;
+    /// <summary>Columns and rows only apply to the plain grid.</summary>
+    public bool IsPlainGrid => SelectedLayout?.Template is null;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsFixedWidth))] private ScreenFit _fitToScreen;
+    /// <summary>The sheet width only applies when the size does not come from the screen.</summary>
+    public bool IsFixedWidth => FitToScreen == ScreenFit.Off;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasBackgroundImage))] private string? _backgroundImagePath;
+    [ObservableProperty] private BackgroundImageMode _backgroundImageMode;
+    [ObservableProperty] private decimal _backgroundImageOpacity;
+    public bool HasBackgroundImage => !string.IsNullOrWhiteSpace(BackgroundImagePath);
     [ObservableProperty] private decimal _columns;
     [ObservableProperty] private decimal _rows;
     [ObservableProperty] private decimal _sheetWidth;
@@ -110,6 +126,11 @@ public partial class SettingsViewModel : ObservableObject
     {
         _source = s.Clone();
         Columns = s.Columns; Rows = s.Rows; SheetWidth = s.SheetWidth; Gap = s.Gap; Margin = s.Margin;
+        SelectedLayout = ChoiceFor(s.Template);
+        FitToScreen = s.FitToScreen;
+        BackgroundImagePath = s.BackgroundImage?.Path;
+        BackgroundImageMode = s.BackgroundImage?.Mode ?? BackgroundImageMode.Fill;
+        BackgroundImageOpacity = (decimal)(s.BackgroundImage?.Opacity ?? 0.5);
         Order = s.Order; PortraitSwapGrid = s.PortraitSwapGrid;
         SkipStartPercent = (decimal)s.SkipStartPercent; SkipEndPercent = (decimal)s.SkipEndPercent;
         SkipBlackFrames = s.SkipBlackFrames; BlackFrameSearchSeconds = (decimal)s.BlackFrameSearchSeconds;
@@ -136,12 +157,34 @@ public partial class SettingsViewModel : ObservableObject
         ClipSeconds = (decimal)s.Animation.ClipSeconds; AnimationFps = s.Animation.FramesPerSecond;
     }
 
+    /// <summary>Entry of the layout picker for a template; a template that is not built in gets its own entry.</summary>
+    private LayoutChoice ChoiceFor(GridTemplate? t)
+    {
+        // Only the special grid of the preset currently loaded is offered besides the built-in ones.
+        foreach (var old in Layouts.Where(l => !l.IsBuiltIn).ToList()) Layouts.Remove(old);
+        if (t is null) return Layouts[0];
+        var builtIn = Layouts.FirstOrDefault(l => l.Template is { } b && l.IsBuiltIn
+                                                  && string.Equals(b.Name, t.Name, StringComparison.OrdinalIgnoreCase) && BuiltInTemplates.SameTiles(b, t));
+        if (builtIn is not null) return builtIn;
+        var custom = LayoutChoice.Custom(t);
+        Layouts.Add(custom);
+        return custom;
+    }
+
     /// <summary>Builds settings from the current values. Fields the GUI does not show are kept from the loaded preset.</summary>
     public SheetSettings ToSettings(string name)
     {
         var s = _source.Clone();
         s.Name = name;
         s.Columns = (int)Columns; s.Rows = (int)Rows; s.SheetWidth = (int)SheetWidth; s.TileWidth = null;
+        s.Template = SelectedLayout?.Template?.Clone();
+        s.FitToScreen = FitToScreen;
+        s.BackgroundImage = new BackgroundImageSettings
+        {
+            Path = string.IsNullOrWhiteSpace(BackgroundImagePath) ? null : BackgroundImagePath.Trim(),
+            Mode = BackgroundImageMode,
+            Opacity = (double)BackgroundImageOpacity,
+        };
         s.Gap = (int)Gap; s.Margin = (int)Margin; s.Order = Order; s.PortraitSwapGrid = PortraitSwapGrid;
         s.SkipStartPercent = (double)SkipStartPercent; s.SkipEndPercent = (double)SkipEndPercent;
         s.SkipBlackFrames = SkipBlackFrames; s.BlackFrameSearchSeconds = (double)BlackFrameSearchSeconds;

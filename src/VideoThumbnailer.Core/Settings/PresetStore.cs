@@ -44,6 +44,10 @@ public sealed class PresetStore
         var p = JsonSerializer.Deserialize<SheetSettings>(json, SettingsJson.Options)
                 ?? throw new InvalidDataException($"Preset file is empty: {path}");
         if (string.IsNullOrWhiteSpace(p.Name)) p.Name = Path.GetFileName(path).Replace(FileExtension, "");
+        p.BackgroundImage ??= new BackgroundImageSettings();
+        // A background picture given relative to the preset file (e.g. lying next to it) becomes an absolute path.
+        if (p.BackgroundImage.Path is { Length: > 0 } bg && !Path.IsPathRooted(bg))
+            p.BackgroundImage.Path = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(path))!, bg));
         return p;
     }
 
@@ -60,6 +64,23 @@ public sealed class PresetStore
         var tmp = path + ".tmp";
         File.WriteAllText(tmp, JsonSerializer.Serialize(preset, SettingsJson.Options));
         File.Move(tmp, path, overwrite: true);
+    }
+
+    /// <summary>
+    /// Writes a preset for passing on. A background picture in the folder of the file (or below) is stored relative
+    /// to it, so the preset and the picture can be copied together; other pictures keep their absolute path.
+    /// </summary>
+    public static void ExportFile(SheetSettings preset, string path)
+    {
+        var p = preset.Clone();
+        if (p.BackgroundImage.Path is { Length: > 0 } bg && Path.IsPathRooted(bg))
+        {
+            var dir = Path.GetDirectoryName(Path.GetFullPath(path))!;
+            var rel = Path.GetRelativePath(dir, bg);
+            if (!Path.IsPathRooted(rel) && !rel.StartsWith("..", StringComparison.Ordinal))
+                p.BackgroundImage.Path = rel.Replace('\\', '/');
+        }
+        SaveFile(p, path);
     }
 
     public bool Delete(string name)
