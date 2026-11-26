@@ -1,6 +1,9 @@
 name: Release
 
-# Builds self-contained single-file binaries for all platforms.
+# Builds self-contained single-file binaries for all platforms, plus (all unsigned)
+#   Windows: Inno Setup installer  Video-Thumbnailer-<version>-win-<arch>-setup.exe
+#   Linux:   AppImage              Video-Thumbnailer-<version>-linux-<arch>.AppImage
+#   macOS:   DMG with the .app     Video-Thumbnailer-<version>-osx-<arch>.dmg
 # Runs on tags like v0.1.0 (creates a GitHub release) or manually (artifacts only).
 # Files are named Video-Thumbnailer-<version>-<rid>.zip (manual runs: version 0.0.0-dev).
 on:
@@ -17,18 +20,28 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # smoke: the runner can start this build (installs/opens the package and runs vthumb --version)
           - rid: win-x64
             os: windows-latest
+            arch: x64
+            smoke: true
           - rid: win-arm64
             os: windows-latest
+            arch: arm64
           - rid: linux-x64
             os: ubuntu-latest
+            arch: x86_64
+            smoke: true
           - rid: linux-arm64
             os: ubuntu-latest
+            arch: aarch64
           - rid: osx-x64
             os: macos-latest
+            arch: x64
           - rid: osx-arm64
             os: macos-latest
+            arch: arm64
+            smoke: true
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -50,13 +63,70 @@ jobs:
               -p:Version="${VERSION%%-*}" -p:InformationalVersion="$VERSION" -o "$OUT"
           done
           cp LICENSE README.md "$OUT/"
+          { echo "VERSION=$VERSION"; echo "NAME=$NAME"; } >> "$GITHUB_ENV"
           cd dist
           if command -v zip > /dev/null; then zip -qr "$NAME.zip" "$NAME"
           else 7z a -tzip "$NAME.zip" "$NAME" > /dev/null; fi
+
+      - name: Windows installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress; if ($LASTEXITCODE) { exit 1 } }
+          $numeric = ($env:VERSION -split '-')[0]
+          & $iscc /Q "/DAppVersion=$env:VERSION" "/DNumericVersion=$numeric" "/DArch=${{ matrix.arch }}" `
+            "/DSourceDir=$pwd\dist\$env:NAME" "/DOutputDir=$pwd\dist" "/DOutputBase=$env:NAME-setup" packaging\windows\installer.iss
+          if ($LASTEXITCODE) { exit 1 }
+      - name: Windows installer smoke test
+        if: runner.os == 'Windows' && matrix.smoke
+        shell: pwsh
+        run: |
+          $dir = "$env:RUNNER_TEMP\vt-install"
+          $p = Start-Process -Wait -PassThru "dist\$env:NAME-setup.exe" -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/CURRENTUSER', '/NORESTART', "/DIR=$dir"
+          if ($p.ExitCode) { throw "setup exit code $($p.ExitCode)" }
+          if (-not (Test-Path "$dir\VideoThumbnailer.exe")) { throw "VideoThumbnailer.exe missing" }
+          $lnk = Get-ChildItem "$env:APPDATA\Microsoft\Windows\Start Menu\Programs" -Recurse -Filter 'Video-Thumbnailer.lnk'
+          if (-not $lnk) { throw "Start menu entry missing" }
+          & "$dir\vthumb.exe" --version
+          if ($LASTEXITCODE) { exit 1 }
+          $u = Start-Process -Wait -PassThru "$dir\unins000.exe" -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES'
+          if ($u.ExitCode) { throw "uninstall exit code $($u.ExitCode)" }
+
+      - name: AppImage
+        if: runner.os == 'Linux'
+        run: |
+          set -euo pipefail
+          curl -fsSL -o "$RUNNER_TEMP/appimagetool" https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x "$RUNNER_TEMP/appimagetool"
+          APPIMAGETOOL="$RUNNER_TEMP/appimagetool" packaging/linux/make-appimage.sh "dist/$NAME" ${{ matrix.arch }} "dist/$NAME.AppImage"
+      - name: AppImage smoke test
+        if: runner.os == 'Linux' && matrix.smoke
+        run: |
+          "dist/$NAME.AppImage" --appimage-extract-and-run vthumb --version
+
+      - name: macOS app and DMG
+        if: runner.os == 'macOS'
+        run: packaging/macos/make-dmg.sh "dist/$NAME" "$VERSION" "dist/$NAME.dmg"
+      - name: DMG smoke test
+        if: runner.os == 'macOS' && matrix.smoke
+        run: |
+          set -euo pipefail
+          MNT=$(mktemp -d)
+          hdiutil attach -nobrowse -readonly -mountpoint "$MNT" "dist/$NAME.dmg"
+          test -f "$MNT/Video-Thumbnailer.app/Contents/Resources/app.icns"
+          codesign --verify --deep --strict "$MNT/Video-Thumbnailer.app"
+          "$MNT/Video-Thumbnailer.app/Contents/MacOS/vthumb" --version
+          hdiutil detach "$MNT"
+
       - uses: actions/upload-artifact@v4
         with:
           name: Video-Thumbnailer-${{ matrix.rid }}
-          path: dist/Video-Thumbnailer-*-${{ matrix.rid }}.zip
+          path: |
+            dist/Video-Thumbnailer-*-${{ matrix.rid }}.zip
+            dist/Video-Thumbnailer-*-${{ matrix.rid }}-setup.exe
+            dist/Video-Thumbnailer-*-${{ matrix.rid }}.AppImage
+            dist/Video-Thumbnailer-*-${{ matrix.rid }}.dmg
 
   release:
     if: github.ref_type == 'tag'
@@ -68,7 +138,7 @@ jobs:
           path: dist
           merge-multiple: true
       - name: Checksums
-        run: cd dist && sha256sum *.zip > checksums.sha256
+        run: cd dist && sha256sum Video-Thumbnailer-* > checksums.sha256
       - name: Create release
         env:
           GH_TOKEN: ${{ github.token }}

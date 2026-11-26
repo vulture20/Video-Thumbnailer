@@ -1,0 +1,12 @@
+#!/bin/sh
+# AppImage entry point: starts the GUI. The command line tool runs if the AppImage is called through a link named
+# "vthumb", or with "vthumb" as first argument:  ./Video-Thumbnailer-x86_64.AppImage vthumb --help
+HERE=$(dirname "$(readlink -f "$0")")
+case "$(basename "${ARGV0:-$0}")" in
+  vthumb*) exec "$HERE/usr/bin/vthumb" "$@" ;;
+esac
+if [ "$1" = "vthumb" ]; then
+  shift
+  exec "$HERE/usr/bin/vthumb" "$@"
+fi
+exec "$HERE/usr/bin/VideoThumbnailer" "$@"
