@@ -6,15 +6,15 @@ using VideoThumbnailer.Core.Settings;
 namespace VideoThumbnailer.Core.Rendering;
 
 /// <summary>Result of <see cref="SheetPreview.Render"/>: the image plus the size of the real sheet.</summary>
-public sealed record SheetPreviewResult(SKBitmap Bitmap, int SheetWidth, int SheetHeight, int Tiles) : IDisposable
+public sealed record SheetPreviewResult(SKBitmap Bitmap, int SheetWidth, int SheetHeight, int Tiles, int RealFrames = 0) : IDisposable
 {
     public void Dispose() => Bitmap.Dispose();
 }
 
 /// <summary>
-/// Renders a sheet with the real <see cref="SheetRenderer"/> but with painted placeholder scenes instead of
-/// video frames. Used for the live preview in the GUI, so header, timestamps, colors and geometry match the
-/// result exactly; only the pictures are stand-ins.
+/// Renders a sheet with the real <see cref="SheetRenderer"/> for the live preview in the GUI, so header,
+/// timestamps, colors and geometry match the result exactly. Pictures come from a frame provider (real
+/// frames of the video); every frame it cannot deliver (yet) is drawn as a painted placeholder scene.
 /// </summary>
 public static class SheetPreview
 {
@@ -39,32 +39,59 @@ public static class SheetPreview
         AudioStreams = [new AudioStreamInfo { Codec = "aac", SampleRate = 48000, Channels = 2, ChannelLayout = "stereo" }],
     };
 
-    /// <param name="maxWidth">The returned bitmap is scaled down to at most this width (the sheet size is reported unscaled).</param>
-    public static SheetPreviewResult Render(SheetSettings settings, MediaInfo info, int maxWidth = 1400)
+    /// <summary>Capture times of the sheet for these settings and this video (same plan as the real sheet).</summary>
+    public static double[] PlanTimes(SheetSettings settings, MediaInfo info)
+    {
+        var (s, layout) = Prepare(settings, info);
+        return TimestampPlanner.Plan(info.Duration, layout.Tiles.Count, s.SkipStartPercent, s.SkipEndPercent);
+    }
+
+    private static (SheetSettings, GridLayout) Prepare(SheetSettings settings, MediaInfo info)
     {
         var s = settings.Clone();
         s.Normalize();
         var aspect = info.Video?.DisplayAspect ?? 16.0 / 9.0;
-        var layout = GridLayout.Create(s, aspect, SheetRenderer.MeasureHeader(s, info), new Random(1));
+        // Same seed as SheetGenerator, so "random" order matches the real sheet.
+        var seed = StringComparer.Ordinal.GetHashCode(Path.GetFileName(info.Path));
+        return (s, GridLayout.Create(s, aspect, SheetRenderer.MeasureHeader(s, info), new Random(seed)));
+    }
+
+    /// <param name="frame">
+    /// Returns the real frame for a capture time, or null to draw a placeholder. Returned bitmaps stay owned
+    /// by the caller (they are not disposed here). Null provider = placeholders only.
+    /// </param>
+    /// <param name="maxWidth">The returned bitmap is scaled down to at most this width (the sheet size is reported unscaled).</param>
+    public static SheetPreviewResult Render(SheetSettings settings, MediaInfo info, int maxWidth = 1400, Func<double, SKBitmap?>? frame = null)
+    {
+        var (s, layout) = Prepare(settings, info);
+        var aspect = info.Video?.DisplayAspect ?? 16.0 / 9.0;
         var times = TimestampPlanner.Plan(info.Duration, layout.Tiles.Count, s.SkipStartPercent, s.SkipEndPercent);
 
         var sceneW = Math.Clamp(layout.TileWidth, 16, 320);
         var sceneH = Math.Max(2, (int)Math.Round(sceneW / aspect));
         var frames = new List<CapturedFrame>(times.Length);
+        var scenes = new List<SKBitmap>();
+        var real = 0;
         try
         {
-            for (var i = 0; i < times.Length; i++) frames.Add(new CapturedFrame(times[i], Scene(i, sceneW, sceneH)));
+            for (var i = 0; i < times.Length; i++)
+            {
+                var bmp = frame?.Invoke(times[i]);
+                if (bmp is not null) real++;
+                else scenes.Add(bmp = Scene(i, sceneW, sceneH));
+                frames.Add(new CapturedFrame(times[i], bmp));
+            }
             var full = SheetRenderer.Render(s, info, layout, frames);
             if (full.Width <= maxWidth)
-                return new SheetPreviewResult(full, layout.SheetWidth, layout.SheetHeight, layout.Tiles.Count);
+                return new SheetPreviewResult(full, layout.SheetWidth, layout.SheetHeight, layout.Tiles.Count, real);
             var h = Math.Max(1, (int)Math.Round((double)full.Height * maxWidth / full.Width));
             var small = full.Resize(new SKImageInfo(maxWidth, h), new SKSamplingOptions(SKCubicResampler.Mitchell)) ?? full;
             if (!ReferenceEquals(small, full)) full.Dispose();
-            return new SheetPreviewResult(small, layout.SheetWidth, layout.SheetHeight, layout.Tiles.Count);
+            return new SheetPreviewResult(small, layout.SheetWidth, layout.SheetHeight, layout.Tiles.Count, real);
         }
         finally
         {
-            foreach (var f in frames) f.Bitmap?.Dispose();
+            foreach (var b in scenes) b.Dispose();
         }
     }
 

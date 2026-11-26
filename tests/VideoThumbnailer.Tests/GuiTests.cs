@@ -148,3 +148,50 @@ public class GuiTests
         }
     }
 }
+
+public class GuiPreviewTests
+{
+    [AvaloniaFact]
+    public async Task Preview_shows_real_frames_and_video_data_of_the_selected_video()
+    {
+        var t = PreviewSourceTests.Tools();
+        var home = TestUtil.TempDir();
+        AppPaths.SetRootOverride(home);
+        try
+        {
+            new AppSettings { FfmpegDownloadAsked = true, CheckFfmpegUpdates = false }.Save();
+            var video = PreviewSourceTests.MakeVideo(t, Directory.CreateDirectory(Path.Combine(home, "v")).FullName);
+            var window = new MainWindow();
+            var vm = new MainViewModel(window);
+            window.DataContext = vm;
+            window.Show();
+            Assert.True(vm.Ffmpeg.IsReady);
+
+            vm.AddPaths([video]);
+            await vm.UpdatePreviewAsync();
+            Assert.Equal(Loc.T("PreviewNoteReal"), vm.PreviewNote);
+            Assert.Equal("clip.mp4", vm.PreviewTitle);
+
+            var shot = Environment.GetEnvironmentVariable("VTHUMB_SCREENSHOT_PREVIEW");
+            if (!string.IsNullOrEmpty(shot))
+            {
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+#pragma warning disable CS0618
+                window.CaptureRenderedFrame()?.Save(shot);
+#pragma warning restore CS0618
+            }
+
+            // Fewer tiles: the frames for the new capture times are loaded, still all real.
+            vm.Settings.Columns = 2;
+            vm.Settings.Rows = 2;
+            await vm.UpdatePreviewAsync();
+            Assert.Equal(Loc.T("PreviewNoteReal"), vm.PreviewNote);
+            Assert.Contains("2 × 2 = 4", vm.PreviewCaption);
+            window.Close();
+        }
+        finally
+        {
+            AppPaths.SetRootOverride(null);
+        }
+    }
+}

@@ -33,3 +33,61 @@ public class SheetPreviewTests
         Assert.True(without.SheetHeight < with.SheetHeight);
     }
 }
+
+/// <summary>Preview with real frames (needs ffmpeg on PATH, otherwise skipped).</summary>
+public class PreviewSourceTests
+{
+    internal static Core.Ffmpeg.FfmpegTools Tools()
+    {
+        var t = Core.Ffmpeg.FfmpegLocator.FromPath();
+        if (t is null) Assert.Skip("ffmpeg/ffprobe not on PATH");
+        return t;
+    }
+
+    internal static string MakeVideo(Core.Ffmpeg.FfmpegTools t, string dir)
+    {
+        var path = Path.Combine(dir, "clip.mp4");
+        Assert.True(TestUtil.Run(t.FfmpegPath, "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=size=320x180:rate=25:duration=6", path));
+        return path;
+    }
+
+    [Fact]
+    public async Task Loads_real_info_and_frames_once_and_renders_them()
+    {
+        var t = Tools();
+        var video = MakeVideo(t, TestUtil.TempDir());
+        var source = new Core.Extraction.PreviewSource(t, 2);
+        var info = await source.GetInfoAsync(video, CancellationToken.None);
+        Assert.InRange(info.Duration, 5.5, 6.5);
+        Assert.Same(info, source.TryGetInfo(video));
+
+        var s = BuiltInPresets.All.First(p => p.Name == "Compact").Clone();
+        var times = SheetPreview.PlanTimes(s, info);
+        Assert.Equal(9, times.Length);
+
+        using (var before = SheetPreview.Render(s, info, 1200, x => source.TryGetFrame(video, x)))
+            Assert.Equal(0, before.RealFrames);
+
+        var calls = 0;
+        await source.LoadFramesAsync(info, times, () => Interlocked.Increment(ref calls), CancellationToken.None);
+        Assert.Equal(9, calls);
+        using (var after = SheetPreview.Render(s, info, 1200, x => source.TryGetFrame(video, x)))
+            Assert.Equal(9, after.RealFrames);
+
+        // Cached: nothing is extracted again.
+        calls = 0;
+        await source.LoadFramesAsync(info, times, () => Interlocked.Increment(ref calls), CancellationToken.None);
+        Assert.Equal(0, calls);
+    }
+
+    [Fact]
+    public async Task Unreadable_file_fails_and_is_retried_later()
+    {
+        var t = Tools();
+        var bad = Path.Combine(TestUtil.TempDir(), "broken.mp4");
+        File.WriteAllText(bad, "not a video");
+        var source = new Core.Extraction.PreviewSource(t);
+        await Assert.ThrowsAnyAsync<Exception>(() => source.GetInfoAsync(bad, CancellationToken.None));
+        Assert.Null(source.TryGetInfo(bad));
+    }
+}
