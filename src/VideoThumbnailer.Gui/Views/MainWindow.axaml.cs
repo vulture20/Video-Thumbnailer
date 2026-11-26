@@ -16,6 +16,11 @@ public partial class MainWindow : Window, IUiServices
         InitializeComponent();
         AddHandler(DragDrop.DragOverEvent, OnDragOver);
         AddHandler(DragDrop.DropEvent, OnDrop);
+        PropertyChanged += (_, e) =>
+        {
+            if (e.Property == ClientSizeProperty) (DataContext as MainViewModel)?.OnWindowWidthChanged(ClientSize.Width);
+        };
+        DataContextChanged += (_, _) => (DataContext as MainViewModel)?.OnWindowWidthChanged(ClientSize.Width);
         Activated += (_, _) => (DataContext as MainViewModel)?.OnWindowActivated();
         Opened += async (_, _) => { if (DataContext is MainViewModel vm) await vm.OnOpenedAsync(); };
         Closing += (_, _) => (DataContext as MainViewModel)?.OnClosing();

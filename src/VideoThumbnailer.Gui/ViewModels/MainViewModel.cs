@@ -60,6 +60,34 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private string _previewNoteTip = Loc.T("PreviewNoteTip");
     public string QueueTitle => Loc.T("QueueTitle", Jobs.Count);
 
+    // ---- collapsible queue
+    /// <summary>Below this window width the queue folds into a narrow strip by itself.</summary>
+    public const double NarrowWindowWidth = 1120;
+    [ObservableProperty] private bool _isQueueCollapsed;
+    private bool _isNarrow;
+    private bool _collapsedAutomatically;
+
+    /// <summary>Folds or unfolds the queue by hand; that choice holds until the window crosses the width limit again.</summary>
+    [RelayCommand]
+    private void ToggleQueue()
+    {
+        IsQueueCollapsed = !IsQueueCollapsed;
+        _collapsedAutomatically = false;
+    }
+
+    /// <summary>
+    /// Called when the window width changes. Only crossing <see cref="NarrowWindowWidth"/> acts: getting narrow folds
+    /// the queue, getting wide again unfolds it if it was folded automatically.
+    /// </summary>
+    public void OnWindowWidthChanged(double width)
+    {
+        var narrow = width < NarrowWindowWidth;
+        if (narrow == _isNarrow) return;
+        _isNarrow = narrow;
+        if (narrow && !IsQueueCollapsed) { IsQueueCollapsed = true; _collapsedAutomatically = true; }
+        else if (!narrow && _collapsedAutomatically) { IsQueueCollapsed = false; _collapsedAutomatically = false; }
+    }
+
     public static Choice[] Languages { get; } = Choice.ForEnum<UiLanguage>("Lang");
     public static Choice[] Themes { get; } = Choice.ForEnum<UiTheme>("Theme");
 

@@ -27,10 +27,10 @@ public class FfmpegTests
     }
 
     [Theory]
-    [InlineData("win64", "ffmpeg-n9.0-latest-win64-gpl-9.0.zip", "9.0", ArchiveKind.Zip)]
+    [InlineData("win64", "ffmpeg-n9.0-latest-win64-gpl-shared-9.0.zip", "9.0", ArchiveKind.Zip)]
     [InlineData("linux64", "ffmpeg-n9.0-latest-linux64-gpl-9.0.tar.xz", "9.0", ArchiveKind.TarXz)]
     [InlineData("linuxarm64", "ffmpeg-n10.0-latest-linuxarm64-gpl-10.0.tar.xz", "10.0", ArchiveKind.TarXz)]
-    public void BtbN_picks_newest_static_gpl_release_branch(string target, string file, string version, ArchiveKind kind)
+    public void BtbN_picks_newest_release_branch_static_on_linux_shared_on_windows(string target, string file, string version, ArchiveKind kind)
     {
         var r = new BtbNSource(target).SelectRelease(FfmpegSources.ParseChecksums(Checksums))!;
         Assert.Equal(version, r.Version);
@@ -38,6 +38,34 @@ public class FfmpegTests
         Assert.Equal(file, a.FileName);
         Assert.Equal(kind, a.Kind);
         Assert.Equal(BtbNSource.BaseUrl + file, a.Url.ToString());
+        Assert.Equal(target.StartsWith("win") ? [".dll"] : null, a.Libraries);
+    }
+
+    [Fact]
+    public void Extract_takes_shared_libraries_from_bin_but_nothing_else()
+    {
+        var dir = TestUtil.TempDir();
+        var zip = Path.Combine(dir, "s.zip");
+        using (var z = ZipFile.Open(zip, ZipArchiveMode.Create))
+        {
+            foreach (var name in new[]
+                     {
+                         "f/bin/" + FfmpegLocator.ExeName("ffmpeg"), "f/bin/" + FfmpegLocator.ExeName("ffprobe"), "f/bin/" + FfmpegLocator.ExeName("ffplay"),
+                         "f/bin/avcodec-62.dll", "f/bin/avutil-60.dll", "f/lib/avcodec.dll.a", "f/doc/x.dll",
+                     })
+                using (var w = new StreamWriter(z.CreateEntry(name).Open())) w.Write(name);
+        }
+        var dest = Directory.CreateDirectory(Path.Combine(dir, "out")).FullName;
+        var asset = new FfmpegAsset("s.zip", new Uri("https://example.invalid/s.zip"), "", ArchiveKind.Zip, ["ffmpeg", "ffprobe"], [".dll"]);
+        var files = FfmpegInstaller.Extract(zip, asset, dest).Select(Path.GetFileName).Order().ToList();
+        Assert.Equal(new[] { "avcodec-62.dll", "avutil-60.dll", FfmpegLocator.ExeName("ffmpeg"), FfmpegLocator.ExeName("ffprobe") }.Order(), files);
+
+        // A shared build without its libraries is rejected.
+        var noLibs = Path.Combine(dir, "n.zip");
+        using (var z = ZipFile.Open(noLibs, ZipArchiveMode.Create))
+            foreach (var name in new[] { "f/bin/" + FfmpegLocator.ExeName("ffmpeg"), "f/bin/" + FfmpegLocator.ExeName("ffprobe") })
+                using (var w = new StreamWriter(z.CreateEntry(name).Open())) w.Write(name);
+        Assert.Throws<InvalidDataException>(() => FfmpegInstaller.Extract(noLibs, asset, Directory.CreateDirectory(Path.Combine(dir, "o2")).FullName));
     }
 
     [Fact]

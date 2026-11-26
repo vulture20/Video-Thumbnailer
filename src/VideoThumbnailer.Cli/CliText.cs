@@ -23,7 +23,7 @@ internal static class CliText
         ["SummaryCancelled"] = ("Done in {0}: {1} created, {2} skipped, {3} failed, {4} cancelled.", "Fertig in {0}: {1} erstellt, {2} übersprungen, {3} fehlgeschlagen, {4} abgebrochen."),
         ["NoFfmpegNoDownload"] = ("ffmpeg was not found and there is no automatic download for this platform. Install ffmpeg and ffprobe and put them on PATH, or pass --ffmpeg <folder>.", "ffmpeg wurde nicht gefunden, und für diese Plattform gibt es keinen automatischen Download. Bitte ffmpeg und ffprobe installieren und in den PATH legen oder --ffmpeg <Ordner> angeben."),
         ["NoFfmpegNonInteractive"] = ("ffmpeg was not found. Run 'vthumb ffmpeg install' or pass --yes to download it automatically.", "ffmpeg wurde nicht gefunden. 'vthumb ffmpeg install' ausführen oder --yes angeben, um es automatisch herunterzuladen."),
-        ["AskDownload"] = ("ffmpeg was not found. Download it now from {0} (about 100–150 MB) into\n  {1}\n? [Y/n] ", "ffmpeg wurde nicht gefunden. Jetzt von {0} herunterladen (etwa 100–150 MB) nach\n  {1}\n? [J/n] "),
+        ["AskDownload"] = ("ffmpeg was not found. Download it now from {0} (about 60–90 MB) into\n  {1}\n? [Y/n] ", "ffmpeg wurde nicht gefunden. Jetzt von {0} herunterladen (etwa 60–90 MB) nach\n  {1}\n? [J/n] "),
         ["WithoutFfmpeg"] = ("Without ffmpeg no sheets can be created.", "Ohne ffmpeg können keine Sheets erstellt werden."),
         ["Source"] = ("Source: {0}", "Quelle: {0}"),
         ["DownloadProgress"] = ("  {0}: {1}% of {2}", "  {0}: {1} % von {2}"),
