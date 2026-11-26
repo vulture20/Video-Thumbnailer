@@ -73,10 +73,17 @@
     <ScrollViewer Grid.Column="2" Padding="0,10,14,10">
       <StackPanel DataContext="{Binding}" Spacing="4">
 
-        <Grid ColumnDefinitions="180,*" Margin="0,0,0,4">
+        <StackPanel Orientation="Horizontal" Spacing="18" Margin="0,0,0,8">
+          <RadioButton x:Name="SimpleMode" GroupName="SettingsMode" Content="{l:T ModeSimple}" IsChecked="{Binding IsSimple}" FontWeight="SemiBold" />
+          <RadioButton x:Name="AdvancedMode" GroupName="SettingsMode" Content="{l:T ModeAdvanced}" IsChecked="{Binding IsAdvanced}" FontWeight="SemiBold" />
+        </StackPanel>
+        <Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto" RowSpacing="4" Margin="0,0,0,4">
           <TextBlock Classes="label" Text="{l:T Language}" />
           <ComboBox Grid.Column="1" ItemsSource="{x:Static vm:MainViewModel.Languages}" DisplayMemberBinding="{ReflectionBinding Label}"
                     SelectedValueBinding="{ReflectionBinding Value}" SelectedValue="{Binding Language, Mode=TwoWay}" HorizontalAlignment="Stretch" />
+          <TextBlock Grid.Row="1" Classes="label" Text="{l:T Theme}" />
+          <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{x:Static vm:MainViewModel.Themes}" DisplayMemberBinding="{ReflectionBinding Label}"
+                    SelectedValueBinding="{ReflectionBinding Value}" SelectedValue="{Binding Theme, Mode=TwoWay}" HorizontalAlignment="Stretch" />
         </Grid>
         <TextBlock Classes="section" Text="{l:T Preset}" Margin="0,8,0,6" />
         <ComboBox ItemsSource="{Binding Presets}" SelectedItem="{Binding SelectedPreset}" HorizontalAlignment="Stretch">
@@ -86,7 +93,7 @@
             </DataTemplate>
           </ComboBox.ItemTemplate>
         </ComboBox>
-        <WrapPanel>
+        <WrapPanel IsVisible="{Binding IsAdvanced}">
           <Button Content="{l:T SaveAs}" Command="{Binding SavePresetCommand}" Margin="0,4,6,0" />
           <Button Content="{l:T Delete}" Command="{Binding DeletePresetCommand}" Margin="0,4,6,0" />
           <Button Content="{l:T Reset}" Command="{Binding ResetToPresetCommand}" Margin="0,4,6,0" ToolTip.Tip="{l:T ResetTip}" />
@@ -96,7 +103,7 @@
 
         <!-- Layout -->
         <TextBlock Classes="section" Text="{l:T Layout}" />
-        <Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="4">
+        <Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto" RowSpacing="4">
           <TextBlock Classes="label" Text="{l:T ColumnsRows}" />
           <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
             <NumericUpDown Value="{Binding Settings.Columns}" Minimum="1" Maximum="50" Increment="1" FormatString="0" Width="110" />
@@ -105,29 +112,31 @@
           </StackPanel>
           <TextBlock Grid.Row="1" Classes="label" Text="{l:T SheetWidth}" />
           <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding Settings.SheetWidth}" Minimum="100" Maximum="32000" Increment="100" FormatString="0" />
-          <TextBlock Grid.Row="2" Classes="label" Text="{l:T GapMargin}" />
-          <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="6">
+        </Grid>
+        <Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="4" Margin="0,4,0,0" IsVisible="{Binding IsAdvanced}">
+          <TextBlock Grid.Row="0" Classes="label" Text="{l:T GapMargin}" />
+          <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="6">
             <NumericUpDown Value="{Binding Settings.Gap}" Minimum="0" Maximum="500" FormatString="0" Width="110" />
             <NumericUpDown Value="{Binding Settings.Margin}" Minimum="0" Maximum="500" FormatString="0" Width="110" />
           </StackPanel>
-          <TextBlock Grid.Row="3" Classes="label" Text="{l:T TimelineFlow}" />
-          <ComboBox Grid.Row="3" Grid.Column="1" ItemsSource="{x:Static vm:SettingsViewModel.Orders}" DisplayMemberBinding="{ReflectionBinding Label}" SelectedValueBinding="{ReflectionBinding Value}" SelectedValue="{Binding Settings.Order, Mode=TwoWay}" HorizontalAlignment="Stretch" />
-          <TextBlock Grid.Row="4" Classes="label" Text="{l:T SkipStartEnd}" />
-          <StackPanel Grid.Row="4" Grid.Column="1" Orientation="Horizontal" Spacing="6">
+          <TextBlock Grid.Row="1" Classes="label" Text="{l:T TimelineFlow}" />
+          <ComboBox Grid.Row="1" Grid.Column="1" ItemsSource="{x:Static vm:SettingsViewModel.Orders}" DisplayMemberBinding="{ReflectionBinding Label}" SelectedValueBinding="{ReflectionBinding Value}" SelectedValue="{Binding Settings.Order, Mode=TwoWay}" HorizontalAlignment="Stretch" />
+          <TextBlock Grid.Row="2" Classes="label" Text="{l:T SkipStartEnd}" />
+          <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="6">
             <NumericUpDown Value="{Binding Settings.SkipStartPercent}" Minimum="0" Maximum="45" Increment="0.5" FormatString="0.#" Width="110" />
             <NumericUpDown Value="{Binding Settings.SkipEndPercent}" Minimum="0" Maximum="45" Increment="0.5" FormatString="0.#" Width="110" />
           </StackPanel>
-          <TextBlock Grid.Row="5" Classes="label" Text="{l:T Background}" />
-          <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding Settings.BackgroundColor}" PlaceholderText="#AARRGGBB" />
-          <TextBlock Grid.Row="6" Classes="label" Text="{l:T FontFamily}" />
-          <TextBox Grid.Row="6" Grid.Column="1" Text="{Binding Settings.FontFamily}" PlaceholderText="{l:T FontFamilyPlaceholder}" />
-          <CheckBox Grid.Row="7" Grid.ColumnSpan="2" Content="{l:T PortraitSwap}" IsChecked="{Binding Settings.PortraitSwapGrid}" />
+          <TextBlock Grid.Row="3" Classes="label" Text="{l:T Background}" />
+          <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding Settings.BackgroundColor}" PlaceholderText="#AARRGGBB" />
+          <TextBlock Grid.Row="4" Classes="label" Text="{l:T FontFamily}" />
+          <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding Settings.FontFamily}" PlaceholderText="{l:T FontFamilyPlaceholder}" />
+          <CheckBox Grid.Row="5" Grid.ColumnSpan="2" Content="{l:T PortraitSwap}" IsChecked="{Binding Settings.PortraitSwapGrid}" />
         </Grid>
 
         <!-- Timestamps -->
         <TextBlock Classes="section" Text="{l:T Timestamps}" />
         <CheckBox Content="{l:T ShowTimestamps}" IsChecked="{Binding Settings.TimestampEnabled}" />
-        <Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="4" IsEnabled="{Binding Settings.TimestampEnabled}">
+        <Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="4" IsEnabled="{Binding Settings.TimestampEnabled}" IsVisible="{Binding IsAdvanced}">
           <TextBlock Classes="label" Text="{l:T Position}" />
           <ComboBox Grid.Column="1" ItemsSource="{x:Static vm:SettingsViewModel.TimestampPositions}" DisplayMemberBinding="{ReflectionBinding Label}" SelectedValueBinding="{ReflectionBinding Value}" SelectedValue="{Binding Settings.TimestampPosition, Mode=TwoWay}" HorizontalAlignment="Stretch" />
           <TextBlock Grid.Row="1" Classes="label" Text="{l:T FontSize}" />
@@ -145,7 +154,7 @@
         <!-- Header -->
         <TextBlock Classes="section" Text="{l:T InfoHeader}" />
         <CheckBox Content="{l:T ShowHeader}" IsChecked="{Binding Settings.HeaderEnabled}" />
-        <Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="4" IsEnabled="{Binding Settings.HeaderEnabled}">
+        <Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="4" IsEnabled="{Binding Settings.HeaderEnabled}" IsVisible="{Binding IsAdvanced}">
           <TextBlock Grid.Row="4" Classes="label" Text="{l:T SheetLanguage}" />
           <ComboBox Grid.Row="4" Grid.Column="1" ItemsSource="{x:Static vm:SettingsViewModel.SheetLanguages}" DisplayMemberBinding="{ReflectionBinding Label}"
                     SelectedValueBinding="{ReflectionBinding Value}" SelectedValue="{Binding Settings.SheetLanguage, Mode=TwoWay}" HorizontalAlignment="Stretch" />
@@ -163,7 +172,7 @@
 
         <!-- Output -->
         <TextBlock Classes="section" Text="{l:T Output}" />
-        <Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="4">
+        <Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="4">
           <TextBlock Classes="label" Text="{l:T FormatQuality}" />
           <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
             <ComboBox ItemsSource="{x:Static vm:SettingsViewModel.Formats}" DisplayMemberBinding="{ReflectionBinding Label}" SelectedValueBinding="{ReflectionBinding Value}" SelectedValue="{Binding Settings.Format, Mode=TwoWay}" Width="110" />
@@ -176,21 +185,23 @@
             <TextBox Text="{Binding Settings.OutputFolder}" />
             <Button Grid.Column="1" Content="…" Command="{Binding BrowseOutputFolderCommand}" Margin="4,0,0,0" />
           </Grid>
-          <CheckBox Grid.Row="3" Grid.ColumnSpan="2" Content="{l:T KeepStructure}" IsChecked="{Binding Settings.KeepFolderStructure}" IsVisible="{Binding Settings.IsOutputFolder}" />
           <TextBlock Grid.Row="4" Classes="label" Text="{l:T SubfolderName}" IsVisible="{Binding Settings.IsSubfolder}" />
           <TextBox Grid.Row="4" Grid.Column="1" Text="{Binding Settings.SubfolderName}" IsVisible="{Binding Settings.IsSubfolder}" />
-          <TextBlock Grid.Row="5" Classes="label" Text="{l:T FileNamePattern}" />
-          <TextBox Grid.Row="5" Grid.Column="1" Text="{Binding Settings.FileNamePattern}" ToolTip.Tip="{}{name} {ext} {preset} {cols} {rows} {date} {time}" />
-          <TextBlock Grid.Row="6" Classes="label" Text="{l:T IfFileExists}" />
-          <ComboBox Grid.Row="6" Grid.Column="1" ItemsSource="{x:Static vm:SettingsViewModel.OverwriteModes}" DisplayMemberBinding="{ReflectionBinding Label}" SelectedValueBinding="{ReflectionBinding Value}" SelectedValue="{Binding Settings.Overwrite, Mode=TwoWay}" HorizontalAlignment="Stretch" />
-          <CheckBox Grid.Row="7" Grid.ColumnSpan="2" Content="{l:T SaveFrames}" IsChecked="{Binding Settings.SaveFrames}" />
+        </Grid>
+        <Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="4" Margin="0,4,0,0" IsVisible="{Binding IsAdvanced}">
+          <CheckBox Grid.Row="0" Grid.ColumnSpan="2" Content="{l:T KeepStructure}" IsChecked="{Binding Settings.KeepFolderStructure}" IsVisible="{Binding Settings.IsOutputFolder}" />
+          <TextBlock Grid.Row="1" Classes="label" Text="{l:T FileNamePattern}" />
+          <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Settings.FileNamePattern}" ToolTip.Tip="{}{name} {ext} {preset} {cols} {rows} {date} {time}" />
+          <TextBlock Grid.Row="2" Classes="label" Text="{l:T IfFileExists}" />
+          <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{x:Static vm:SettingsViewModel.OverwriteModes}" DisplayMemberBinding="{ReflectionBinding Label}" SelectedValueBinding="{ReflectionBinding Value}" SelectedValue="{Binding Settings.Overwrite, Mode=TwoWay}" HorizontalAlignment="Stretch" />
+          <CheckBox Grid.Row="3" Grid.ColumnSpan="2" Content="{l:T SaveFrames}" IsChecked="{Binding Settings.SaveFrames}" />
         </Grid>
 
         <!-- Processing -->
-        <TextBlock Classes="section" Text="{l:T Processing}" />
-        <Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto" RowSpacing="4">
+        <TextBlock Classes="section" Text="{l:T Processing}" IsVisible="{Binding IsAdvanced}" />
+        <Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto" RowSpacing="4" IsVisible="{Binding IsAdvanced}">
           <TextBlock Classes="label" Text="{l:T FfmpegProcesses}" />
-          <NumericUpDown Grid.Column="1" Value="{Binding MaxParallelProcesses}" Minimum="1" Maximum="64" FormatString="0" />
+          <NumericUpDown x:Name="ParallelProcesses" Grid.Column="1" Value="{Binding MaxParallelProcesses}" Minimum="1" Maximum="64" FormatString="0" />
           <TextBlock Grid.Row="1" Classes="label" Text="{l:T VideosInParallel}" />
           <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding MaxParallelVideos}" Minimum="1" Maximum="32" FormatString="0" />
         </Grid>
@@ -198,19 +209,22 @@
         <!-- ffmpeg -->
         <TextBlock Classes="section" Text="{l:T Ffmpeg}" />
         <TextBlock Text="{Binding Ffmpeg.StatusLine}" TextWrapping="Wrap" />
-        <TextBlock Text="{Binding Ffmpeg.DetailLine}" Classes="hint" />
+        <TextBlock Text="{Binding Ffmpeg.DetailLine}" Classes="hint" IsVisible="{Binding IsAdvanced}" />
         <ProgressBar Value="{Binding Ffmpeg.DownloadPercent}" Minimum="0" Maximum="100" Height="6" IsVisible="{Binding Ffmpeg.IsBusy}" />
         <WrapPanel IsVisible="{Binding Ffmpeg.CanDownload}">
           <Button Content="{Binding Ffmpeg.InstallButtonText}" Command="{Binding Ffmpeg.InstallOrUpdateCommand}" Margin="0,4,6,0" />
-          <Button Content="{l:T FfmpegCheckUpdate}" Command="{Binding Ffmpeg.CheckForUpdateCommand}" Margin="0,4,6,0" />
+          <Button Content="{l:T FfmpegCheckUpdate}" Command="{Binding Ffmpeg.CheckForUpdateCommand}" Margin="0,4,6,0" IsVisible="{Binding IsAdvanced}" />
         </WrapPanel>
-        <CheckBox Content="{l:T FfmpegWeekly}" IsChecked="{Binding Ffmpeg.CheckUpdatesAutomatically}" IsVisible="{Binding Ffmpeg.CanDownload}" />
-        <TextBlock Classes="hint" Text="{Binding Ffmpeg.SourceLine}" />
-        <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,4,0,0">
+        <StackPanel Spacing="4" IsVisible="{Binding IsAdvanced}">
+          <CheckBox Content="{l:T FfmpegWeekly}" IsChecked="{Binding Ffmpeg.CheckUpdatesAutomatically}" IsVisible="{Binding Ffmpeg.CanDownload}" />
+          <TextBlock Classes="hint" Text="{Binding Ffmpeg.SourceLine}" />
+        </StackPanel>
+        <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,4,0,0" IsVisible="{Binding IsAdvanced}">
           <TextBox Text="{Binding Ffmpeg.CustomDirectory}" PlaceholderText="{l:T FfmpegCustomPlaceholder}" />
           <Button Grid.Column="1" Content="…" Command="{Binding Ffmpeg.BrowseCustomDirectoryCommand}" Margin="4,0,0,0" />
           <Button Grid.Column="2" Content="✕" Command="{Binding Ffmpeg.ClearCustomDirectoryCommand}" Margin="4,0,0,0" ToolTip.Tip="{l:T FfmpegClearCustomTip}" />
         </Grid>
+        <TextBlock Classes="hint" Text="{l:T SimpleHint}" Margin="0,16,0,0" IsVisible="{Binding IsSimple}" />
       </StackPanel>
     </ScrollViewer>
   </Grid>

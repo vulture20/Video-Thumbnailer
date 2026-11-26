@@ -20,6 +20,10 @@ public sealed class AppSettings
     public string? LastInputFolder { get; set; }
     /// <summary>GUI language ("English", "German"); null = follow the system language.</summary>
     public string? Language { get; set; }
+    /// <summary>GUI shows all settings (true) or only the basic ones (false, default).</summary>
+    public bool AdvancedMode { get; set; }
+    /// <summary>GUI colour theme ("Light", "Dark"); null = follow the system.</summary>
+    public string? Theme { get; set; }
 
     public static AppSettings Load(string? path = null)
     {

@@ -104,6 +104,10 @@ internal static class Strings
 
         // ---- settings: language
         ["Language"] = new("Language", "Sprache"),
+        ["Theme"] = new("Appearance", "Darstellung"),
+        ["ModeSimple"] = new("Simple", "Einfach"),
+        ["ModeAdvanced"] = new("Advanced", "Erweitert"),
+        ["SimpleHint"] = new("More settings (overlays, file names, processing, ffmpeg) under \u201cAdvanced\u201d.", "Weitere Einstellungen (Einblendungen, Dateinamen, Verarbeitung, ffmpeg) unter \u201eErweitert\u201c."),
 
         // ---- enum values
         ["Order.RowMajor"] = new("Row by row", "Zeilenweise"),
@@ -130,6 +134,9 @@ internal static class Strings
         ["Lang.System"] = new("System language", "Systemsprache"),
         ["Lang.English"] = new("English", "English"),
         ["Lang.German"] = new("Deutsch", "Deutsch"),
+        ["Theme.System"] = new("Like the system", "Wie System"),
+        ["Theme.Light"] = new("Light", "Hell"),
+        ["Theme.Dark"] = new("Dark", "Dunkel"),
 
         // ---- ffmpeg panel
         ["Ffmpeg"] = new("ffmpeg", "ffmpeg"),

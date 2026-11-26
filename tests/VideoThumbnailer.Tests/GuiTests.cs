@@ -88,6 +88,34 @@ public class GuiTests
             vm.Settings.Order = TileOrder.ColumnMajor;
             Assert.Equal(TileOrder.ColumnMajor, vm.Settings.ToSettings("x").Order);
 
+            // Simple mode is the default and hides advanced settings; the choice and the theme are saved.
+            Assert.True(vm.IsSimple);
+            var processes = window.FindControl<NumericUpDown>("ParallelProcesses")!;
+            Assert.False(processes.IsEffectivelyVisible);
+            window.FindControl<RadioButton>("AdvancedMode")!.IsChecked = true;
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            Assert.True(vm.IsAdvanced);
+            Assert.True(processes.IsEffectivelyVisible);
+
+            vm.Theme = UiTheme.Dark;
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            Assert.Equal(Avalonia.Styling.ThemeVariant.Dark, window.ActualThemeVariant);
+            var dark = Environment.GetEnvironmentVariable("VTHUMB_SCREENSHOT_DARK");
+            if (!string.IsNullOrEmpty(dark))
+            {
+#pragma warning disable CS0618
+                window.CaptureRenderedFrame()?.Save(dark);
+#pragma warning restore CS0618
+            }
+            vm.SaveAppSettings();
+            var saved = AppSettings.Load();
+            Assert.True(saved.AdvancedMode);
+            Assert.Equal("Dark", saved.Theme);
+            vm.Theme = UiTheme.System;
+            vm.IsSimple = true;
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            Assert.False(processes.IsEffectivelyVisible);
+
             vm.ClearAllCommand.Execute(null);
             Assert.Empty(vm.Jobs);
             window.Close();

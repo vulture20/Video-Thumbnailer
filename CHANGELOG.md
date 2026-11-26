@@ -14,6 +14,8 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 - Kommandozeile auf Deutsch und Englisch (Hilfe, Meldungen, Beschreibungen der Basis-Presets); Sprache über `--lang` oder `VTHUMB_LANG`, sonst wie in der GUI eingestellt bzw. Systemsprache ([#6])
 - Texte im Sheet auf Deutsch und Englisch: Standard-Info-Kopf („Größe:“, „Dauer:“), „kein Bild“, „keine“/„k. A.“ und Dezimalkomma; Sprache pro Preset wählbar („Wie Oberfläche“, Deutsch, Englisch), per CLI `--sheet-lang` ([#6])
 - Meldungen der Verarbeitung und des ffmpeg-Downloads in der Oberfläche übersetzt ([#6])
+- Einstellungen in den Modi „Einfach“ (Standard, nur das Wichtigste) und „Erweitert“ (alle Einstellungen) ([#7])
+- Dark-Mode: Darstellung „Wie System“, „Hell“ oder „Dunkel“, wirkt sofort ([#7])
 
 ### Geändert
 - Einstellungsspalte etwas breiter, Beschriftungen brechen bei Bedarf um ([#5])
@@ -48,3 +50,4 @@ Erste Version.
 [#4]: https://github.com/vulture20/Video-Thumbnailer/pull/4
 [#5]: https://github.com/vulture20/Video-Thumbnailer/pull/5
 [#6]: https://github.com/vulture20/Video-Thumbnailer/pull/6
+[#7]: https://github.com/vulture20/Video-Thumbnailer/pull/7
