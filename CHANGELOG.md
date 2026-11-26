@@ -6,6 +6,10 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 
 ## [Unveröffentlicht]
 
+## [0.2.0] – 2026-11-26
+
+Zweisprachig (Deutsch/Englisch), Modi „Einfach“/„Erweitert“, Dark-Mode und neue Oberfläche „Leuchttisch“ mit Live-Vorschau.
+
 ### Hinzugefügt
 - Eigenes App-Icon (Filmstreifen mit Vorschauraster und Play-Bild) für Windows (`.ico`, in `VideoThumbnailer.exe` und `vthumb.exe`), macOS (`.icns`) und Linux (hicolor-Icons und `.desktop`-Datei unter `packaging/linux`); Fenstericon in der GUI ([#3])
 - README-Banner und Social-Preview-Bild ([#3])
@@ -49,7 +53,8 @@ Erste Version.
 ### Geändert
 - Release-Workflow hängt die Dateien auch an ein im Browser angelegtes Release an ([#2])
 
-[Unveröffentlicht]: https://github.com/vulture20/Video-Thumbnailer/compare/v0.1.0...HEAD
+[Unveröffentlicht]: https://github.com/vulture20/Video-Thumbnailer/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/vulture20/Video-Thumbnailer/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/vulture20/Video-Thumbnailer/releases/tag/v0.1.0
 [#1]: https://github.com/vulture20/Video-Thumbnailer/pull/1
 [#2]: https://github.com/vulture20/Video-Thumbnailer/pull/2
