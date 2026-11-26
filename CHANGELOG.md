@@ -6,6 +6,10 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 
 ## [Unveröffentlicht]
 
+## [0.6.0] – 2026-11-26
+
+Videos per URL, Spezial-Raster mit großen Kacheln, Kachel-Effekte, Wasserzeichen, Kommentar und Hintergrundbild, Aufnahmezeitpunkte von Hand, schwarze Bilder überspringen, weitere Animationsformate mit Ton, Farb- und Schriftauswahl sowie alle Einstellungen auf der Kommandozeile.
+
 ### Hinzugefügt
 - Kachel-Effekte unter „Erweitert“: Rahmen je Kachel (innen gezeichnet, Farbe und Breite), Schlagschatten (fällt in den Abstand), Graustufen, abgerundete oder abgeschnittene Ecken mit einstellbarer Größe und ein Rahmen um das ganze Sheet. Alles standardmäßig aus; gilt auch für animierte Sheets und die Live-Vorschau. Kommandozeile `--tile-border`, `--tile-border-color`, `--tile-shadow`, `--tile-shadow-color`, `--tile-shadow-offset`, `--tile-shadow-blur`, `--grayscale`, `--corners square|rounded|cut`, `--corner-radius`, `--sheet-border`, `--sheet-border-color` ([#47], #27)
 - Eigener Kommentartext im Info-Kopf (z. B. „Urlaub 2026“, auch mehrzeilig): steht unter den Zeilen des Info-Kopfs oder dort, wo die Vorlage `{comment}` enthält; gespeichert im Preset, auf der Kommandozeile `--comment` ([#47], #28)
@@ -22,6 +26,7 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 - Kommandozeile kann jetzt jede Preset-Einstellung setzen: Zeitstempel (`--timestamp-size`, `--timestamp-color`, `--timestamp-opacity`, `--timestamp-bold`, `--timestamp-padding`, `--outline-color`, `--outline-width`, `--no-outline`, `--shadow`/`--no-shadow`, `--shadow-color`, `--shadow-offset`, `--milliseconds`), Info-Kopf (`--title-size`, `--header-size`, `--title-color`, `--header-color`, `--line-spacing`), Einzelbilder (`--frames-folder`, `--no-frames`) sowie `--timestamps`, `--header`, `--portrait-swap`, `--no-keep-structure` und `--description` zum Zurückschalten bzw. für `--save-preset` ([#40])
 
 ### Geändert
+- Release-Notizen auf GitHub kommen automatisch aus dem CHANGELOG-Abschnitt der Version, auch wenn das Release im Browser angelegt wird ([#48])
 - Dokumentation auf den Stand von v0.5.0 gebracht: erledigte und doppelte offene Punkte in `docs/DECISIONS.md` bereinigt, überholte Entscheidungen markiert, README (Funktionen, Inhalt der ZIPs, Aufbau) aktualisiert; spätere Ideen aus der Spezifikation als Issues #21–#39 ([#41])
 - Farben auf der Kommandozeile werden geprüft: ungültige Werte (auch bei `--background`) brechen mit einer Meldung ab, statt still die Standardfarbe zu nehmen ([#40])
 - README-Screenshots neu: aktuelle Oberfläche mit echten Bildern, Schalter „Animiertes Sheet“, Farbfeldern in „Erweitert“ (dunkel) und eingeklappter Warteschlange im schmalen Fenster; erzeugt per Test `Readme_screenshots` ([#44])
@@ -120,7 +125,8 @@ Erste Version.
 ### Geändert
 - Release-Workflow hängt die Dateien auch an ein im Browser angelegtes Release an ([#2])
 
-[Unveröffentlicht]: https://github.com/vulture20/Video-Thumbnailer/compare/v0.5.0...HEAD
+[Unveröffentlicht]: https://github.com/vulture20/Video-Thumbnailer/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/vulture20/Video-Thumbnailer/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/vulture20/Video-Thumbnailer/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/vulture20/Video-Thumbnailer/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/vulture20/Video-Thumbnailer/compare/v0.2.0...v0.3.0
@@ -150,3 +156,4 @@ Erste Version.
 [#19]: https://github.com/vulture20/Video-Thumbnailer/pull/19
 [#41]: https://github.com/vulture20/Video-Thumbnailer/pull/41
 [#40]: https://github.com/vulture20/Video-Thumbnailer/pull/40
+[#48]: https://github.com/vulture20/Video-Thumbnailer/pull/48
