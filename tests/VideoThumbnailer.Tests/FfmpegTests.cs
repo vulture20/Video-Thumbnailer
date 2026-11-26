@@ -41,6 +41,96 @@ public class FfmpegTests
         Assert.Equal(target.StartsWith("win") ? [".dll"] : null, a.Libraries);
     }
 
+    [Theory]
+    [InlineData("win-x64", ".dll")]
+    [InlineData("linux-x64", null)]
+    [InlineData("linux-arm64", null)]
+    [InlineData("osx-x64", null)]
+    [InlineData("osx-arm64", null)]
+    public void Embedded_pins_cover_every_platform_but_windows_arm64(string rid, string? library)
+    {
+        var pin = FfmpegPins.For(rid);
+        Assert.NotNull(pin);
+        var r = PinnedSource.ToRelease(pin);
+        Assert.NotEmpty(r.Version);
+        Assert.Equal(["ffmpeg", "ffprobe"], r.Assets.SelectMany(a => a.Binaries).Order());
+        Assert.All(r.Assets, a =>
+        {
+            Assert.Matches("^[0-9a-f]{64}$", a.Sha256);
+            Assert.Equal("https", a.Url.Scheme);
+            Assert.DoesNotContain("latest", a.Url.AbsolutePath); // fixed file, not a moving "latest" link
+            Assert.Equal(library is null ? null : [library], a.Libraries);
+        });
+        Assert.Equal(rid.StartsWith("osx"), r.MacTeamId is { Length: 10 });
+        Assert.Null(FfmpegPins.For("win-arm64"));
+    }
+
+    [Fact]
+    public void Default_source_is_pinned_latest_is_not()
+    {
+        var pinned = FfmpegSources.ForCurrentPlatform();
+        Assert.NotNull(pinned);
+        Assert.Equal(FfmpegSources.CurrentRid() != "win-arm64", pinned.IsPinned);
+        Assert.False(FfmpegSources.ForCurrentPlatform(latest: true)!.IsPinned);
+    }
+
+    private static string PinJson(string generated, string version, string sha = "AB") => $$"""
+        { "generated": "{{generated}}", "platforms": { "x": { "source": "s", "homepage": "h", "version": "{{version}}", "macTeamId": "ABCDE12345",
+          "assets": [ { "fileName": "a.tar.xz", "url": "https://example.invalid/a.tar.xz", "sha256": "{{sha}}", "kind": "TarXz", "binaries": ["ffmpeg"] } ] } } }
+        """;
+
+    [Fact]
+    public async Task Pinned_source_without_list_url_uses_embedded_pin()
+    {
+        var pin = FfmpegPins.Parse(PinJson("2026-01-01", "1.0")).Platforms["x"];
+        using var http = new HttpClient(new StaticHandler([]));
+        var r = await new PinnedSource("x", pin, remoteUrl: "").GetLatestAsync(http, CancellationToken.None);
+        Assert.Equal("1.0", r.Version);
+        Assert.Equal("ab", r.Assets[0].Sha256);
+        Assert.Equal(ArchiveKind.TarXz, r.Assets[0].Kind);
+        Assert.Null(r.Assets[0].Libraries);
+        Assert.Equal("ABCDE12345", r.MacTeamId);
+    }
+
+    [Fact]
+    public async Task Pinned_source_takes_newer_builds_from_the_list_in_the_repo()
+    {
+        var embedded = FfmpegPins.Parse(PinJson("2026-01-01", "1.0")).Platforms["x"];
+        var remote = PinJson("9999-01-01", "2.0", new string('c', 64));
+        using var http = new HttpClient(new StaticHandler(System.Text.Encoding.UTF8.GetBytes(remote)));
+        var r = await new PinnedSource("x", embedded, "https://example.invalid/pins.json").GetLatestAsync(http, CancellationToken.None);
+        Assert.Equal("2.0", r.Version);
+        Assert.Equal(new string('c', 64), r.Assets[0].Sha256);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.NotFound, "")]
+    [InlineData(HttpStatusCode.OK, "not json")]
+    [InlineData(HttpStatusCode.OK, "{ \"generated\": \"9999-01-01\", \"platforms\": {} }")]       // no entry for this platform
+    [InlineData(HttpStatusCode.OK, "old")]                                                               // older than the embedded list
+    [InlineData(HttpStatusCode.OK, "bad hash")]                                                          // invalid entry
+    public async Task Pinned_source_falls_back_to_embedded_pin(HttpStatusCode status, string body)
+    {
+        body = body switch
+        {
+            "old" => PinJson("1999-01-01", "2.0", new string('c', 64)),
+            "bad hash" => PinJson("9999-01-01", "2.0", "xyz"),
+            _ => body,
+        };
+        var embedded = FfmpegPins.Parse(PinJson("2026-01-01", "1.0")).Platforms["x"];
+        // The embedded list of the app decides about "older"; the test list is compared against it.
+        using var http = new HttpClient(new StaticHandler(System.Text.Encoding.UTF8.GetBytes(body), status));
+        var r = await new PinnedSource("x", embedded, "https://example.invalid/pins.json").GetLatestAsync(http, CancellationToken.None);
+        Assert.Equal("1.0", r.Version);
+    }
+
+    [Theory]
+    [InlineData("Executable=/x/ffmpeg\nIdentifier=ffmpeg\nTeamIdentifier=KU3N25YGLU\nSealed Resources=none", "KU3N25YGLU")]
+    [InlineData("Identifier=ffmpeg\nTeamIdentifier=not set", null)]
+    [InlineData("", null)]
+    public void Parses_team_id_from_codesign(string output, string? expected) =>
+        Assert.Equal(expected, FfmpegInstaller.ParseTeamId(output));
+
     [Fact]
     public void Extract_takes_shared_libraries_from_bin_but_nothing_else()
     {
@@ -171,9 +261,9 @@ public class FfmpegTests
                 [new FfmpegAsset("pkg.zip", new Uri("https://example.invalid/pkg.zip"), sha, ArchiveKind.Zip, ["ffmpeg", "ffprobe"])]));
     }
 
-    private sealed class StaticHandler(byte[] body) : HttpMessageHandler
+    private sealed class StaticHandler(byte[] body, HttpStatusCode status = HttpStatusCode.OK) : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
-            Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(body) });
+            Task.FromResult(new HttpResponseMessage(status) { Content = new ByteArrayContent(body) });
     }
 }

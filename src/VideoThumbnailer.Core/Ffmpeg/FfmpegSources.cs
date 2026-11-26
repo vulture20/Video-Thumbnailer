@@ -1,9 +1,11 @@
 using System.Runtime.InteropServices;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using VideoThumbnailer.Core.Localization;
 
 namespace VideoThumbnailer.Core.Ffmpeg;
 
+[JsonConverter(typeof(JsonStringEnumConverter<ArchiveKind>))]
 public enum ArchiveKind { Zip, TarXz }
 
 /// <summary>
@@ -13,8 +15,11 @@ public enum ArchiveKind { Zip, TarXz }
 public sealed record FfmpegAsset(string FileName, Uri Url, string Sha256, ArchiveKind Kind, IReadOnlyList<string> Binaries,
     IReadOnlyList<string>? Libraries = null);
 
-/// <summary>A concrete build that can be installed. <see cref="Id"/> changes whenever the build changes.</summary>
-public sealed record FfmpegRelease(string SourceName, string Version, IReadOnlyList<FfmpegAsset> Assets)
+/// <summary>
+/// A concrete build that can be installed. <see cref="Id"/> changes whenever the build changes.
+/// <paramref name="MacTeamId"/>: on macOS the binaries must carry a valid code signature of this Apple Team ID.
+/// </summary>
+public sealed record FfmpegRelease(string SourceName, string Version, IReadOnlyList<FfmpegAsset> Assets, string? MacTeamId = null)
 {
     public string Id => string.Join("+", Assets.Select(a => a.Sha256));
 }
@@ -23,28 +28,47 @@ public interface IFfmpegSource
 {
     string Name { get; }
     string Homepage { get; }
+    /// <summary>True if the checksums come from this app (ffmpeg-pins.json), not from the download server.</summary>
+    bool IsPinned => false;
     Task<FfmpegRelease> GetLatestAsync(HttpClient http, CancellationToken ct);
 }
 
 public static class FfmpegSources
 {
-    /// <summary>Picks the download source for the current OS/architecture, or null if none exists.</summary>
-    public static IFfmpegSource? ForCurrentPlatform()
+    /// <summary>
+    /// Picks the download source for the current OS/architecture, or null if none exists. By default the build fixed
+    /// in ffmpeg-pins.json (checksums from this repository, see <see cref="FfmpegPins"/>); <paramref name="latest"/> or a platform without a pinned
+    /// build (Windows arm64) uses the newest build, checked only against the checksum published next to it.
+    /// </summary>
+    public static IFfmpegSource? ForCurrentPlatform(bool latest = false)
     {
-        var arch = RuntimeInformation.OSArchitecture;
-        if (OperatingSystem.IsWindows())
-            return arch == Architecture.Arm64 ? new BtbNSource("winarm64") : new BtbNSource("win64");
-        if (OperatingSystem.IsLinux())
-            return arch switch
-            {
-                Architecture.X64 => new BtbNSource("linux64"),
-                Architecture.Arm64 => new BtbNSource("linuxarm64"),
-                _ => null,
-            };
-        if (OperatingSystem.IsMacOS())
-            return new MartinRiedlSource(arch == Architecture.Arm64 ? "arm64" : "amd64");
-        return null;
+        if (!latest && CurrentRid() is { } rid && FfmpegPins.For(rid) is { } pin) return new PinnedSource(rid, pin);
+        return LatestForCurrentPlatform();
     }
+
+    /// <summary>Runtime id of this OS/architecture as used in ffmpeg-pins.json, e.g. "win-x64", "osx-arm64".</summary>
+    public static string? CurrentRid()
+    {
+        var arch = RuntimeInformation.OSArchitecture switch
+        {
+            Architecture.X64 => "x64",
+            Architecture.Arm64 => "arm64",
+            _ => null,
+        };
+        var os = OperatingSystem.IsWindows() ? "win" : OperatingSystem.IsLinux() ? "linux" : OperatingSystem.IsMacOS() ? "osx" : null;
+        return arch is null || os is null ? null : $"{os}-{arch}";
+    }
+
+    private static IFfmpegSource? LatestForCurrentPlatform() => CurrentRid() switch
+    {
+        "win-x64" => new BtbNSource("win64"),
+        "win-arm64" => new BtbNSource("winarm64"),
+        "linux-x64" => new MartinRiedlSource("linux", "amd64"),
+        "linux-arm64" => new MartinRiedlSource("linux", "arm64"),
+        "osx-x64" => new MartinRiedlSource("macos", "amd64"),
+        "osx-arm64" => new MartinRiedlSource("macos", "arm64"),
+        _ => null,
+    };
 
     /// <summary>Parses "sha256␠␠filename" lines (sha256sum format).</summary>
     public static Dictionary<string, string> ParseChecksums(string text)
@@ -60,7 +84,9 @@ public static class FfmpegSources
 }
 
 /// <summary>
-/// GPL builds from https://github.com/BtbN/FFmpeg-Builds (Windows and Linux, x64 and arm64).
+/// GPL builds from https://github.com/BtbN/FFmpeg-Builds (Windows and Linux, x64 and arm64). Only used for the newest
+/// build ("ffmpeg install --latest") and on Windows arm64, which has no pinned build: BtbN keeps dated builds only
+/// for 14 days, so they cannot be pinned.
 /// Uses the floating "latest" release and its checksums.sha256; picks the newest release branch
 /// build (e.g. n8.1), not master. Windows uses the "gpl-shared" variant: ffmpeg and ffprobe share their
 /// DLLs there, which makes the download less than half as big (about 87 instead of 198 MB, about 200 instead of
@@ -103,15 +129,15 @@ public sealed partial class BtbNSource(string target) : IFfmpegSource
 }
 
 /// <summary>
-/// macOS builds from https://ffmpeg.martin-riedl.de (signed and notarized, arm64 and amd64).
+/// Builds from https://ffmpeg.martin-riedl.de (macOS: signed and notarized; Linux; arm64 and amd64), newest release.
 /// ffmpeg and ffprobe come as separate ZIPs, each with a .sha256 file next to it.
 /// </summary>
-public sealed class MartinRiedlSource(string arch) : IFfmpegSource
+public sealed class MartinRiedlSource(string os, string arch) : IFfmpegSource
 {
-    public string Name => $"ffmpeg.martin-riedl.de (macOS {arch})";
+    public string Name => $"ffmpeg.martin-riedl.de ({os} {arch})";
     public string Homepage => "https://ffmpeg.martin-riedl.de";
 
-    private string Url(string tool) => $"https://ffmpeg.martin-riedl.de/redirect/latest/macos/{arch}/release/{tool}.zip";
+    private string Url(string tool) => $"https://ffmpeg.martin-riedl.de/redirect/latest/{os}/{arch}/release/{tool}.zip";
 
     public async Task<FfmpegRelease> GetLatestAsync(HttpClient http, CancellationToken ct)
     {

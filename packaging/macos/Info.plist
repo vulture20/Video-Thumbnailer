@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Template for Video-Thumbnailer.app; @VERSION@ and @SHORT_VERSION@ are filled in by packaging/macos/make-dmg.sh. -->
+<plist version="1.0">
+<dict>
+  <key>CFBundleName</key>
+  <string>Video-Thumbnailer</string>
+  <key>CFBundleDisplayName</key>
+  <string>Video-Thumbnailer</string>
+  <key>CFBundleIdentifier</key>
+  <string>io.github.vulture20.videothumbnailer</string>
+  <key>CFBundleExecutable</key>
+  <string>VideoThumbnailer</string>
+  <key>CFBundleIconFile</key>
+  <string>app.icns</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleInfoDictionaryVersion</key>
+  <string>6.0</string>
+  <key>CFBundleShortVersionString</key>
+  <string>@SHORT_VERSION@</string>
+  <key>CFBundleVersion</key>
+  <string>@VERSION@</string>
+  <key>CFBundleDevelopmentRegion</key>
+  <string>en</string>
+  <key>CFBundleLocalizations</key>
+  <array>
+    <string>en</string>
+    <string>de</string>
+  </array>
+  <key>LSApplicationCategoryType</key>
+  <string>public.app-category.video</string>
+  <key>NSHighResolutionCapable</key>
+  <true/>
+  <key>NSHumanReadableCopyright</key>
+  <string>Copyright (C) 2026 Thorsten Schröpel</string>
+</dict>
+</plist>

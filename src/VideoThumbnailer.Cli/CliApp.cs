@@ -232,7 +232,7 @@ public static class CliApp
     {
         var sub = args.FirstOrDefault() ?? "status";
         var app = AppSettings.Load();
-        var installer = FfmpegInstaller.ForCurrentPlatform();
+        var installer = FfmpegInstaller.ForCurrentPlatform(latest: args.Contains("--latest"));
         switch (sub)
         {
             case "status":

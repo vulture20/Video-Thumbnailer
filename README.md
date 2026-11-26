@@ -31,12 +31,16 @@ Free, cross-platform video contact sheet generator with GUI and command line.
 
 ## Download und Start
 
-Fertige Programme gibt es unter [Releases](https://github.com/vulture20/Video-Thumbnailer/releases), je Plattform als ZIP mit zwei Einzeldateien:
+Fertige Programme gibt es unter [Releases](https://github.com/vulture20/Video-Thumbnailer/releases). Es muss kein .NET installiert sein.
 
-- `VideoThumbnailer` (bzw. `.exe`) – grafische Oberfläche
-- `vthumb` (bzw. `.exe`) – Kommandozeile
+| System | Paket | Hinweis |
+|---|---|---|
+| Windows | `…-win-x64-setup.exe` (bzw. `arm64`) | Installer mit Startmenü-Eintrag, ohne Administratorrechte. Nicht signiert: SmartScreen warnt, „Weitere Informationen“ → „Trotzdem ausführen“ |
+| Linux | `…-linux-x64.AppImage` (bzw. `arm64`) | ausführbar machen und starten (`chmod +x …AppImage`); Kommandozeile: `./…AppImage vthumb --help` |
+| macOS | `…-osx-arm64.dmg` (Apple Silicon) bzw. `osx-x64` (Intel) | App in „Programme“ ziehen. Nicht notarisiert: beim ersten Start Rechtsklick → „Öffnen“ bestätigen; die Kommandozeile liegt in `Video-Thumbnailer.app/Contents/MacOS/vthumb` |
+| alle | `…-<system>.zip` | portable Fassung mit zwei Einzeldateien: `VideoThumbnailer` (Oberfläche) und `vthumb` (Kommandozeile) |
 
-Es muss kein .NET installiert sein. Unter macOS ist das Programm noch nicht signiert: beim ersten Start per Rechtsklick → „Öffnen“ bestätigen.
+Die Prüfsummen aller Dateien stehen in `checksums.sha256`.
 
 **Portabler Modus:** Liegt eine leere Datei `portable.txt` neben der Programmdatei, werden Einstellungen, Presets und ffmpeg im Ordner `data` daneben gespeichert.
 
@@ -88,8 +92,11 @@ Die erste Zeile wird fett und größer dargestellt.
 
 | System | Quelle |
 |---|---|
-| Windows x64/arm64, Linux x64/arm64 | [BtbN/FFmpeg-Builds](https://github.com/BtbN/FFmpeg-Builds) (statischer GPL-Build des aktuellen Release-Zweigs) |
-| macOS arm64/Intel | [ffmpeg.martin-riedl.de](https://ffmpeg.martin-riedl.de) |
+| Windows x64 | [gyan.dev](https://www.gyan.dev/ffmpeg/builds/) (GPL-„full_build-shared“, über [GyanD/codexffmpeg](https://github.com/GyanD/codexffmpeg/releases)) |
+| Linux x64/arm64, macOS arm64/Intel | [ffmpeg.martin-riedl.de](https://ffmpeg.martin-riedl.de) (macOS-Builds signiert und notarisiert) |
+| Windows arm64 | [BtbN/FFmpeg-Builds](https://github.com/BtbN/FFmpeg-Builds) (neuester Build, siehe unten) |
+
+Installiert wird ein **fest hinterlegter** ffmpeg-Build aus [ffmpeg-pins.json](src/VideoThumbnailer.Core/Ffmpeg/ffmpeg-pins.json): Adresse und SHA-256-Prüfsumme stehen in diesem Repo, nicht auf dem Download-Server. Unter macOS wird zusätzlich die Apple-Signatur des Herausgebers geprüft. Die App liest die Liste beim Update-Check von GitHub (ohne Verbindung gilt die eingebaute Liste); ein wöchentlicher Workflow trägt neuere Builds dort ein, nachdem er sie heruntergeladen und geprüft hat. Für ein neues ffmpeg braucht es also keine neue App-Version. Unter Windows arm64 gibt es keinen dauerhaft abrufbaren Build; dort wird wie bisher der neueste Build gegen die Prüfsumme des Anbieters geprüft. `vthumb ffmpeg install --latest` macht das auf Wunsch auch auf den anderen Systemen.
 
 Reihenfolge der Suche: eigener Ordner (Einstellungen bzw. `--ffmpeg`) → heruntergeladenes ffmpeg → `PATH`.
 Details zu Speicherorten, Prüfsummen und Updates: [docs/DECISIONS.md](docs/DECISIONS.md).

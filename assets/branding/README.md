@@ -21,7 +21,7 @@ Schrift in Banner/Preview: Inter (SIL OFL), nur in den PNGs verwendet.
 |---|---|
 | `src/VideoThumbnailer.Gui/Assets/app.ico` | Windows-Programmicon (GUI und `vthumb`), Fenstericon der Oberfläche |
 | `assets/branding/app.ico` | dieselbe Datei für andere Zwecke (16–256 px) |
-| `assets/branding/app.icns` | macOS (16–1024 px, inkl. @2x), für ein späteres `.app`-Bundle |
+| `assets/branding/app.icns` | macOS (16–1024 px, inkl. @2x), Icon von `Video-Thumbnailer.app` im DMG |
 | `assets/branding/png/icon-*.png` | PNG in 16–1024 px |
 | `packaging/linux/icons/hicolor/…` | Linux-Icon-Theme (16–512 px + scalable) |
 | `docs/images/banner.png` | README-Banner (1280×320) |
