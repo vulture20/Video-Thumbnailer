@@ -209,3 +209,59 @@ public class GuiPreviewTests
         }
     }
 }
+
+public class GuiQueueTests
+{
+    [AvaloniaFact]
+    public void Queue_folds_in_narrow_windows_and_by_hand()
+    {
+        var home = TestUtil.TempDir();
+        AppPaths.SetRootOverride(home);
+        try
+        {
+            new AppSettings { FfmpegDownloadAsked = true, CheckFfmpegUpdates = false }.Save();
+            var window = new MainWindow();
+            var vm = new MainViewModel(window);
+            window.DataContext = vm;
+            window.Show();
+            var strip = window.FindControl<Border>("QueueStrip")!;
+            var panel = window.FindControl<Border>("QueuePanel")!;
+            Assert.False(vm.IsQueueCollapsed);
+            Assert.True(panel.IsEffectivelyVisible);
+
+            // Narrow window: folds by itself; wide again: unfolds.
+            window.Width = 900;
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            Assert.True(vm.IsQueueCollapsed);
+            Assert.True(strip.IsEffectivelyVisible);
+            Assert.False(panel.IsEffectivelyVisible);
+            var shot = Environment.GetEnvironmentVariable("VTHUMB_SCREENSHOT_NARROW");
+            if (!string.IsNullOrEmpty(shot))
+            {
+#pragma warning disable CS0618
+                window.CaptureRenderedFrame()?.Save(shot);
+#pragma warning restore CS0618
+            }
+            window.Width = 1320;
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            Assert.False(vm.IsQueueCollapsed);
+
+            // By hand: stays folded when the window gets narrow and wide again.
+            window.FindControl<Button>("CollapseQueueButton")!.Command!.Execute(null);
+            Assert.True(vm.IsQueueCollapsed);
+            vm.OnWindowWidthChanged(900);
+            vm.OnWindowWidthChanged(1300);
+            Assert.True(vm.IsQueueCollapsed);
+            // Unfolded by hand while narrow: stays open until the next crossing.
+            vm.OnWindowWidthChanged(900);
+            vm.ToggleQueueCommand.Execute(null);
+            vm.OnWindowWidthChanged(950);
+            Assert.False(vm.IsQueueCollapsed);
+            window.Close();
+        }
+        finally
+        {
+            AppPaths.SetRootOverride(null);
+        }
+    }
+}

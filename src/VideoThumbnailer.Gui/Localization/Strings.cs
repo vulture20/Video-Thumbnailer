@@ -24,6 +24,8 @@ internal static class Strings
         ["AddFilesShort"] = new("+ Files…", "+ Dateien…"),
         ["AddFolderShort"] = new("+ Folder…", "+ Ordner…"),
         ["QueueTitle"] = new("QUEUE · {0}", "WARTESCHLANGE · {0}"),
+        ["QueueCollapse"] = new("Fold the queue (more room for the preview)", "Warteschlange einklappen (mehr Platz für die Vorschau)"),
+        ["QueueExpand"] = new("Unfold the queue", "Warteschlange ausklappen"),
         ["QueueMenuTip"] = new("More queue actions", "Weitere Aktionen für die Warteschlange"),
         ["DropZone"] = new("or drop videos and folders here", "oder Videos und Ordner hierher ziehen"),
 
