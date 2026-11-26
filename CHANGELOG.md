@@ -6,6 +6,10 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 
 ## [Unveröffentlicht]
 
+### Hinzugefügt
+- Farbwähler: Klick auf das Farbmuster neben einem Farbfeld öffnet Spektrum, Palette und Regler mit Deckkraft; die Hex-Eingabe bleibt ([#NN])
+- Schriftauswahl: „…“ neben der Schriftart öffnet eine durchsuchbare Liste der installierten Schriften, jede in ihrer eigenen Schrift, mit Vorschau von Info-Kopf und Zeitstempel ([#NN])
+
 ## [0.5.0] – 2026-11-26
 
 Installer für Windows, AppImage für Linux und DMG für macOS, sichererer ffmpeg-Download mit fest hinterlegten Prüfsummen, neue Farb- und Zeitstempel-Optionen unter „Erweitert“.
@@ -108,6 +112,7 @@ Erste Version.
 [0.1.0]: https://github.com/vulture20/Video-Thumbnailer/releases/tag/v0.1.0
 [#1]: https://github.com/vulture20/Video-Thumbnailer/pull/1
 [#2]: https://github.com/vulture20/Video-Thumbnailer/pull/2
+[#NN]: https://github.com/vulture20/Video-Thumbnailer/pull/NN
 [#3]: https://github.com/vulture20/Video-Thumbnailer/pull/3
 [#4]: https://github.com/vulture20/Video-Thumbnailer/pull/4
 [#5]: https://github.com/vulture20/Video-Thumbnailer/pull/5

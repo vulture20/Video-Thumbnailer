@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Data;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -9,7 +10,8 @@ namespace VideoThumbnailer.Gui.Controls;
 /// <summary>
 /// Text box for a color (#RGB, #ARGB, #RRGGBB or #AARRGGBB) with a small swatch that shows the
 /// color on a checkerboard, so transparency is visible. An unreadable value gets a red frame; the sheet then
-/// uses the built-in default for that color.
+/// uses the built-in default for that color. A click on the swatch opens a color picker (spectrum, palette,
+/// sliders and opacity); every change there is written back as #AARRGGBB.
 /// </summary>
 public sealed class ColorField : Grid
 {
@@ -19,6 +21,9 @@ public sealed class ColorField : Grid
     private readonly TextBox _box;
     private readonly Border _swatch;
     private readonly Border _frame;
+    private readonly Button _button;
+    private readonly ColorView _picker;
+    private bool _syncing;
 
     public ColorField()
     {
@@ -33,9 +38,29 @@ public sealed class ColorField : Grid
             VerticalAlignment = VerticalAlignment.Center, ClipToBounds = true,
             Background = Checkerboard, Child = _swatch,
         };
-        SetColumn(_frame, 1);
+        _picker = new ColorView
+        {
+            IsAlphaEnabled = true, IsAlphaVisible = true, IsAccentColorsVisible = false,
+            Width = 320, Height = 380,
+        };
+        _picker.ColorChanged += (_, e) =>
+        {
+            if (_syncing) return;
+            _syncing = true;
+            Text = ToHex(e.NewColor);
+            _syncing = false;
+        };
+        var flyout = new Flyout { Content = _picker, Placement = PlacementMode.LeftEdgeAlignedTop };
+        flyout.Opening += (_, _) => SyncPicker();
+        _button = new Button
+        {
+            Content = _frame, Padding = new Thickness(0), Background = Brushes.Transparent, BorderThickness = new Thickness(0),
+            VerticalAlignment = VerticalAlignment.Center, Flyout = flyout,
+        };
+        ToolTip.SetTip(_button, Localization.Loc.T("ColorPick"));
+        SetColumn(_button, 1);
         Children.Add(_box);
-        Children.Add(_frame);
+        Children.Add(_button);
         Update();
     }
 
@@ -44,13 +69,31 @@ public sealed class ColorField : Grid
     /// <summary>The inner text box (for tests and focus).</summary>
     public TextBox Box => _box;
 
+    /// <summary>The swatch button that opens the color picker, and the picker itself (for tests).</summary>
+    public Button PickerButton => _button;
+    public ColorView Picker => _picker;
+
+    /// <summary>#AARRGGBB, the format of the presets.</summary>
+    public static string ToHex(Color c) => $"#{c.A:X2}{c.R:X2}{c.G:X2}{c.B:X2}";
+
+    private void SyncPicker()
+    {
+        _syncing = true;
+        _picker.Color = TryParse(Text, out var c) ? c : Colors.White;
+        _syncing = false;
+    }
+
     /// <summary>True if <see cref="Text"/> is a color the sheet can use.</summary>
     public bool IsValid { get; private set; }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
-        if (change.Property == TextProperty) Update();
+        if (change.Property == TextProperty)
+        {
+            Update();
+            if (!_syncing && _button.Flyout is { IsOpen: true }) SyncPicker();
+        }
     }
 
     private void Update()
@@ -63,7 +106,7 @@ public sealed class ColorField : Grid
             HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
         };
         _frame.BorderBrush = IsValid ? new SolidColorBrush(Color.FromArgb(0x60, 0x80, 0x80, 0x80)) : InvalidBrush;
-        ToolTip.SetTip(_frame, IsValid ? Text : Localization.Loc.T("ColorInvalid"));
+        ToolTip.SetTip(_frame, IsValid ? null : Localization.Loc.T("ColorInvalid"));
     }
 
     /// <summary>Same rules as the sheet renderer (SkiaSharp's color parser).</summary>

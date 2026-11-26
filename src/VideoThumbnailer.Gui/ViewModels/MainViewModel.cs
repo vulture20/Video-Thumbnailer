@@ -399,6 +399,13 @@ public partial class MainViewModel : ObservableObject
     private async Task AddFilesAsync() => AddPaths(await _ui.PickVideoFilesAsync());
 
     [RelayCommand]
+    private async Task PickFontAsync()
+    {
+        var family = await _ui.PickFontAsync(Settings.FontFamily);
+        if (family is not null) Settings.FontFamily = family.Length == 0 ? null : family;
+    }
+
+    [RelayCommand]
     private async Task AddFolderAsync()
     {
         var folder = await _ui.PickFolderAsync(Loc.T("DlgAddFolder"));

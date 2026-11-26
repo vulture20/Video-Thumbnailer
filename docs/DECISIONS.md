@@ -160,6 +160,14 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Farben bleiben Textfelder (#RRGGBB oder #AARRGGBB, AA = Deckkraft) mit Farbmuster daneben (Schachbrett zeigt Transparenz), kein Farbwähler. Ungültige Werte bleiben stehen, werden mit „?“ markiert, und der Bogen nimmt solange die Standardfarbe. Geprüft wird mit demselben Parser wie beim Rendern | kein zusätzliches Paket (Avalonia-ColorPicker ist eigenständig); die Werte passen 1:1 zum Preset-JSON |
 | 26.11.2026 | Schattenfarbe ist nur bei aktivem Schlagschatten bearbeitbar; Farbe/Deckkraft und Kontur/Konturfarbe stehen in getrennten Zeilen | in der 350 px breiten Spalte passen #AARRGGBB-Werte sonst nicht ganz hinein |
 
+### Farbwähler und Schriftauswahl (#NN)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 26.11.2026 | Farbwähler (Wunsch von Vulli) mit dem offiziellen Paket `Avalonia.Controls.ColorPicker` 12.2.0: Klick auf das Farbmuster öffnet ein Aufklappfenster mit Spektrum, Palette und Reglern inkl. Deckkraft. Jede Änderung wird sofort als #AARRGGBB ins Feld geschrieben (Vorschau zieht mit); die Hex-Eingabe bleibt. Ersetzt die Entscheidung „kein Farbwähler“ aus #18 | gleiche Quelle und Version wie Avalonia; ein Aufklappfenster statt eines eigenen Fensters, weil man die Wirkung in der Vorschau sofort sieht |
+| 26.11.2026 | Schriftauswahl als eigenes Fenster („…“ neben „Schriftart“): durchsuchbare Liste der installierten Schriften, so wie der Bogen-Renderer (SkiaSharp) sie findet, jede in ihrer eigenen Schrift; oben „mitgelieferte DejaVu Sans“; darunter eine Vorschau von Info-Kopf und Zeitstempel. Freitext im Feld bleibt möglich | Liste stammt aus derselben Quelle wie das Rendern, also funktioniert jede auswählbare Schrift auch im Bogen |
+| 26.11.2026 | Eine Schrift für den ganzen Bogen (Info-Kopf und Zeitstempel), wie bisher im Preset (`fontFamily`); keine getrennten Schriften je Bereich | hält Presets und CLI unverändert; getrennte Schriften wären ein eigenes Thema |
+| 26.11.2026 | Schriften, die die Oberfläche nicht lesen kann (in der Testumgebung brachte eine Systemschrift Avalonia zum Absturz), werden in der Liste in der Standardschrift gezeigt statt die App abstürzen zu lassen | Absicherung gegen kaputte oder exotische Schriftdateien |
+
 ## Offen
 
 | Seit | Punkt | Stand |
