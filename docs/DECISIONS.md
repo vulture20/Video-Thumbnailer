@@ -157,7 +157,7 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | Datum | Entscheidung | Begründung / Anmerkung |
 |---|---|---|
 | 26.11.2026 | Konturfarbe, Schattenfarbe, Millisekunden (Zeitstempel) und Titel-/Textfarbe (Info-Kopf) sind in der GUI einstellbar, nur im Modus „Erweitert“ (Wunsch von Vulli). Kein eigener Optionsdialog: die Felder stehen bei ihrem Abschnitt | wer sie braucht, ist ohnehin in „Erweitert“; Einfach bleibt schlank |
-| 26.11.2026 | Farben bleiben Textfelder (#RRGGBB oder #AARRGGBB, AA = Deckkraft) mit Farbmuster daneben (Schachbrett zeigt Transparenz), kein Farbwähler. Ungültige Werte bleiben stehen, werden mit „?“ markiert, und der Bogen nimmt solange die Standardfarbe. Geprüft wird mit demselben Parser wie beim Rendern | kein zusätzliches Paket (Avalonia-ColorPicker ist eigenständig); die Werte passen 1:1 zum Preset-JSON |
+| 26.11.2026 | ~~Kein Farbwähler~~ (abgelöst durch #42, Farbwähler am Farbmuster). Farben bleiben Textfelder (#RRGGBB oder #AARRGGBB, AA = Deckkraft) mit Farbmuster daneben (Schachbrett zeigt Transparenz). Ungültige Werte bleiben stehen, werden mit „?“ markiert, und der Bogen nimmt solange die Standardfarbe. Geprüft wird mit demselben Parser wie beim Rendern | kein zusätzliches Paket (Avalonia-ColorPicker ist eigenständig); die Werte passen 1:1 zum Preset-JSON |
 | 26.11.2026 | Schattenfarbe ist nur bei aktivem Schlagschatten bearbeitbar; Farbe/Deckkraft und Kontur/Konturfarbe stehen in getrennten Zeilen | in der 350 px breiten Spalte passen #AARRGGBB-Werte sonst nicht ganz hinein |
 
 ### Farbwähler und Schriftauswahl (#42)
