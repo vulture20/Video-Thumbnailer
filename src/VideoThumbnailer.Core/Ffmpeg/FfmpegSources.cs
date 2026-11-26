@@ -111,11 +111,9 @@ public sealed class MartinRiedlSource(string arch) : IFfmpegSource
         foreach (var tool in new[] { "ffmpeg", "ffprobe" })
         {
             // Resolve the redirect so the checksum belongs to exactly the file we download later.
-            using var head = new HttpRequestMessage(HttpMethod.Head, Url(tool));
-            using var resp = await http.SendAsync(head, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
-            resp.EnsureSuccessStatusCode();
-            var finalUrl = resp.RequestMessage?.RequestUri ?? new Uri(Url(tool));
-            var shaText = await http.GetStringAsync(finalUrl + ".sha256", ct).ConfigureAwait(false);
+            // GET (headers only) instead of HEAD: the redirect service does not answer HEAD requests.
+            var finalUrl = await ResolveAsync(http, Url(tool), ct).ConfigureAwait(false);
+            var shaText = await GetStringAsync(http, finalUrl + ".sha256", ct).ConfigureAwait(false);
             var sha = shaText.Trim().Split((char[])[' ', '\t', '\n'], StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()?.ToLowerInvariant();
             if (sha is null || sha.Length != 64)
                 throw new InvalidOperationException(CoreText.T("NoChecksum", finalUrl));
@@ -124,5 +122,22 @@ public sealed class MartinRiedlSource(string arch) : IFfmpegSource
         // The resolved URL contains the version/date folder; use it as a human readable version.
         var version = assets[0].Url.Segments.Reverse().Skip(1).FirstOrDefault()?.Trim('/') ?? "latest";
         return new FfmpegRelease(Name, version, assets);
+    }
+
+    private static async Task<Uri> ResolveAsync(HttpClient http, string url, CancellationToken ct)
+    {
+        using var req = new HttpRequestMessage(HttpMethod.Get, url);
+        using var resp = await http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
+        if (!resp.IsSuccessStatusCode)
+            throw new HttpRequestException($"{(int)resp.StatusCode} {resp.ReasonPhrase}: {url}", null, resp.StatusCode);
+        return resp.RequestMessage?.RequestUri ?? new Uri(url);
+    }
+
+    private static async Task<string> GetStringAsync(HttpClient http, string url, CancellationToken ct)
+    {
+        using var resp = await http.GetAsync(url, ct).ConfigureAwait(false);
+        if (!resp.IsSuccessStatusCode)
+            throw new HttpRequestException($"{(int)resp.StatusCode} {resp.ReasonPhrase}: {url}", null, resp.StatusCode);
+        return await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
     }
 }

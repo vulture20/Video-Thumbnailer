@@ -9,6 +9,11 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 ### Hinzugefügt
 - Animierte Sheets als MP4, WebM oder GIF: jede Kachel spielt einen kurzen Ausschnitt ab ihrem Zeitpunkt ab, Zeitstempel laufen mit; Schalter „Animiertes Sheet“ in der Ausgabe, Länge je Ausschnitt und Bilder pro Sekunde einstellbar; CLI `-a/--animated mp4|webm|gif`, `--clip-seconds`, `--fps`, `--still` ([#15])
 - Animierte Sheets heißen `<Name>.sheet.mp4` usw. und werden beim Durchsuchen von Ordnern übersprungen ([#15])
+- CI auf macOS erstellt zusätzlich ein animiertes MP4-Sheet mit dem heruntergeladenen ffmpeg ([#15])
+
+## [0.3.0] – 2026-11-26
+
+Vorschau mit echten Bildern des gewählten Videos; Versionsnummer in den Release-Dateien.
 
 ### Hinzugefügt
 - Live-Vorschau abschaltbar (Schalter über der Vorschau, wird gespeichert); ausgeschaltet läuft dafür kein ffmpeg ([#12])
@@ -16,8 +21,10 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 
 ### Geändert
 - Release-Dateien tragen die Version im Namen, z. B. `Video-Thumbnailer-0.3.0-win-x64.zip` (auch der Ordner im ZIP) ([#10])
+- CI prüft auf macOS den echten ffmpeg-Download (ffmpeg.martin-riedl.de) und erstellt damit ein Test-Sheet ([#13])
 
 ### Behoben
+- macOS: ffmpeg-Download schlug mit „404“ fehl, weil der Download-Dienst keine HEAD-Anfragen beantwortet; Fehlermeldungen nennen jetzt die betroffene Adresse ([#13])
 - Vorschau erkennt, wenn sich eine Videodatei auf der Festplatte geändert hat (Größe oder Änderungszeit), und liest sie neu ([#12])
 
 ## [0.2.0] – 2026-11-26
@@ -67,7 +74,8 @@ Erste Version.
 ### Geändert
 - Release-Workflow hängt die Dateien auch an ein im Browser angelegtes Release an ([#2])
 
-[Unveröffentlicht]: https://github.com/vulture20/Video-Thumbnailer/compare/v0.2.0...HEAD
+[Unveröffentlicht]: https://github.com/vulture20/Video-Thumbnailer/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/vulture20/Video-Thumbnailer/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/vulture20/Video-Thumbnailer/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/vulture20/Video-Thumbnailer/releases/tag/v0.1.0
 [#1]: https://github.com/vulture20/Video-Thumbnailer/pull/1
@@ -81,4 +89,5 @@ Erste Version.
 [#11]: https://github.com/vulture20/Video-Thumbnailer/pull/11
 [#12]: https://github.com/vulture20/Video-Thumbnailer/pull/12
 [#10]: https://github.com/vulture20/Video-Thumbnailer/pull/10
+[#13]: https://github.com/vulture20/Video-Thumbnailer/pull/13
 [#15]: https://github.com/vulture20/Video-Thumbnailer/pull/15

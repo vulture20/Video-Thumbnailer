@@ -18,6 +18,8 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | MVP-Umfang bestätigt: alle P1-Punkte der Spezifikation, veröffentlicht als v0.1.0 und unter Windows getestet | von Vulli bestätigt |
 | 26.11.2026 | Release v0.2.0 mit #3–#8 (Icon, CHANGELOG, Deutsch/Englisch in GUI, CLI und Sheet, Einfach/Erweitert, Dark-Mode, Leuchttisch-Oberfläche mit Live-Vorschau). Minor-Version, da neue Funktionen ohne Bruch von Presets/CLI | Wunsch von Vulli |
 | 26.11.2026 | Release-Dateien heißen `Video-Thumbnailer-<Version>-<Plattform>.zip` (z. B. `Video-Thumbnailer-0.3.0-win-x64.zip`), der Ordner im ZIP ebenso; `checksums.sha256` bleibt ohne Version. Gilt ab dem nächsten Release | Wunsch von Vulli: heruntergeladene Dateien sind eindeutig zuzuordnen |
+| 26.11.2026 | Release v0.3.0 mit #10–#12 (echte Vorschaubilder, Versionsnummer in den Dateinamen), als reguläres Release (kein Pre-release), damit GitHub es als „Latest“ anzeigt | Wunsch von Vulli |
+| 26.11.2026 | Kein Mac für Tests vorhanden: macOS wird nur über CI geprüft. Zusätzlich zu Build und Tests lädt die CI auf macOS ffmpeg über die eingebaute Download-Funktion (martin-riedl.de, mit Prüfsumme) und erstellt damit ein echtes Sheet (als Artefakt abrufbar). Die GUI auf macOS bleibt ungetestet | Vulli hat keinen Mac |
 | 26.11.2026 | `CHANGELOG.md` nach „Keep a Changelog“, auf Deutsch, rückwirkend ab v0.1.0. Jeder PR ergänzt seinen Eintrag unter „Unveröffentlicht“; beim Release wird daraus der Versionsabschnitt | Änderungen nachvollziehbar, Grundlage für Release-Notizen |
 
 ### Technik
@@ -126,7 +128,7 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 
 | Seit | Punkt | Stand |
 |---|---|---|
-| 26.11.2026 | macOS-Quelle (martin-riedl.de): URL-Schema und `.sha256`-Dateien konnten in der Entwicklungsumgebung nicht live geprüft werden | auf einem Mac mit `vthumb ffmpeg install` testen; Fallback: Homebrew-ffmpeg wird automatisch gefunden |
+| 26.11.2026 | macOS-Quelle (martin-riedl.de): wird seit v0.3.0 in der CI auf macOS geprüft (Download, Prüfsumme, Sheet); ein Test auf einem echten Mac (GUI, Gatekeeper) fehlt weiterhin | kein Mac vorhanden, nur CI |
 | 26.11.2026 | Prüfsumme kommt vom selben Server wie der Download; schützt nicht gegen einen kompromittierten Anbieter. Stärker wären Signaturen (GPG) oder fest hinterlegte Hashes | bewusst akzeptiert für v1 |
 | 26.11.2026 | Downloadgröße: Linux-Build von BtbN ca. 150 MB (tar.xz), Windows ähnlich. Kleinere Varianten (z. B. „gpl-shared“ oder LGPL) prüfen? | |
 | 26.11.2026 | Code-Signierung (Windows) und Notarisierung/App-Bundle (macOS) fehlen; macOS zeigt beim ersten Start eine Gatekeeper-Warnung | Installer/Pakete (MSI, .app/.dmg, AppImage/Flatpak) später |

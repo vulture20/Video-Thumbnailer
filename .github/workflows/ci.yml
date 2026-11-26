@@ -29,6 +29,32 @@ jobs:
         run: dotnet test -c Release --no-build
         env:
           VTHUMB_SCREENSHOT: ${{ runner.temp }}/gui-${{ matrix.os }}.png
+      # No Mac available for manual tests: check the real ffmpeg download (martin-riedl.de) and a sheet on the macOS runner.
+      - name: Smoke test with downloaded ffmpeg (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          VIDEO_THUMBNAILER_HOME: ${{ runner.temp }}/vthumb-home
+        run: |
+          set -euo pipefail
+          CLI="dotnet src/VideoThumbnailer.Cli/bin/Release/net10.0/vthumb.dll"
+          $CLI --lang en ffmpeg install
+          FF=$(find "$VIDEO_THUMBNAILER_HOME" -type f -name ffmpeg | head -1)
+          BIN=$(dirname "$FF")
+          $CLI --lang en ffmpeg status
+          "$FF" -loglevel error -f lavfi -i testsrc2=size=1280x720:rate=25 -f lavfi -i sine=frequency=440 -t 20 \
+            -c:v libx264 -pix_fmt yuv420p -c:a aac "$RUNNER_TEMP/smoke.mp4"
+          $CLI --lang en --ffmpeg "$BIN" -o "$RUNNER_TEMP/smoke-out" "$RUNNER_TEMP/smoke.mp4"
+          test -s "$RUNNER_TEMP/smoke-out/smoke.jpg"
+          $CLI --lang en --ffmpeg "$BIN" -a mp4 --clip-seconds 1 -o "$RUNNER_TEMP/smoke-out" "$RUNNER_TEMP/smoke.mp4"
+          test -s "$RUNNER_TEMP/smoke-out/smoke.sheet.mp4"
+      - name: Upload smoke-test sheet (macOS)
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-sheet-macos
+          path: ${{ runner.temp }}/smoke-out/smoke*
+          if-no-files-found: ignore
       - name: Upload GUI screenshot
         if: always()
         uses: actions/upload-artifact@v4
