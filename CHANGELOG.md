@@ -6,6 +6,9 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 
 ## [Unveröffentlicht]
 
+### Geändert
+- Copyright und Herausgeber in den Programmdateien (EXE-Eigenschaften): „Copyright (C) 2026 Thorsten Schröpel“ statt „Video-Thumbnailer contributors“; ebenso in der README ([#17])
+
 ## [0.4.0] – 2026-11-26
 
 Animierte Sheets (MP4/WebM/GIF), einklappbare Warteschlange, kleinerer ffmpeg-Download unter Windows, abschaltbare Vorschau, ffmpeg-Download auf macOS repariert.
@@ -102,3 +105,4 @@ Erste Version.
 [#10]: https://github.com/vulture20/Video-Thumbnailer/pull/10
 [#13]: https://github.com/vulture20/Video-Thumbnailer/pull/13
 [#15]: https://github.com/vulture20/Video-Thumbnailer/pull/15
+[#17]: https://github.com/vulture20/Video-Thumbnailer/pull/17
