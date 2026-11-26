@@ -40,24 +40,35 @@ internal static class HelpText
               --gap <px> / --margin <px>
               --order row|column|random
               --skip-start <%> / --skip-end <%>   ignore start/end of the video
-              --no-portrait-swap     keep columns/rows for portrait videos
-              --background <#AARRGGBB>  --font <family>
+              --no-portrait-swap     keep columns/rows for portrait videos (--portrait-swap: swap them)
+              --background <color>   --font <family>
 
-        Overlays:
-              --no-timestamps        --timestamp-pos TopLeft|TopRight|BottomLeft|BottomRight|Center
-              --no-header            --header-pos TopLeft|TopRight|BottomLeft|BottomRight
+        Timestamps (colors as #RRGGBB or #AARRGGBB, AA = opacity):
+              --timestamps / --no-timestamps
+              --timestamp-pos TopLeft|TopRight|BottomLeft|BottomRight|Center
+              --timestamp-size <pt>  --timestamp-bold / --no-timestamp-bold
+              --timestamp-color <color>  --timestamp-opacity <0-1 or %>  --timestamp-padding <px>
+              --outline-color <color>  --outline-width <px>  --no-outline
+              --shadow / --no-shadow  --shadow-color <color>  --shadow-offset <px>
+              --milliseconds / --no-milliseconds   e.g. 00:12:34.567
+
+        Info header:
+              --header / --no-header  --header-pos TopLeft|TopRight|BottomLeft|BottomRight
               --header-template <t>  e.g. "{filename}\n{size:GB} · {duration} · {resolution}"
+              --title-size <pt>  --header-size <pt>  --title-color <color>  --header-color <color>
+              --line-spacing <factor>  (default 1.25)
 
         Output:
           -f, --format jpg|png|webp  -q, --quality <1-100>
           -o, --output <folder>      write all sheets into this folder
-              --keep-structure       with -o: recreate the input folder structure
+              --keep-structure       with -o: recreate the input folder structure (--no-keep-structure)
               --next-to-video        write next to each video (default)
               --subfolder <name>     write into <video folder>/<name>
               --pattern <pattern>    file name, placeholders {name} {ext} {preset} {cols} {rows} {date} {time}
               --overwrite skip|overwrite|rename
-              --frames               also save every frame as its own image (still sheets only)
-              --save-preset <name>   save the resulting settings as a preset
+              --frames / --no-frames also save every frame as its own image (still sheets only)
+              --frames-folder <pattern>  folder for the frames, relative to the sheet (default {name}_frames)
+              --save-preset <name>   save the resulting settings as a preset (--description <text>)
 
         Animated sheet (every tile plays a short clip):
           -a, --animated mp4|webm|gif  write an animated sheet instead of an image
@@ -109,24 +120,35 @@ internal static class HelpText
               --gap <px> / --margin <px>
               --order row|column|random
               --skip-start <%> / --skip-end <%>   Anfang/Ende des Videos auslassen
-              --no-portrait-swap     Spalten/Zeilen bei Hochkant-Videos nicht tauschen
-              --background <#AARRGGBB>  --font <Schriftfamilie>
+              --no-portrait-swap     Spalten/Zeilen bei Hochkant-Videos nicht tauschen (--portrait-swap: tauschen)
+              --background <Farbe>   --font <Schriftfamilie>
 
-        Einblendungen:
-              --no-timestamps        --timestamp-pos TopLeft|TopRight|BottomLeft|BottomRight|Center
-              --no-header            --header-pos TopLeft|TopRight|BottomLeft|BottomRight
+        Zeitstempel (Farben als #RRGGBB oder #AARRGGBB, AA = Deckkraft):
+              --timestamps / --no-timestamps
+              --timestamp-pos TopLeft|TopRight|BottomLeft|BottomRight|Center
+              --timestamp-size <pt>  --timestamp-bold / --no-timestamp-bold
+              --timestamp-color <Farbe>  --timestamp-opacity <0-1 oder %>  --timestamp-padding <px>
+              --outline-color <Farbe>  --outline-width <px>  --no-outline
+              --shadow / --no-shadow  --shadow-color <Farbe>  --shadow-offset <px>
+              --milliseconds / --no-milliseconds   z. B. 00:12:34.567
+
+        Info-Kopf:
+              --header / --no-header  --header-pos TopLeft|TopRight|BottomLeft|BottomRight
               --header-template <t>  z. B. "{filename}\n{size:GB} · {duration} · {resolution}"
+              --title-size <pt>  --header-size <pt>  --title-color <Farbe>  --header-color <Farbe>
+              --line-spacing <Faktor>  (Standard 1,25)
 
         Ausgabe:
           -f, --format jpg|png|webp  -q, --quality <1-100>
           -o, --output <Ordner>      alle Sheets in diesen Ordner schreiben
-              --keep-structure       mit -o: Ordnerstruktur der Eingabe nachbilden
+              --keep-structure       mit -o: Ordnerstruktur der Eingabe nachbilden (--no-keep-structure)
               --next-to-video        neben das jeweilige Video schreiben (Standard)
               --subfolder <Name>     in <Videoordner>/<Name> schreiben
               --pattern <Muster>     Dateiname, Platzhalter {name} {ext} {preset} {cols} {rows} {date} {time}
               --overwrite skip|overwrite|rename
-              --frames               zusätzlich jedes Einzelbild als eigene Datei speichern (nur Standbild)
-              --save-preset <Name>   resultierende Einstellungen als Preset speichern
+              --frames / --no-frames zusätzlich jedes Einzelbild als eigene Datei speichern (nur Standbild)
+              --frames-folder <Muster>  Ordner für die Einzelbilder, relativ zum Sheet (Standard {name}_frames)
+              --save-preset <Name>   resultierende Einstellungen als Preset speichern (--description <Text>)
 
         Animiertes Sheet (jede Kachel spielt einen kurzen Ausschnitt ab):
           -a, --animated mp4|webm|gif  animiertes Sheet statt eines Bildes erstellen

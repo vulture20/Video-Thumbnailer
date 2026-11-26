@@ -67,6 +67,7 @@ internal static class CliText
         ["UnknownAnimationFormat"] = ("Unknown animation format '{0}' (mp4, webm, gif).", "Unbekanntes Animationsformat „{0}“ (mp4, webm, gif)."),
         ["UnknownFormat"] = ("Unknown format '{0}' (jpg, png, webp).", "Unbekanntes Format „{0}“ (jpg, png, webp)."),
         ["UnknownOrder"] = ("Unknown order '{0}' (row, column, random).", "Unbekannte Reihenfolge „{0}“ (row, column, random)."),
+        ["InvalidColor"] = ("Invalid color '{0}' for {1}. Use #RRGGBB or #AARRGGBB (AA = opacity, FF = opaque).", "Ungültige Farbe „{0}“ für {1}. Erlaubt: #RRGGBB oder #AARRGGBB (AA = Deckkraft, FF = deckend)."),
         ["InvalidValue"] = ("Invalid value '{0}' for {1}. Allowed: {2}", "Ungültiger Wert „{0}“ für {1}. Erlaubt: {2}"),
         ["UnknownLanguage"] = ("Unknown language '{0}' (en, de, auto).", "Unbekannte Sprache „{0}“ (en, de, auto)."),
     };

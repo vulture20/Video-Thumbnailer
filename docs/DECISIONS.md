@@ -1,7 +1,8 @@
 # Entscheidungen & offene Punkte
 
 Dieses Dokument wird bei jeder Änderung mitgeführt. Neue Entscheidungen bekommen ein Datum und eine kurze Begründung.
-Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos; dieser Stand ist mit ihrem Abschnitt „Entscheidungen & offene Punkte“ abgeglichen.
+Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos; dieser Stand ist mit ihrem Abschnitt „Entscheidungen & offene Punkte“ abgeglichen (zuletzt nach v0.5.0).
+Überholte Entscheidungen bleiben stehen und sind mit **Überholt:** markiert. Spätere Ideen ohne Entscheidung stehen als [Issues](https://github.com/vulture20/Video-Thumbnailer/issues) im Repo (siehe „Spätere Ideen“ unten).
 
 ## Entschieden
 
@@ -24,6 +25,11 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Release v0.4.0 mit #12–#15; Tag wird erst nach dem Merge dieses Release-PRs auf `main` gesetzt | v0.3.0 wurde versehentlich vor den letzten PRs getaggt |
 | 26.11.2026 | Release v0.5.0 mit #17–#19 (Copyright, Feinoptionen unter „Erweitert“, Installer/Pakete, fest hinterlegte ffmpeg-Builds); Tag nach dem Merge dieses Release-PRs auf `main` | erstes Release mit Installer, AppImage und DMG |
 | 26.11.2026 | Kein Mac für Tests vorhanden: macOS wird nur über CI geprüft. Zusätzlich zu Build und Tests lädt die CI auf macOS ffmpeg über die eingebaute Download-Funktion (martin-riedl.de, mit Prüfsumme) und erstellt damit ein echtes Sheet (als Artefakt abrufbar). Die GUI auf macOS bleibt ungetestet | Vulli hat keinen Mac |
+| 26.11.2026 | Von Vulli unter Windows geprüft: v0.1.0 (Programm), die Oberfläche „Leuchttisch“ und v0.5.0 (Installer, Startmenü-Eintrag, Oberfläche, Icon, ffmpeg-Download von gyan.dev) | erledigt die offenen Windows-Tests |
+| 26.11.2026 | HDR mit echtem Material von Vulli geprüft: Ergebnis passt, Tonemapping bleibt wie es ist | erledigt den offenen HDR-Punkt |
+| 26.11.2026 | Aufteilung „Einfach“/„Erweitert“ passt so (Vulli, nach erster Nutzung) | |
+| 26.11.2026 | Social-Preview in den Repo-Einstellungen hochgeladen (Vulli) | |
+| 26.11.2026 | Offene P2/P3-Punkte der Spezifikation sind GitHub-Issues (#21–#39, Labels `enhancement` und `P2`/`P3`) | Ideen nachvollziehbar, ohne dass sie wie vergessen aussehen |
 | 26.11.2026 | `CHANGELOG.md` nach „Keep a Changelog“, auf Deutsch, rückwirkend ab v0.1.0. Jeder PR ergänzt seinen Eintrag unter „Unveröffentlicht“; beim Release wird daraus der Versionsabschnitt | Änderungen nachvollziehbar, Grundlage für Release-Notizen |
 
 ### Technik
@@ -45,6 +51,8 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Info-Kopf über eine Textvorlage mit Platzhaltern (`{filename}`, `{size:GB}`, `{duration}` …); erste Zeile fett und größer | frei konfigurierbare Felder |
 | 26.11.2026 | CLI ohne `--preset` nutzt die zuletzt in der GUI verwendeten Einstellungen (sonst „Standard“) | wie in der Spezifikation |
 | 26.11.2026 | CLI-Name `vthumb`, eigener kleiner Argument-Parser ohne Zusatzpaket | wenige Abhängigkeiten |
+| 26.11.2026 | Jede Preset-Einstellung hat eine CLI-Option (#40). Schalter gibt es paarweise (`--shadow`/`--no-shadow` usw.), damit sich Presets in beide Richtungen übersteuern lassen. `--shadow-color`/`--shadow-offset` schalten den Schatten ein, `--frames-folder` die Einzelbilder. `--timestamp-opacity` nimmt 0–1 oder Prozent (Werte über 1 gelten als %). Ein Test vergleicht alle Felder von `SheetSettings` mit den Optionen, damit neue Einstellungen nicht ohne Option bleiben | Wunsch von Vulli: Kommandozeile um alle fehlenden Einstellungen ergänzen |
+| 26.11.2026 | Farben auf der Kommandozeile werden beim Einlesen geprüft (`#RRGGBB`/`#AARRGGBB`); ungültig = Aufruffehler (Exit-Code 2) | Tippfehler fallen sofort auf statt als Standardfarbe im Sheet |
 | 26.11.2026 | Speicherorte: Einstellungen/Presets unter `%APPDATA%\VideoThumbnailer`, `~/.config/video-thumbnailer`, `~/Library/Application Support/VideoThumbnailer`; ffmpeg unter `%LOCALAPPDATA%\VideoThumbnailer\ffmpeg`, `~/.local/share/video-thumbnailer/ffmpeg` bzw. macOS wie oben. Portabler Modus: Datei `portable.txt` neben der Programmdatei oder Umgebungsvariable `VIDEO_THUMBNAILER_HOME` | Standardpfade je Betriebssystem, USB-Stick-Betrieb möglich |
 | 26.11.2026 | Auslieferung als selbstständige Einzeldatei je Plattform (win-x64, win-arm64, linux-x64, linux-arm64, osx-x64, osx-arm64), ohne vorinstalliertes .NET | „direkt überall lauffähig“ |
 | 26.11.2026 | Code und Kommentare auf Englisch, Projektdokumentation auf Deutsch | öffentliches Repo |
@@ -55,14 +63,14 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Standard-Info-Kopf je Sprache („Größe:/Dauer:“ bzw. „Size:/Duration:“). Presets speichern ihn nicht als festen Text (`template: null`); die bisherige englische Standardvorlage gilt ebenfalls als Standard. Eigene Vorlagen bleiben unverändert | bestehende Presets/Einstellungen wechseln automatisch die Sprache, eigene Texte werden nicht überschrieben |
 | 26.11.2026 | Deutsche Sheets mit Dezimalkomma (1,50 GB, 23,976 fps) und „kein Bild“, „keine“, „k. A.“ | übliche deutsche Schreibweise |
 | 26.11.2026 | Texte aus Core/CLI in eigenen Tabellen (`CoreText`, `CliText`) wie in der GUI; Tests prüfen beide Sprachen und Platzhalter | einheitlich, ohne `.resx` |
-| 26.11.2026 | Kommandozeile bleibt vorerst Englisch | stabile, skriptfreundliche Ausgabe; siehe offene Punkte |
+| 26.11.2026 | Kommandozeile bleibt vorerst Englisch | **Überholt:** seit #6 zweisprachig, siehe oben |
 
 ### ffmpeg-Bezug
 | Datum | Entscheidung | Begründung / Anmerkung |
 |---|---|---|
 | 26.11.2026 | ffmpeg wird nicht mitgeliefert. Beim ersten Bedarf (GUI: beim ersten Start; CLI: beim ersten Lauf) wird kurz gefragt und dann automatisch heruntergeladen. CLI: `--yes` lädt ohne Frage, `vthumb ffmpeg install/update/check/status/uninstall` | wie beschlossen |
 | 26.11.2026 | Suchreihenfolge: eigener Ordner aus den Einstellungen → von uns heruntergeladenes ffmpeg → `PATH` (plus Homebrew-/Standardpfade) | vorhandene Installationen werden genutzt, nichts doppelt geladen |
-| 26.11.2026 | Quelle Windows/Linux: **BtbN/FFmpeg-Builds** (GitHub), Release „latest“, **GPL**-Build (Linux statisch, Windows „shared“ seit #14) des neuesten Release-Zweigs (z. B. n9.0), nicht „master“ | stabil, statisch gelinkt, x64 und arm64 |
+| 26.11.2026 | Quelle Windows/Linux: **BtbN/FFmpeg-Builds** (GitHub), Release „latest“, **GPL**-Build (Linux statisch, Windows „shared“ seit #14) des neuesten Release-Zweigs (z. B. n9.0), nicht „master“ | stabil, statisch gelinkt, x64 und arm64. **Überholt** durch #19: Windows x64 von gyan.dev, Linux von martin-riedl.de; BtbN nur noch für Windows arm64 und `--latest` |
 | 26.11.2026 | Quelle macOS: **ffmpeg.martin-riedl.de** (arm64/amd64, signiert und notarisiert), ffmpeg und ffprobe als getrennte ZIPs | BtbN baut kein macOS |
 | 26.11.2026 | Prüfsumme: SHA-256 aus der vom Anbieter veröffentlichten Datei (`checksums.sha256` bzw. `*.sha256`); ohne gültige Prüfsumme wird nicht installiert | schützt gegen beschädigte Downloads. Seit #19 nur noch für `--latest` und Windows arm64, siehe „Fest hinterlegte ffmpeg-Builds“ |
 | 26.11.2026 | Installation atomar: Entpacken in einen Arbeitsordner, Testlauf `ffmpeg -version`, dann Austausch des `bin`-Ordners; bei Fehlern bleibt die alte Version erhalten. `manifest.json` merkt sich Quelle, Version und Prüfsumme | Update kann nichts kaputt machen |
@@ -92,8 +100,8 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Eigenes Icon: dunkler Filmstreifen mit Perforation, darin ein 3×3-Raster aus hellblauen Vorschaubildern, in der Mitte ein orangefarbenes Bild mit Play-Symbol (Variante A, am 26.11.2026 freigegeben; Alternative „blauer Filmstreifen“ verworfen) | zeigt sofort „Video → Bildraster“; hebt sich auf hellen und dunklen Oberflächen ab |
 | 26.11.2026 | SVG als Master (`assets/branding/icon.svg`), dazu pixelgenaue Varianten für 16 px und 20–32 px (ohne Perforation, 16 px ohne Play-Dreieck); alle PNG/ICO/ICNS werden per `assets/branding/build.py` erzeugt und mit eingecheckt | kleine Größen bleiben scharf; Build braucht keine Grafikwerkzeuge |
 | 26.11.2026 | Windows: `app.ico` (16–256 px) als `ApplicationIcon` für `VideoThumbnailer.exe` und `vthumb.exe`, dieselbe Datei als Fenstericon der Avalonia-Oberfläche (auch Dialoge) | ein Icon für Explorer, Taskleiste und Fenster |
-| 26.11.2026 | macOS: `app.icns` (16–1024 px) liegt bereit, wird aber erst mit einem `.app`-Bundle genutzt; bis dahin zeigt das Fenster das Avalonia-Fenstericon | aktuell nur Einzeldateien im ZIP |
-| 26.11.2026 | Linux: Icons im hicolor-Schema (16–512 px + scalable SVG) und `video-thumbnailer.desktop` unter `packaging/linux`, Installation von Hand beschrieben | Grundlage für spätere Pakete (AppImage/Flatpak) |
+| 26.11.2026 | macOS: `app.icns` (16–1024 px) liegt bereit, wird aber erst mit einem `.app`-Bundle genutzt; bis dahin zeigt das Fenster das Avalonia-Fenstericon | **Überholt:** seit #19 Icon von `Video-Thumbnailer.app` im DMG |
+| 26.11.2026 | Linux: Icons im hicolor-Schema (16–512 px + scalable SVG) und `video-thumbnailer.desktop` unter `packaging/linux`, Installation von Hand beschrieben | Grundlage für spätere Pakete (AppImage/Flatpak). Seit #19 im AppImage enthalten; die Anleitung in `packaging/linux/README.md` gilt nur noch für die ZIPs |
 | 26.11.2026 | README-Banner (1280×320) und GitHub-Social-Preview (1280×640) mit englischem Text („Contact sheets from your videos“), Schrift Inter (SIL OFL), als PNG eingebunden | öffentliches Repo; PNG zeigt überall dieselbe Schrift |
 
 ### Oberfläche (Einfach/Erweitert, Darstellung)
@@ -138,7 +146,7 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | Datum | Entscheidung | Begründung / Anmerkung |
 |---|---|---|
 | 26.11.2026 | Warteschlange einklappbar: unter 1120 px Fensterbreite klappt sie automatisch zu einer 52 px breiten Leiste (Anzahl, „+“, Ordner, ein Status-Punkt je Video); wird das Fenster wieder breit, klappt sie nur auf, wenn sie automatisch eingeklappt wurde. Von Hand jederzeit mit « / » umschaltbar. Mindestbreite 820 statt 1040 px | Vorschau und Einstellungen behalten im schmalen Fenster ihren Platz; eine Entscheidung von Hand wird nicht überschrieben |
-| 26.11.2026 | ffmpeg unter Windows als BtbN-„gpl-shared“-Build: ffmpeg.exe/ffprobe.exe plus die DLLs aus `bin` (ffplay wird nicht entpackt). Gemessen: 87–90 MB statt 198 MB Download, ca. 200 statt 340 MB installiert. Linux bleibt beim statischen Build (62 MB, shared spart nur ca. 9 MB und bräuchte Bibliothekspfade) | gleicher Funktionsumfang (GPL, zimg, x264/x265-Decoder), etwa halbe Größe. Bestehende Windows-Installationen sehen den Wechsel als Update (andere Prüfsumme) |
+| 26.11.2026 | ffmpeg unter Windows als BtbN-„gpl-shared“-Build: ffmpeg.exe/ffprobe.exe plus die DLLs aus `bin` (ffplay wird nicht entpackt). Gemessen: 87–90 MB statt 198 MB Download, ca. 200 statt 340 MB installiert. Linux bleibt beim statischen Build (62 MB, shared spart nur ca. 9 MB und bräuchte Bibliothekspfade) | gleicher Funktionsumfang (GPL, zimg, x264/x265-Decoder), etwa halbe Größe. Bestehende Windows-Installationen sehen den Wechsel als Update (andere Prüfsumme). **Überholt** durch #19: Windows x64 lädt den „full_build-shared“ von gyan.dev |
 | 26.11.2026 | HDR-Tonemapping geprüft mit echten HDR10- (PQ, BT.2020, 10 bit, HDR10-Metadaten) und HLG-Videos (x265): Farben stimmen, kein Grünstich, nicht ausgewaschen; etwas dunkler und weniger satt als SDR (mittlere Helligkeit ca. 80–85 % der SDR-Fassung), typisch für „hable“. Filter bleibt unverändert; ein Integrationstest sichert das ab (übersprungen ohne libx265/zscale) | größere Eingriffe (z. B. andere Kurve) nur bei Rückmeldung mit echtem Material |
 
 ### Animierte Sheets
@@ -172,18 +180,42 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 
 | Seit | Punkt | Stand |
 |---|---|---|
-| 26.11.2026 | macOS-Quelle (martin-riedl.de): wird seit v0.3.0 in der CI auf macOS geprüft (Download, Prüfsumme, Sheet); ein Test auf einem echten Mac (GUI, Gatekeeper) fehlt weiterhin | kein Mac vorhanden, nur CI |
-| 26.11.2026 | Code-Signierung (Windows) und Notarisierung (macOS) fehlen; SmartScreen bzw. Gatekeeper warnen beim ersten Start. Installer/Pakete gibt es seit #19 | braucht Zertifikat bzw. Apple-Entwicklerkonto (kostenpflichtig) |
-| 26.11.2026 | Installer, AppImage und DMG auf echten Systemen ansehen (Startmenü, Deinstallation, Dock-Icon, Gatekeeper-Dialog); in der CI nur automatisch installiert/geöffnet | Rückmeldung von Vulli; kein Mac vorhanden |
+| 26.11.2026 | Test auf einem echten Mac: Oberfläche (Schriften, Schalter, Symbole, Titelleiste), DMG mit Dock-Icon und Gatekeeper-Dialog. Die CI prüft auf macOS nur Download, Prüfsumme, Signatur und ein erstelltes Sheet | kein Mac vorhanden |
+| 26.11.2026 | Code-Signierung (Windows) und Notarisierung (macOS) fehlen; SmartScreen bzw. Gatekeeper warnen beim ersten Start | braucht Zertifikat bzw. Apple-Entwicklerkonto (kostenpflichtig) |
+| 26.11.2026 | Icon-Einbindung unter Linux (AppImage, Fenster) und macOS nur über CI geprüft; unter Windows von Vulli bestätigt | Blick auf Linux und macOS fehlt |
+| 26.11.2026 | Pakete für Windows arm64, Linux arm64 und Intel-Mac werden nur gebaut, nie gestartet (die Runner können sie nicht ausführen) | Rückmeldung von Nutzern mit solchen Geräten |
 | 26.11.2026 | Windows arm64 hat keinen fest hinterlegten ffmpeg-Build (BtbN hebt Builds nur 14 Tage auf, gyan.dev baut kein arm64) | bei einer dauerhaften arm64-Quelle nachziehen |
-| 26.11.2026 | Prüfsumme kommt vom selben Server wie der Download; schützt nicht gegen einen kompromittierten Anbieter. Stärker wären Signaturen (GPG) oder fest hinterlegte Hashes | bewusst akzeptiert für v1 |
-| 26.11.2026 | Code-Signierung (Windows) und Notarisierung/App-Bundle (macOS) fehlen; macOS zeigt beim ersten Start eine Gatekeeper-Warnung | Installer/Pakete (MSI, .app/.dmg, AppImage/Flatpak) später |
-| 26.11.2026 | ffmpeg-Download unter Windows (neuer „shared“-Build, #14) auf einem echten Windows testen: Installation, Update einer bestehenden Installation, Verarbeitung | in der Entwicklungsumgebung nur unter Linux mit nachgebautem Archiv getestet |
-| 26.11.2026 | HDR mit echtem Kamera-/Streaming-Material ansehen (Test lief mit erzeugten HDR10/HLG-Videos); bei zu dunklen Bildern Kurve oder Weißpunkt anpassen | Rückmeldung von Vulli |
-| 26.11.2026 | Neue Oberfläche auf Windows und macOS ansehen (Schriften, Schalter, Zahnrad- und „⋯“-Symbol, Titelleiste); gebaut und getestet nur unter Linux (headless) | Rückmeldung von Vulli |
-| 26.11.2026 | Aufteilung Einfach/Erweitert nach erster Nutzung prüfen (fehlt im einfachen Modus etwas Wichtiges, z. B. Preset speichern oder Reihenfolge?) | Rückmeldung von Vulli |
-| 26.11.2026 | Social-Preview muss von Hand hochgeladen werden: GitHub → Settings → General → Social preview → `docs/images/social-preview.png` (geht nicht per API/PR) | |
-| 26.11.2026 | Icon-Einbindung (ApplicationIcon, Fenstericon) konnte lokal nicht gebaut werden (kein .NET in der Entwicklungsumgebung); Prüfung über CI und ein Blick auf Windows/Linux/macOS | |
+| 26.11.2026 | Workflow „ffmpeg pins“ hat seit #19 noch keinen neuen Build eingetragen. Seine Commits mit `GITHUB_TOKEN` starten keine CI; wird `main` geschützt, schlägt sein direkter Push fehl. Die Adresse der Liste (`FfmpegPins.RemoteUrl`) enthält den Repo-Namen | ersten echten Lauf beobachten |
+| 26.11.2026 | Kommandozeile kann nicht alle Einstellungen als Option setzen (u. a. Zeitstempel-Farbe, Deckkraft, Schriftgröße, Kontur, Schatten, Millisekunden, Farben des Info-Kopfs); bisher nur über ein Preset | wird ergänzt |
+| 26.11.2026 | Farbauswahl- und Schriftauswahl-Dialog in der Oberfläche (bisher Hex-Textfelder bzw. Schriftname als Text) | Wunsch von Vulli, wird umgesetzt |
+| 26.11.2026 | Release-Notizen auf GitHub sind die automatisch erzeugte PR-Liste, nicht der CHANGELOG-Abschnitt. Das Release v0.3.0 heißt „v.0.3.0“ (Tippfehler im Titel) | Notizen beim nächsten Release aus dem CHANGELOG übernehmen; Titel von Hand korrigieren |
+| 26.11.2026 | Screenshots in `docs/images` stammen aus #8/#11 und zeigen weder den Schalter für animierte Sheets, die einklappbare Warteschlange noch die Farbfelder aus #18 | neu erzeugen, sobald Farb- und Schriftdialog fertig sind |
+
+## Spätere Ideen (P2/P3, noch ohne Entscheidung)
+
+Aus der Spezifikation, je ein Issue. Erledigt sind aus P2 bereits: Kommandozeile, Live-Vorschau, Deutsch/Englisch, Preset-Import/-Export, „Einfach“/„Erweitert“ statt Optionsdialog, Hintergrundfarbe und animierte Sheets (MP4/WebM/GIF). Die Wahl der Render-Engine (P3) entfällt: ffmpeg ist das einzige Backend.
+
+| Prio | Idee | Issue |
+|---|---|---|
+| P2 | Remote-Videos per HTTP-URL ohne vollständigen Download | #21 |
+| P2 | Schwarze Frames erkennen und durch benachbarte ersetzen | #22 |
+| P2 | Aufnahmezeitpunkte von Hand wählen | #23 |
+| P2 | Spezial-Raster mit großen und kleinen Kacheln | #24 |
+| P2 | Bildgröße „An Bildschirm anpassen“ | #25 |
+| P2 | Hintergrundbild | #26 |
+| P2 | Kachel-Effekte: Rahmen, Schlagschatten, Graustufen, abgeschnittene Ecken | #27 |
+| P2 | Eigener Kommentartext | #28 |
+| P2 | Wasserzeichen (Bild oder Text) | #29 |
+| P2 | Animierte Sheets: H.265, WebP, APNG, OGV, Ton | #30 |
+| P2 | Durchgehende Vorschau-Animation / GIF-Slideshow | #31 |
+| P2 | Export der Video-Infos als CSV, XML, WebVTT | #32 |
+| P2 | Preset-Datei per Doppelklick öffnen (Dateizuordnung) | #33 |
+| P2 | Tastenkürzel | #34 |
+| P3 | Untertitel-Infos auslesen | #35 |
+| P3 | Baukasten-Editor für eigene Raster | #36 |
+| P3 | Mehrere Sheets zu einem „Pack“-Bild | #37 |
+| P3 | JSON-Begleitdatei mit Kachel-Zeitpunkten | #38 |
+| P3 | Viewer: Video an der Kachel starten | #39 |
 
 ## Umfang v0.1.0
 
@@ -201,4 +233,4 @@ Umgesetzt (P1):
 - Ausgabeordner / neben dem Video / Unterordner neben dem Video; Ordnerstruktur beibehalten; Dateinamen-Muster; Verhalten bei vorhandenen Dateien (überspringen, überschreiben, umbenennen)
 - Presets speichern, laden, löschen, importieren, exportieren; 4 Basis-Presets; Preset-Datei als Programmargument öffnet sie
 - ffmpeg-Download mit Nachfrage, SHA-256-Prüfung und Update-Mechanismus
-- CLI `vthumb` mit allen Einstellungen als Optionen
+- CLI `vthumb` mit den wichtigsten Einstellungen als Optionen, alle übrigen über Presets (siehe offene Punkte)
