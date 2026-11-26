@@ -24,6 +24,8 @@ internal static class Strings
         ["AddFilesShort"] = new("+ Files…", "+ Dateien…"),
         ["AddFolderShort"] = new("+ Folder…", "+ Ordner…"),
         ["QueueTitle"] = new("QUEUE · {0}", "WARTESCHLANGE · {0}"),
+        ["QueueCollapse"] = new("Fold the queue (more room for the preview)", "Warteschlange einklappen (mehr Platz für die Vorschau)"),
+        ["QueueExpand"] = new("Unfold the queue", "Warteschlange ausklappen"),
         ["QueueMenuTip"] = new("More queue actions", "Weitere Aktionen für die Warteschlange"),
         ["DropZone"] = new("or drop videos and folders here", "oder Videos und Ordner hierher ziehen"),
 
@@ -215,7 +217,7 @@ internal static class Strings
         ["DlgFfmpegMissingTitle"] = new("ffmpeg missing", "ffmpeg fehlt"),
         ["DlgFfmpegMissingManual"] = new("Video-Thumbnailer needs ffmpeg and ffprobe. Please install them (e.g. with your package manager) or choose their folder in the settings.", "Video-Thumbnailer braucht ffmpeg und ffprobe. Bitte installieren (z. B. über die Paketverwaltung) oder ihren Ordner in den Einstellungen auswählen."),
         ["DlgFfmpegNeededTitle"] = new("ffmpeg needed", "ffmpeg wird benötigt"),
-        ["DlgFfmpegNeeded"] = new("Video-Thumbnailer uses ffmpeg to read videos. ffmpeg is not installed yet.\n\nDownload it now from {0}?\nSize about 100–150 MB. It is stored in:\n{1}\n\nThe download is verified with SHA-256.", "Video-Thumbnailer liest Videos mit ffmpeg. ffmpeg ist noch nicht installiert.\n\nJetzt von {0} herunterladen?\nGröße etwa 100–150 MB. Speicherort:\n{1}\n\nDer Download wird per SHA-256 geprüft."),
+        ["DlgFfmpegNeeded"] = new("Video-Thumbnailer uses ffmpeg to read videos. ffmpeg is not installed yet.\n\nDownload it now from {0}?\nSize about 60–90 MB. It is stored in:\n{1}\n\nThe download is verified with SHA-256.", "Video-Thumbnailer liest Videos mit ffmpeg. ffmpeg ist noch nicht installiert.\n\nJetzt von {0} herunterladen?\nGröße etwa 60–90 MB. Speicherort:\n{1}\n\nDer Download wird per SHA-256 geprüft."),
         ["DlgDownload"] = new("Download", "Herunterladen"),
         ["DlgNotNow"] = new("Not now", "Jetzt nicht"),
         ["DlgFfmpegFolderTitle"] = new("Folder containing ffmpeg and ffprobe", "Ordner mit ffmpeg und ffprobe"),
