@@ -90,7 +90,7 @@ public class GuiTests
             // Language switch updates bound texts and the enum labels live.
             vm.Language = UiLanguage.German;
             Avalonia.Threading.Dispatcher.UIThread.RunJobs();
-            var addFiles = window.GetVisualDescendants().OfType<Button>().First(b => b.Command == vm.AddFilesCommand);
+            var addFiles = window.GetVisualDescendants().OfType<Button>().First(b => b.Command == vm.AddFilesCommand && !Equals(b.Content, "+")); // not the one in the folded strip
             Assert.Equal("+ Dateien…", addFiles.Content);
             Assert.Equal("Zeilenweise", SettingsViewModel.Orders[0].Label);
             Assert.Equal("Pause", vm.PauseButtonText);

@@ -56,7 +56,7 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 |---|---|---|
 | 26.11.2026 | ffmpeg wird nicht mitgeliefert. Beim ersten Bedarf (GUI: beim ersten Start; CLI: beim ersten Lauf) wird kurz gefragt und dann automatisch heruntergeladen. CLI: `--yes` lädt ohne Frage, `vthumb ffmpeg install/update/check/status/uninstall` | wie beschlossen |
 | 26.11.2026 | Suchreihenfolge: eigener Ordner aus den Einstellungen → von uns heruntergeladenes ffmpeg → `PATH` (plus Homebrew-/Standardpfade) | vorhandene Installationen werden genutzt, nichts doppelt geladen |
-| 26.11.2026 | Quelle Windows/Linux: **BtbN/FFmpeg-Builds** (GitHub), Release „latest“, statischer **GPL**-Build des neuesten Release-Zweigs (z. B. n9.0), nicht „master“ | stabil, statisch gelinkt, x64 und arm64 |
+| 26.11.2026 | Quelle Windows/Linux: **BtbN/FFmpeg-Builds** (GitHub), Release „latest“, **GPL**-Build (Linux statisch, Windows „shared“ seit #13) des neuesten Release-Zweigs (z. B. n9.0), nicht „master“ | stabil, statisch gelinkt, x64 und arm64 |
 | 26.11.2026 | Quelle macOS: **ffmpeg.martin-riedl.de** (arm64/amd64, signiert und notarisiert), ffmpeg und ffprobe als getrennte ZIPs | BtbN baut kein macOS |
 | 26.11.2026 | Prüfsumme: SHA-256 aus der vom Anbieter veröffentlichten Datei (`checksums.sha256` bzw. `*.sha256`); ohne gültige Prüfsumme wird nicht installiert | schützt gegen beschädigte Downloads |
 | 26.11.2026 | Installation atomar: Entpacken in einen Arbeitsordner, Testlauf `ffmpeg -version`, dann Austausch des `bin`-Ordners; bei Fehlern bleibt die alte Version erhalten. `manifest.json` merkt sich Quelle, Version und Prüfsumme | Update kann nichts kaputt machen |
@@ -110,17 +110,23 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Der Vorschau-Cache merkt sich Größe und Änderungszeit jeder gelesenen Datei. Weichen sie ab (Datei ersetzt, neu kodiert, noch im Schreiben), werden Videodaten und Bilder dieser Datei vergessen und neu gelesen (`PreviewSource.ForgetIfChanged`). Geprüft wird bei jeder Vorschau-Aktualisierung und wenn das Fenster wieder den Fokus bekommt; ein Bild, das während einer Änderung entstand, wird verworfen | billiger als ein Dateiwächter, deckt den üblichen Fall „Datei draußen geändert, zurück ins Programm“ ab |
 | 26.11.2026 | Live-Vorschau abschaltbar (Wunsch von Vulli): Schalter „Live-Vorschau“ oben rechts über der Vorschau, Standard an, gespeichert in `settings.json` (`livePreview`). Aus: laufendes Laden wird abgebrochen, Bild freigegeben, keine Vorschau gezeichnet und kein ffmpeg/ffprobe für die Vorschau gestartet; in der Mitte steht ein Hinweis, dass die Einstellungen trotzdem gelten | für langsame Rechner, Netzlaufwerke oder Akku; Schalter dort, wo die Vorschau ist |
 
+### Schmale Fenster, kleineres ffmpeg, HDR (#13)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 26.11.2026 | Warteschlange einklappbar: unter 1120 px Fensterbreite klappt sie automatisch zu einer 52 px breiten Leiste (Anzahl, „+“, Ordner, ein Status-Punkt je Video); wird das Fenster wieder breit, klappt sie nur auf, wenn sie automatisch eingeklappt wurde. Von Hand jederzeit mit « / » umschaltbar. Mindestbreite 820 statt 1040 px | Vorschau und Einstellungen behalten im schmalen Fenster ihren Platz; eine Entscheidung von Hand wird nicht überschrieben |
+| 26.11.2026 | ffmpeg unter Windows als BtbN-„gpl-shared“-Build: ffmpeg.exe/ffprobe.exe plus die DLLs aus `bin` (ffplay wird nicht entpackt). Gemessen: 87–90 MB statt 198 MB Download, ca. 200 statt 340 MB installiert. Linux bleibt beim statischen Build (62 MB, shared spart nur ca. 9 MB und bräuchte Bibliothekspfade) | gleicher Funktionsumfang (GPL, zimg, x264/x265-Decoder), etwa halbe Größe. Bestehende Windows-Installationen sehen den Wechsel als Update (andere Prüfsumme) |
+| 26.11.2026 | HDR-Tonemapping geprüft mit echten HDR10- (PQ, BT.2020, 10 bit, HDR10-Metadaten) und HLG-Videos (x265): Farben stimmen, kein Grünstich, nicht ausgewaschen; etwas dunkler und weniger satt als SDR (mittlere Helligkeit ca. 80–85 % der SDR-Fassung), typisch für „hable“. Filter bleibt unverändert; ein Integrationstest sichert das ab (übersprungen ohne libx265/zscale) | größere Eingriffe (z. B. andere Kurve) nur bei Rückmeldung mit echtem Material |
+
 ## Offen
 
 | Seit | Punkt | Stand |
 |---|---|---|
 | 26.11.2026 | macOS-Quelle (martin-riedl.de): URL-Schema und `.sha256`-Dateien konnten in der Entwicklungsumgebung nicht live geprüft werden | auf einem Mac mit `vthumb ffmpeg install` testen; Fallback: Homebrew-ffmpeg wird automatisch gefunden |
 | 26.11.2026 | Prüfsumme kommt vom selben Server wie der Download; schützt nicht gegen einen kompromittierten Anbieter. Stärker wären Signaturen (GPG) oder fest hinterlegte Hashes | bewusst akzeptiert für v1 |
-| 26.11.2026 | Downloadgröße: Linux-Build von BtbN ca. 150 MB (tar.xz), Windows ähnlich. Kleinere Varianten (z. B. „gpl-shared“ oder LGPL) prüfen? | |
 | 26.11.2026 | Code-Signierung (Windows) und Notarisierung/App-Bundle (macOS) fehlen; macOS zeigt beim ersten Start eine Gatekeeper-Warnung | Installer/Pakete (MSI, .app/.dmg, AppImage/Flatpak) später |
-| 26.11.2026 | HDR-Tonemapping mit echten HDR10/HLG-Videos prüfen (Testvideos ohne korrekte Farbmetadaten) | |
 | 26.11.2026 | GUI-Einstellungen für Kontur-/Schattenfarbe, Kopf-Farben und Millisekunden im Zeitstempel fehlen (im Preset-JSON und teils per CLI möglich) | Optionsdialog ist P2 |
-| 26.11.2026 | Schmale Fenster: Unter etwa 1040 px Breite könnte die Warteschlange zu einer Leiste einklappen (im Konzept vorgesehen, noch nicht gebaut; derzeit Mindestbreite 1040 px) | |
+| 26.11.2026 | ffmpeg-Download unter Windows (neuer „shared“-Build, #13) auf einem echten Windows testen: Installation, Update einer bestehenden Installation, Verarbeitung | in der Entwicklungsumgebung nur unter Linux mit nachgebautem Archiv getestet |
+| 26.11.2026 | HDR mit echtem Kamera-/Streaming-Material ansehen (Test lief mit erzeugten HDR10/HLG-Videos); bei zu dunklen Bildern Kurve oder Weißpunkt anpassen | Rückmeldung von Vulli |
 | 26.11.2026 | Neue Oberfläche auf Windows und macOS ansehen (Schriften, Schalter, Zahnrad- und „⋯“-Symbol, Titelleiste); gebaut und getestet nur unter Linux (headless) | Rückmeldung von Vulli |
 | 26.11.2026 | Aufteilung Einfach/Erweitert nach erster Nutzung prüfen (fehlt im einfachen Modus etwas Wichtiges, z. B. Preset speichern oder Reihenfolge?) | Rückmeldung von Vulli |
 | 26.11.2026 | Social-Preview muss von Hand hochgeladen werden: GitHub → Settings → General → Social preview → `docs/images/social-preview.png` (geht nicht per API/PR) | |
