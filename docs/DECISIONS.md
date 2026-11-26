@@ -176,7 +176,7 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Eine Schrift für den ganzen Bogen (Info-Kopf und Zeitstempel), wie bisher im Preset (`fontFamily`); keine getrennten Schriften je Bereich | hält Presets und CLI unverändert; getrennte Schriften wären ein eigenes Thema |
 | 26.11.2026 | Schriften, die die Oberfläche nicht lesen kann (in der Testumgebung brachte eine Systemschrift Avalonia zum Absturz), werden in der Liste in der Standardschrift gezeigt statt die App abstürzen zu lassen | Absicherung gegen kaputte oder exotische Schriftdateien |
 
-### README-Screenshots (#NN)
+### README-Screenshots (#44)
 | Datum | Entscheidung | Begründung / Anmerkung |
 |---|---|---|
 | 26.11.2026 | Die Bilder in `docs/images` (`gui.png`, `gui-de.png`, `gui-dark.png`, `gui-narrow.png`) erzeugt der Test `Readme_screenshots` (headless, echtes Testvideo per ffmpeg): `VTHUMB_README_SHOTS=$PWD/docs/images dotnet test --filter Readme_screenshots` (absoluter Pfad). Neu ist das Bild mit eingeklappter Warteschlange im schmalen Fenster | Bilder lassen sich nach jeder Oberflächenänderung mit einem Befehl neu erzeugen |
