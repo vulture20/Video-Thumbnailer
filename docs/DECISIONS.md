@@ -62,9 +62,27 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Suchreihenfolge: eigener Ordner aus den Einstellungen → von uns heruntergeladenes ffmpeg → `PATH` (plus Homebrew-/Standardpfade) | vorhandene Installationen werden genutzt, nichts doppelt geladen |
 | 26.11.2026 | Quelle Windows/Linux: **BtbN/FFmpeg-Builds** (GitHub), Release „latest“, **GPL**-Build (Linux statisch, Windows „shared“ seit #14) des neuesten Release-Zweigs (z. B. n9.0), nicht „master“ | stabil, statisch gelinkt, x64 und arm64 |
 | 26.11.2026 | Quelle macOS: **ffmpeg.martin-riedl.de** (arm64/amd64, signiert und notarisiert), ffmpeg und ffprobe als getrennte ZIPs | BtbN baut kein macOS |
-| 26.11.2026 | Prüfsumme: SHA-256 aus der vom Anbieter veröffentlichten Datei (`checksums.sha256` bzw. `*.sha256`); ohne gültige Prüfsumme wird nicht installiert | schützt gegen beschädigte Downloads |
+| 26.11.2026 | Prüfsumme: SHA-256 aus der vom Anbieter veröffentlichten Datei (`checksums.sha256` bzw. `*.sha256`); ohne gültige Prüfsumme wird nicht installiert | schützt gegen beschädigte Downloads. Seit #19 nur noch für `--latest` und Windows arm64, siehe „Fest hinterlegte ffmpeg-Builds“ |
 | 26.11.2026 | Installation atomar: Entpacken in einen Arbeitsordner, Testlauf `ffmpeg -version`, dann Austausch des `bin`-Ordners; bei Fehlern bleibt die alte Version erhalten. `manifest.json` merkt sich Quelle, Version und Prüfsumme | Update kann nichts kaputt machen |
 | 26.11.2026 | Update-Erkennung über die Prüfsumme (neuer Build = neue Prüfsumme). GUI prüft höchstens einmal pro Woche im Hintergrund (abschaltbar) und bietet das Update an; CLI über `vthumb ffmpeg check/update` | auch tägliche „latest“-Builds werden erkannt, ohne GitHub-API-Limits |
+
+### Fest hinterlegte ffmpeg-Builds (#19)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 26.11.2026 | Jede App-Version installiert genau die Dateien aus `src/VideoThumbnailer.Core/Ffmpeg/ffmpeg-pins.json` (in die App eingebettet: feste Versions-URL, SHA-256, Inhalt). Die Prüfsumme kommt damit aus dem Repo, nicht vom Download-Server | Wunsch von Vulli: stärkerer Schutz. Ein später auf dem Server ausgetauschter Build (samt Prüfsummendatei) wird abgelehnt |
+| 26.11.2026 | macOS zusätzlich: `codesign --verify --strict` und Team-ID des Herausgebers aus der Pin-Datei (martin-riedl.de: `KU3N25YGLU`) | ein gefälschter Build bräuchte das Apple-Zertifikat des Herausgebers |
+| 26.11.2026 | Keine GPG-Prüfung: keiner der Anbieter veröffentlicht Signaturen | fest hinterlegte Hashes sind die stärkste verfügbare Prüfung |
+| 26.11.2026 | Quellen gewechselt, weil BtbN datierte Builds nur 14 Tage aufhebt (fest hinterlegte Adressen wären schnell tot): Windows x64 → gyan.dev (GitHub-Releases von GyanD/codexffmpeg, „full_build-shared“, ca. 95 MB, ffplay wird nicht entpackt), Linux x64/arm64 → ffmpeg.martin-riedl.de (wie macOS, Release-Builds seit 2022 abrufbar). Windows arm64 bleibt bei BtbN „latest“ mit Anbieter-Prüfsumme, weil es dafür keine dauerhafte Quelle gibt | dauerhafte Adressen; gleiche Funktionen (GPL-Builds mit x264/x265, zimg). Bestehende Installationen sehen den Wechsel als Update |
+| 26.11.2026 | `tools/ffmpeg-pins.py` erzeugt die Pin-Datei: lädt jede Datei, berechnet SHA-256 selbst und vergleicht mit der Prüfsumme des Anbieters (gyan: GitHub-Digest), liest auf macOS die Team-ID. Workflow „ffmpeg pins“ läuft montags und von Hand, öffnet bei neueren Builds einen PR (`bot/ffmpeg-pins`) und prüft bei PRs alle hinterlegten Dateien erneut | neue Builds nur über einen geprüften PR; falls Actions keine PRs anlegen dürfen, wird nur der Branch gepusht (Einstellung „Allow GitHub Actions to create pull requests“) |
+| 26.11.2026 | `vthumb ffmpeg install\|update\|check --latest` installiert den neuesten Build (BtbN für Windows, martin-riedl.de sonst), geprüft nur gegen die Anbieter-Prüfsumme. Die GUI nutzt immer den hinterlegten Build | für Nutzer, die sofort die neueste ffmpeg-Version wollen |
+
+### Installer und Pakete (#19)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 26.11.2026 | Windows: Inno Setup (`packaging/windows/installer.iss`), x64 und arm64. Standard: Installation nur für den Benutzer ohne Administratorrechte (der Dialog bietet „für alle Benutzer“), Startmenü-Eintrag, Desktop-Symbol optional, Deutsch/Englisch, feste AppId für Updates/Deinstallation. `vthumb.exe` liegt im Programmordner, wird aber nicht in den PATH eingetragen | kostenlos, auf den GitHub-Runnern vorhanden, kleiner als MSI-Werkzeuge; PATH-Änderungen bleiben dem Nutzer überlassen |
+| 26.11.2026 | Linux: AppImage (`packaging/linux/make-appimage.sh`, appimagetool), x86_64 und aarch64. Startet die Oberfläche; `vthumb` als erstes Argument oder ein Link namens `vthumb` startet die Kommandozeile | eine Datei, läuft auf allen gängigen Distributionen; Flatpak/Pakete der Distributionen später bei Bedarf |
+| 26.11.2026 | macOS: `Video-Thumbnailer.app` (Info.plist, `app.icns`, GUI und `vthumb` in `Contents/MacOS`) als DMG mit Verknüpfung auf „Programme“ (`packaging/macos/make-dmg.sh`), arm64 und x64. Nur Ad-hoc-signiert (nötig für Apple Silicon), nicht notarisiert | ohne Apple-Entwicklerkonto; Gatekeeper-Warnung beim ersten Start bleibt |
+| 26.11.2026 | Alles unsigniert und im Release-Workflow gebaut, Namen `Video-Thumbnailer-<Version>-<rid>-setup.exe`, `….AppImage`, `….dmg`; ZIPs bleiben. Der Workflow installiert/öffnet je ein Paket pro System (win-x64, linux-x64, osx-arm64) und ruft `vthumb --version` auf | arm64-Windows/-Linux und Intel-Mac können auf den Runnern nicht gestartet werden |
 
 ### Gestaltung (Icon, Banner)
 | Datum | Entscheidung | Begründung / Anmerkung |
@@ -138,8 +156,10 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | Seit | Punkt | Stand |
 |---|---|---|
 | 26.11.2026 | macOS-Quelle (martin-riedl.de): wird seit v0.3.0 in der CI auf macOS geprüft (Download, Prüfsumme, Sheet); ein Test auf einem echten Mac (GUI, Gatekeeper) fehlt weiterhin | kein Mac vorhanden, nur CI |
-| 26.11.2026 | Prüfsumme kommt vom selben Server wie der Download; schützt nicht gegen einen kompromittierten Anbieter. Stärker wären Signaturen (GPG) oder fest hinterlegte Hashes | bewusst akzeptiert für v1 |
-| 26.11.2026 | Code-Signierung (Windows) und Notarisierung/App-Bundle (macOS) fehlen; macOS zeigt beim ersten Start eine Gatekeeper-Warnung | Installer/Pakete (MSI, .app/.dmg, AppImage/Flatpak) später |
+| 26.11.2026 | Code-Signierung (Windows) und Notarisierung (macOS) fehlen; SmartScreen bzw. Gatekeeper warnen beim ersten Start. Installer/Pakete gibt es seit #19 | braucht Zertifikat bzw. Apple-Entwicklerkonto (kostenpflichtig) |
+| 26.11.2026 | Installer, AppImage und DMG auf echten Systemen ansehen (Startmenü, Deinstallation, Dock-Icon, Gatekeeper-Dialog); in der CI nur automatisch installiert/geöffnet | Rückmeldung von Vulli; kein Mac vorhanden |
+| 26.11.2026 | Windows arm64 hat keinen fest hinterlegten ffmpeg-Build (BtbN hebt Builds nur 14 Tage auf, gyan.dev baut kein arm64) | bei einer dauerhaften arm64-Quelle nachziehen |
+| 26.11.2026 | Neue ffmpeg-Builds kommen nur mit einer neuen App-Version: Der wöchentliche PR muss gemergt und danach ein Release erstellt werden | bewusst: jede Änderung an den Downloads läuft über einen geprüften PR |
 | 26.11.2026 | GUI-Einstellungen für Kontur-/Schattenfarbe, Kopf-Farben und Millisekunden im Zeitstempel fehlen (im Preset-JSON und teils per CLI möglich) | Optionsdialog ist P2 |
 | 26.11.2026 | ffmpeg-Download unter Windows (neuer „shared“-Build, #14) auf einem echten Windows testen: Installation, Update einer bestehenden Installation, Verarbeitung | in der Entwicklungsumgebung nur unter Linux mit nachgebautem Archiv getestet |
 | 26.11.2026 | HDR mit echtem Kamera-/Streaming-Material ansehen (Test lief mit erzeugten HDR10/HLG-Videos); bei zu dunklen Bildern Kurve oder Weißpunkt anpassen | Rückmeldung von Vulli |
@@ -147,7 +167,6 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Aufteilung Einfach/Erweitert nach erster Nutzung prüfen (fehlt im einfachen Modus etwas Wichtiges, z. B. Preset speichern oder Reihenfolge?) | Rückmeldung von Vulli |
 | 26.11.2026 | Social-Preview muss von Hand hochgeladen werden: GitHub → Settings → General → Social preview → `docs/images/social-preview.png` (geht nicht per API/PR) | |
 | 26.11.2026 | Icon-Einbindung (ApplicationIcon, Fenstericon) konnte lokal nicht gebaut werden (kein .NET in der Entwicklungsumgebung); Prüfung über CI und ein Blick auf Windows/Linux/macOS | |
-| 26.11.2026 | macOS-Dock-Icon ohne `.app`-Bundle evtl. generisch; Bundle mit `app.icns` gehört zu „Installer/Pakete später“ | |
 
 ## Umfang v0.1.0
 

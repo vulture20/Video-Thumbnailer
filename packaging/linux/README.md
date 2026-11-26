@@ -1,6 +1,6 @@
 # Linux-Integration (optional)
 
-Die Release-ZIPs enthalten nur die Programmdateien. Wer die Oberfläche ins Startmenü bringen möchte:
+Am einfachsten ist das AppImage aus den Releases (`make-appimage.sh` und `AppRun` in diesem Ordner, gebaut vom Release-Workflow). Die Release-ZIPs enthalten nur die Programmdateien. Wer sie ins Startmenü bringen möchte:
 
 ```bash
 # Programmdatei irgendwo in den PATH legen, z. B.

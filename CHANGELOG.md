@@ -6,6 +6,15 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 
 ## [Unveröffentlicht]
 
+### Hinzugefügt
+- Installer und Pakete, alle unsigniert und vom Release-Workflow gebaut: Windows-Setup (`…-setup.exe`, Startmenü-Eintrag, optional Desktop-Symbol, ohne Administratorrechte, Deinstallation über die Systemsteuerung), Linux-AppImage (Oberfläche, mit `vthumb` als erstem Argument die Kommandozeile) und macOS-DMG mit `Video-Thumbnailer.app` samt Icon im Dock. Die ZIPs gibt es weiterhin; `checksums.sha256` enthält alle Dateien ([#19])
+- Workflow „ffmpeg pins“: sucht wöchentlich nach neueren ffmpeg-Builds und schlägt sie als Pull Request vor; prüft bei Änderungen alle hinterlegten Dateien ([#19])
+
+### Geändert
+- ffmpeg-Download sicherer: Jede App-Version installiert einen fest hinterlegten Build, dessen SHA-256-Prüfsumme in der App steht statt auf dem Download-Server; unter macOS wird zusätzlich die Code-Signatur des Herausgebers (Team-ID) geprüft. `vthumb ffmpeg install --latest` lädt auf Wunsch weiterhin den neuesten Build ([#19])
+- ffmpeg-Quellen: Windows x64 jetzt von gyan.dev, Linux von ffmpeg.martin-riedl.de (beide halten ältere Versionen dauerhaft bereit, BtbN nur 14 Tage). Bestehende Installationen bekommen den Wechsel als ffmpeg-Update angeboten ([#19])
+- CI prüft den echten ffmpeg-Download jetzt auf Windows, Linux und macOS ([#19])
+
 ## [0.4.0] – 2026-11-26
 
 Animierte Sheets (MP4/WebM/GIF), einklappbare Warteschlange, kleinerer ffmpeg-Download unter Windows, abschaltbare Vorschau, ffmpeg-Download auf macOS repariert.
@@ -102,3 +111,4 @@ Erste Version.
 [#10]: https://github.com/vulture20/Video-Thumbnailer/pull/10
 [#13]: https://github.com/vulture20/Video-Thumbnailer/pull/13
 [#15]: https://github.com/vulture20/Video-Thumbnailer/pull/15
+[#19]: https://github.com/vulture20/Video-Thumbnailer/pull/19
