@@ -87,6 +87,13 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Neues Fensterlayout nach Konzept B „Leuchttisch“ (von Vulli aus drei Entwürfen gewählt; A „Aufgeräumt“ und C „Drei Schritte“ verworfen): Warteschlange links (280 px), Vorschau in der Mitte, Einstellungen rechts (350 px), Fußleiste mit ffmpeg-Status, Gesamtfortschritt, Pause, Abbrechen und Start. Mindestbreite des Fensters 1040 px | Ergebnis vor dem Start sehen; Stapelverarbeitung bleibt sichtbar. C ist für wiederholte Arbeit zu langsam |
 | 26.11.2026 | Live-Vorschau wird mit dem echten `SheetRenderer` gezeichnet (`SheetPreview` im Core): Raster, Abstände, Info-Kopf, Zeitstempel, Farben und Größe entsprechen dem Ergebnis. Statt Videobildern gemalte Platzhalter-Szenen, Videodaten im Kopf sind Beispielwerte (Dateiname und -größe vom gewählten Video). Neuberechnung 150 ms nach der letzten Änderung im Hintergrund, auf höchstens 1200 px Breite verkleinert. Darunter Bildanzahl und Bogengröße in Pixeln | eine Logik für Vorschau und Ergebnis, kein zweiter Zeichencode; schnell genug ohne ffmpeg |
 | 26.11.2026 | Die Vorschau zeigt das zuletzt in der Warteschlange ausgewählte Video, sonst das erste, ohne Videos „Beispielvideo.mp4“ | |
+| 26.11.2026 | Presets als Kacheln (4 pro Zeile) mit Rastersymbol aus Spalten × Zeilen; Beschreibung als Tooltip | Wahl auf einen Blick statt Namen in einer Liste |
+| 26.11.2026 | „Ausgabe“ in der Gestaltung von Entwurf A (Wunsch von Vulli): Format als drei Knöpfe JPG/PNG/WebP, Qualität als Schieberegler 1–100 (bei PNG gesperrt, da verlustfrei), darunter „Speichern in“ | |
+| 26.11.2026 | Zeitstempel und Info-Kopf als Schalter (ToggleSwitch) statt Häkchen | |
+| 26.11.2026 | Sprache und Darstellung in einem Zahnrad-Menü oben rechts in der Einstellungsspalte | Programmeinstellungen, keine Bogen-Einstellungen; hält die Spalte frei |
+| 26.11.2026 | Warteschlange: sichtbar nur „+ Dateien…“, „+ Ordner…“ und „Unterordner einbeziehen“; Auswahl entfernen, Erledigte/Alle leeren, Fehlgeschlagene wiederholen und Sortieren im Menü „⋯“. Je Video farbiger Status (grau wartet, blau läuft mit Fortschritt, grün fertig, rot Fehler) | weniger Knöpfe, Zustand auf einen Blick |
+| 26.11.2026 | Eigene Farben als Theme-Ressourcen für hell und dunkel, abgeleitet aus dem Icon: leicht bläuliche Grautöne, Blau (#2585D0 hell / #5BB8F5 dunkel) für Auswahl, Fortschritt und Akzent, Orange (#E2711A / #F7892E) ausschließlich für den Start-Knopf | einheitlicher Auftritt mit Icon und Banner; Orange heißt „Los“ |
+| 26.11.2026 | Paarfelder unter „Erweitert“ (Abstand/Rand, Anfang/Ende, Schriftgrößen, Deckkraft) ohne Auf/Ab-Pfeile, Eingabe per Tastatur oder Mausrad | sonst in der 350-px-Spalte zu schmal |
 
 ### Vorschau mit echten Bildern (#11)
 | Datum | Entscheidung | Begründung / Anmerkung |
@@ -96,13 +103,12 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Cache in `PreviewSource` (Core): Videodaten (ffprobe) einmal je Datei, Bilder je Datei und Zeitpunkt in 320 px Breite, höchstens 200 Bilder (ca. 50 MB), älteste fliegen zuerst raus. Beim Ändern von Spalten/Zeilen werden nur neue Zeitpunkte geholt; ein fehlgeschlagenes Lesen wird beim nächsten Mal wiederholt | 320 px reichen, weil die Vorschau höchstens 1200 px breit ist |
 | 26.11.2026 | Höchstens halb so viele ffmpeg-Prozesse wie CPU-Kerne, maximal 4, für die Vorschau; sie läuft auch während einer Verarbeitung | Vorschau soll die Verarbeitung nicht ausbremsen |
 | 26.11.2026 | Platzhalter bleiben als Rückfall: ohne Video („Beispielbilder, echtes Layout“), ohne ffmpeg („Beispielbilder (ffmpeg fehlt)“) und bei nicht lesbaren Dateien („Beispielbilder (Video nicht lesbar)“). Nach einem ffmpeg-Download wird die Vorschau automatisch neu geladen | |
-| 26.11.2026 | Presets als Kacheln (4 pro Zeile) mit Rastersymbol aus Spalten × Zeilen; Beschreibung als Tooltip | Wahl auf einen Blick statt Namen in einer Liste |
-| 26.11.2026 | „Ausgabe“ in der Gestaltung von Entwurf A (Wunsch von Vulli): Format als drei Knöpfe JPG/PNG/WebP, Qualität als Schieberegler 1–100 (bei PNG gesperrt, da verlustfrei), darunter „Speichern in“ | |
-| 26.11.2026 | Zeitstempel und Info-Kopf als Schalter (ToggleSwitch) statt Häkchen | |
-| 26.11.2026 | Sprache und Darstellung in einem Zahnrad-Menü oben rechts in der Einstellungsspalte | Programmeinstellungen, keine Bogen-Einstellungen; hält die Spalte frei |
-| 26.11.2026 | Warteschlange: sichtbar nur „+ Dateien…“, „+ Ordner…“ und „Unterordner einbeziehen“; Auswahl entfernen, Erledigte/Alle leeren, Fehlgeschlagene wiederholen und Sortieren im Menü „⋯“. Je Video farbiger Status (grau wartet, blau läuft mit Fortschritt, grün fertig, rot Fehler) | weniger Knöpfe, Zustand auf einen Blick |
-| 26.11.2026 | Eigene Farben als Theme-Ressourcen für hell und dunkel, abgeleitet aus dem Icon: leicht bläuliche Grautöne, Blau (#2585D0 hell / #5BB8F5 dunkel) für Auswahl, Fortschritt und Akzent, Orange (#E2711A / #F7892E) ausschließlich für den Start-Knopf | einheitlicher Auftritt mit Icon und Banner; Orange heißt „Los“ |
-| 26.11.2026 | Paarfelder unter „Erweitert“ (Abstand/Rand, Anfang/Ende, Schriftgrößen, Deckkraft) ohne Auf/Ab-Pfeile, Eingabe per Tastatur oder Mausrad | sonst in der 350-px-Spalte zu schmal |
+
+### Vorschau: Dateiänderungen, abschaltbar (#12)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 26.11.2026 | Der Vorschau-Cache merkt sich Größe und Änderungszeit jeder gelesenen Datei. Weichen sie ab (Datei ersetzt, neu kodiert, noch im Schreiben), werden Videodaten und Bilder dieser Datei vergessen und neu gelesen (`PreviewSource.ForgetIfChanged`). Geprüft wird bei jeder Vorschau-Aktualisierung und wenn das Fenster wieder den Fokus bekommt; ein Bild, das während einer Änderung entstand, wird verworfen | billiger als ein Dateiwächter, deckt den üblichen Fall „Datei draußen geändert, zurück ins Programm“ ab |
+| 26.11.2026 | Live-Vorschau abschaltbar (Wunsch von Vulli): Schalter „Live-Vorschau“ oben rechts über der Vorschau, Standard an, gespeichert in `settings.json` (`livePreview`). Aus: laufendes Laden wird abgebrochen, Bild freigegeben, keine Vorschau gezeichnet und kein ffmpeg/ffprobe für die Vorschau gestartet; in der Mitte steht ein Hinweis, dass die Einstellungen trotzdem gelten | für langsame Rechner, Netzlaufwerke oder Akku; Schalter dort, wo die Vorschau ist |
 
 ## Offen
 
@@ -115,7 +121,6 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | HDR-Tonemapping mit echten HDR10/HLG-Videos prüfen (Testvideos ohne korrekte Farbmetadaten) | |
 | 26.11.2026 | GUI-Einstellungen für Kontur-/Schattenfarbe, Kopf-Farben und Millisekunden im Zeitstempel fehlen (im Preset-JSON und teils per CLI möglich) | Optionsdialog ist P2 |
 | 26.11.2026 | Schmale Fenster: Unter etwa 1040 px Breite könnte die Warteschlange zu einer Leiste einklappen (im Konzept vorgesehen, noch nicht gebaut; derzeit Mindestbreite 1040 px) | |
-| 26.11.2026 | Vorschau-Cache merkt nicht, wenn sich eine Videodatei auf der Festplatte ändert (gleicher Pfad); erst ein Neustart liest sie neu. `PreviewSource.Forget` ist vorbereitet, aber noch nirgends angebunden | selten; bei Bedarf über Dateizeit/Größe prüfen |
 | 26.11.2026 | Neue Oberfläche auf Windows und macOS ansehen (Schriften, Schalter, Zahnrad- und „⋯“-Symbol, Titelleiste); gebaut und getestet nur unter Linux (headless) | Rückmeldung von Vulli |
 | 26.11.2026 | Aufteilung Einfach/Erweitert nach erster Nutzung prüfen (fehlt im einfachen Modus etwas Wichtiges, z. B. Preset speichern oder Reihenfolge?) | Rückmeldung von Vulli |
 | 26.11.2026 | Social-Preview muss von Hand hochgeladen werden: GitHub → Settings → General → Social preview → `docs/images/social-preview.png` (geht nicht per API/PR) | |

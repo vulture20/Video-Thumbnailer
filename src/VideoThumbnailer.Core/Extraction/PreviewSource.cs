@@ -8,7 +8,8 @@ namespace VideoThumbnailer.Core.Extraction;
 
 /// <summary>
 /// Real video data for the live preview: video information (ffprobe) and small frames (ffmpeg), both cached,
-/// so changing settings only extracts frames for capture times that are new.
+/// so changing settings only extracts frames for capture times that are new. A file whose size or
+/// modification time changed since it was read is forgotten and read again.
 /// </summary>
 public sealed class PreviewSource(FfmpegTools tools, int maxParallel = 4)
 {
@@ -22,20 +23,50 @@ public sealed class PreviewSource(FfmpegTools tools, int maxParallel = 4)
     private readonly ConcurrentDictionary<string, Task<MediaInfo>> _info = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<(string Path, long Ms), SKBitmap> _frames = new();
     private readonly ConcurrentQueue<(string Path, long Ms)> _order = new();
+    private readonly ConcurrentDictionary<string, (long Length, DateTime Written)> _stamps = new(StringComparer.Ordinal);
 
     public FfmpegTools Tools { get; } = tools;
 
     /// <summary>Video information, read once per file (a failed read is retried next time).</summary>
     public async Task<MediaInfo> GetInfoAsync(string path, CancellationToken ct)
     {
-        var task = _info.GetOrAdd(path, p => FfprobeReader.ReadAsync(Tools.FfprobePath, p, CancellationToken.None));
+        ForgetIfChanged(path);
+        var task = _info.GetOrAdd(path, p =>
+        {
+            _stamps[p] = Stamp(p);
+            return FfprobeReader.ReadAsync(Tools.FfprobePath, p, CancellationToken.None);
+        });
         try { return await task.WaitAsync(ct).ConfigureAwait(false); }
         catch when (task.IsFaulted || task.IsCanceled) { _info.TryRemove(new(path, task)); throw; }
     }
 
     /// <summary>Video information if it has already been read successfully.</summary>
-    public MediaInfo? TryGetInfo(string path) =>
-        _info.TryGetValue(path, out var t) && t.IsCompletedSuccessfully ? t.Result : null;
+    public MediaInfo? TryGetInfo(string path)
+    {
+        ForgetIfChanged(path);
+        return _info.TryGetValue(path, out var t) && t.IsCompletedSuccessfully ? t.Result : null;
+    }
+
+    /// <summary>
+    /// Forgets information and frames of <paramref name="path"/> when its size or modification time differs from
+    /// when it was read (file replaced, re-encoded, still being written …). Returns true if something was forgotten.
+    /// </summary>
+    public bool ForgetIfChanged(string path)
+    {
+        if (!_stamps.TryGetValue(path, out var known) || Stamp(path) == known) return false;
+        Forget(path);
+        return true;
+    }
+
+    private static (long, DateTime) Stamp(string path)
+    {
+        try
+        {
+            var fi = new FileInfo(path);
+            return fi.Exists ? (fi.Length, fi.LastWriteTimeUtc) : (-1, DateTime.MinValue);
+        }
+        catch { return (-1, DateTime.MinValue); }
+    }
 
     private static long Key(double time) => (long)Math.Round(time * 1000);
 
@@ -61,17 +92,22 @@ public sealed class PreviewSource(FfmpegTools tools, int maxParallel = 4)
             finally { _limiter.Release(); }
             if (bmp is null) return;
             var key = (info.Path, Key(t));
-            if (!_frames.TryAdd(key, bmp)) { bmp.Dispose(); return; }
+            // The file was forgotten (changed) while this frame was extracted: do not cache a stale frame.
+            if (TryGetInfoUnchecked(info.Path) != info || !_frames.TryAdd(key, bmp)) { bmp.Dispose(); return; }
             _order.Enqueue(key);
             Trim();
             onFrame?.Invoke();
         })).ConfigureAwait(false);
     }
 
+    private MediaInfo? TryGetInfoUnchecked(string path) =>
+        _info.TryGetValue(path, out var t) && t.IsCompletedSuccessfully ? t.Result : null;
+
     /// <summary>Forgets frames and information of one file (e.g. after it changed on disk).</summary>
     public void Forget(string path)
     {
         _info.TryRemove(path, out _);
+        _stamps.TryRemove(path, out _);
         foreach (var k in _frames.Keys.Where(k => k.Path == path)) _frames.TryRemove(k, out _);
     }
 
