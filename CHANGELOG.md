@@ -6,6 +6,8 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 
 ## [Unveröffentlicht]
 
+### Geändert
+- Dokumentation auf den Stand von v0.5.0 gebracht: erledigte und doppelte offene Punkte in `docs/DECISIONS.md` bereinigt, überholte Entscheidungen markiert, README (Funktionen, Inhalt der ZIPs, Aufbau) aktualisiert; spätere Ideen aus der Spezifikation als Issues #21–#39 ([#41])
 ### Hinzugefügt
 - Kommandozeile kann jetzt jede Preset-Einstellung setzen: Zeitstempel (`--timestamp-size`, `--timestamp-color`, `--timestamp-opacity`, `--timestamp-bold`, `--timestamp-padding`, `--outline-color`, `--outline-width`, `--no-outline`, `--shadow`/`--no-shadow`, `--shadow-color`, `--shadow-offset`, `--milliseconds`), Info-Kopf (`--title-size`, `--header-size`, `--title-color`, `--header-color`, `--line-spacing`), Einzelbilder (`--frames-folder`, `--no-frames`) sowie `--timestamps`, `--header`, `--portrait-swap`, `--no-keep-structure` und `--description` zum Zurückschalten bzw. für `--save-preset` ([#40])
 
@@ -129,4 +131,5 @@ Erste Version.
 [#18]: https://github.com/vulture20/Video-Thumbnailer/pull/18
 [#17]: https://github.com/vulture20/Video-Thumbnailer/pull/17
 [#19]: https://github.com/vulture20/Video-Thumbnailer/pull/19
+[#41]: https://github.com/vulture20/Video-Thumbnailer/pull/41
 [#40]: https://github.com/vulture20/Video-Thumbnailer/pull/40
