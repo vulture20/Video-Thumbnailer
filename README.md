@@ -13,10 +13,13 @@ Free, cross-platform video contact sheet generator with GUI and command line.
 - Videos auf einem Webserver per HTTP(S)-Adresse, ohne sie vorher herunterzuladen: ffmpeg lädt nur die Stellen um die Aufnahmezeitpunkte (Knopf mit Weltkugel, Adresse aus dem Browser hineinziehen oder als Argument in der Kommandozeile)
 - Alle Formate, die ffmpeg lesen kann (MP4, MKV, AVI, MOV, WebM, WMV, TS …), inkl. 10-Bit/HDR, AV1, gedrehte und anamorphe Videos
 - Raster aus Spalten × Zeilen, Breite, Abstand, Rand; automatische Kachelhöhe, Anpassung für Hochkant-Videos
+- Spezial-Raster mit großen und kleinen Kacheln (z. B. ein großes Bild oben oder in der Mitte), eigene Vorlagen als JSON
+- Bildgröße fest, so breit wie der Bildschirm oder so groß, dass das Sheet ohne Scrollen ganz auf den Bildschirm passt
 - Reihenfolge zeilenweise, spaltenweise oder zufällig
 - Schwarze oder einfarbige Bilder (Abblende, Schnitt) werden automatisch durch ein gutes Bild kurz davor oder danach ersetzt (abschaltbar, Suchbereich einstellbar)
 - Aufnahmezeitpunkte von Hand: Kachel in der Vorschau anklicken und den Zeitpunkt per Schieberegler, Eingabe oder bildgenau wählen (bei animierten Sheets auch die Länge des Ausschnitts); in der Kommandozeile mit `--times`
 - Zeitstempel in jeder Kachel (5 Positionen, Farbe, Deckkraft, Kontur- und Schattenfarbe, optional mit Millisekunden)
+- Hintergrundfarbe oder Hintergrundbild (füllen, strecken, kacheln, zentriert, mit Deckkraft)
 - Info-Kopf mit frei konfigurierbaren Video-Infos (Name, Größe, Dauer, Auflösung, Codecs, Bitrate, FPS, Audio …), eigene Titel- und Textfarbe
 - Ausgabe als JPG, PNG oder WebP; optional jede Aufnahme als Einzelbild
 - Animierte Sheets als MP4, WebM oder GIF: jede Kachel spielt einen kurzen Ausschnitt ab ihrem Zeitpunkt ab, mit mitlaufendem Zeitstempel
@@ -86,6 +89,12 @@ vthumb --columns 3 --rows 1 --times "1:00,-,5:30+2" film.mkv
 vthumb --no-skip-black film.mkv
 vthumb --black-search 5 film.mkv
 
+# Großes Bild in der Mitte, Sheet so groß, dass es ganz auf einen 2560×1440-Bildschirm passt
+vthumb --layout big-center --fit-screen both --screen 2560x1440 film.mkv
+
+# Hintergrundbild, abgedunkelt (Deckkraft 40 % über dunklem Hintergrund)
+vthumb --background-image ~/Bilder/kino.jpg --background-opacity 40 film.mkv
+
 # Eigene Einstellungen als Preset speichern
 vthumb --columns 5 --rows 6 --no-header --save-preset "5x6 ohne Kopf"
 ```
@@ -95,6 +104,18 @@ Ohne `--preset` werden die zuletzt in der Oberfläche benutzten Einstellungen ve
 **Videos per URL:** `http://` und `https://` werden direkt von ffmpeg gelesen. Schnell geht das, wenn der Server Range-Anfragen unterstützt (übliche Webserver und CDNs tun das); sonst muss ffmpeg bis zur Stelle lesen, und Formate mit Index am Dateiende (manche MP4) lassen sich dann gar nicht öffnen. Nach 30 s ohne Daten wird abgebrochen. Da es „neben dem Video“ nicht gibt, landen die Sheets im Ausgabeordner, ohne einen solchen in der Oberfläche im Bilder-Ordner des Benutzers und in der Kommandozeile im aktuellen Ordner. Name, Endung und `{folder}`/`{path}` stammen aus der Adresse; Benutzername, Passwort und Query-Parameter (oft Zugangsschlüssel) erscheinen nicht im Sheet.
 
 **Zeitpunkte von Hand:** `--times` nimmt eine Liste je Kachel in Zeitfolge (bei „zufällig“ also nicht nach Position): Sekunden, `mm:ss` oder `hh:mm:ss` (mit Nachkommastellen), `-` für automatisch, `+s` für die Länge des Ausschnitts bei animierten Sheets. Die Liste gilt für alle angegebenen Videos und gehört nicht zum Preset. Von Hand gewählte Zeitpunkte werden nie als „schwarz“ ersetzt. In der Oberfläche gelten sie für das Video in der Warteschlange und bleiben bis zum Schließen des Programms erhalten.
+
+**Spezial-Raster:** Eingebaut sind `big-top` (großes Bild oben, 21 Bilder), `big-center` (großes Bild in der Mitte, 13), `two-big` (zwei große oben, 14) und `big-first` (erstes Bild groß oben links, 17). Eigene Vorlagen stehen im Preset unter `template` oder in einer eigenen JSON-Datei für `--layout`: ein Raster aus `columns` × `rows` Feldern im Seitenverhältnis des Videos und darauf die Kacheln mit linkem oberen Feld und Größe in Feldern (immer quadratisch, damit kein Bild verzerrt wird); Felder ohne Kachel bleiben frei. Die Zeitpunkte laufen nach dem linken oberen Feld jeder Kachel, zeilenweise oder spaltenweise.
+
+```json
+{ "name": "Breitbild", "columns": 3, "rows": 3,
+  "tiles": [ { "x": 0, "y": 0, "size": 2 }, { "x": 2, "y": 0 }, { "x": 2, "y": 1 },
+             { "x": 0, "y": 2 }, { "x": 1, "y": 2 }, { "x": 2, "y": 2 } ] }
+```
+
+**An Bildschirm anpassen:** In der Oberfläche zählt der Bildschirm, auf dem das Fenster ist (nutzbare Fläche ohne Taskleiste, in physischen Pixeln). Die Kommandozeile nimmt `--screen BxH`, sonst den zuletzt von der Oberfläche gesehenen Bildschirm, sonst die feste Breite des Presets.
+
+**Hintergrundbild:** Relative Pfade in einer Preset-Datei gelten relativ zu deren Ordner; beim Export wird ein Bild im selben Ordner relativ eingetragen, sodass Preset und Bild zusammen weitergegeben werden können.
 
 Sprache: `--lang de|en|auto` (oder Umgebungsvariable `VTHUMB_LANG`) für Hilfe und Meldungen; ohne Angabe gilt die in der Oberfläche gewählte Sprache, sonst die Systemsprache. `--sheet-lang de|en|auto` legt die Sprache der Texte im Sheet fest (z. B. „Größe:“/„Size:“, Dezimalkomma).
 Exit-Codes: 0 ok, 1 einzelne Videos fehlgeschlagen, 2 Aufruffehler, 3 ffmpeg fehlt, 130 abgebrochen.

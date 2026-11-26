@@ -26,6 +26,8 @@ public sealed class AppSettings
     public bool LivePreview { get; set; } = true;
     /// <summary>GUI colour theme ("Light", "Dark"); null = follow the system.</summary>
     public string? Theme { get; set; }
+    /// <summary>Usable area of the screen the GUI window was last on; the CLI uses it for "fit to screen" without --screen.</summary>
+    public Layout.ScreenSize? LastScreen { get; set; }
 
     public static AppSettings Load(string? path = null)
     {

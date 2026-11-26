@@ -40,6 +40,11 @@ internal static class HelpText
               --rows <n>             rows
           -w, --width <px>           total sheet width
               --tile-width <px>      fixed tile width (overrides --width)
+              --layout <grid|name|file>  special grid with big and small tiles: big-top, big-center, two-big,
+                                     big-first, or a JSON file with a template; "grid" = plain columns x rows
+              --fit-screen off|width|both  sheet as wide as the screen, or as large as fits on it (width and height)
+              --screen <WxH>         screen size for --fit-screen (default: the screen the GUI was last on;
+                                     unknown = the fixed width applies)
               --gap <px> / --margin <px>
               --order row|column|random
               --skip-start <%> / --skip-end <%>   ignore start/end of the video
@@ -50,6 +55,9 @@ internal static class HelpText
               --black-search <s>     how far before/after to look (default 2)
               --no-portrait-swap     keep columns/rows for portrait videos (--portrait-swap: swap them)
               --background <color>   --font <family>
+              --background-image <file|none>  picture behind the tiles
+              --background-mode fill|stretch|tile|center  (default fill)
+              --background-opacity <0-1 or %>  how strongly the picture shows over the background color (default 0.5)
 
         Timestamps (colors as #RRGGBB or #AARRGGBB, AA = opacity):
               --timestamps / --no-timestamps
@@ -128,6 +136,11 @@ internal static class HelpText
               --rows <n>             Zeilen
           -w, --width <px>           Gesamtbreite des Sheets
               --tile-width <px>      feste Kachelbreite (ersetzt --width)
+              --layout <grid|Name|Datei>  Spezial-Raster mit großen und kleinen Kacheln: big-top, big-center,
+                                     two-big, big-first oder eine JSON-Datei mit Vorlage; "grid" = einfaches Raster
+              --fit-screen off|width|both  Sheet so breit wie der Bildschirm oder so groß, dass es ganz darauf passt
+              --screen <BxH>         Bildschirmgröße für --fit-screen (Standard: der Bildschirm, auf dem die
+                                     Oberfläche zuletzt war; unbekannt = es gilt die feste Breite)
               --gap <px> / --margin <px>
               --order row|column|random
               --skip-start <%> / --skip-end <%>   Anfang/Ende des Videos auslassen
@@ -139,6 +152,9 @@ internal static class HelpText
               --black-search <s>     so weit davor/danach suchen (Standard 2)
               --no-portrait-swap     Spalten/Zeilen bei Hochkant-Videos nicht tauschen (--portrait-swap: tauschen)
               --background <Farbe>   --font <Schriftfamilie>
+              --background-image <Datei|none>  Bild hinter den Kacheln
+              --background-mode fill|stretch|tile|center  füllen, strecken, kacheln, zentriert (Standard fill)
+              --background-opacity <0-1 oder %>  wie stark das Bild über der Hintergrundfarbe liegt (Standard 0,5)
 
         Zeitstempel (Farben als #RRGGBB oder #AARRGGBB, AA = Deckkraft):
               --timestamps / --no-timestamps

@@ -22,11 +22,31 @@ public partial class MainWindow : Window, IUiServices
         };
         DataContextChanged += (_, _) => (DataContext as MainViewModel)?.OnWindowWidthChanged(ClientSize.Width);
         Activated += (_, _) => (DataContext as MainViewModel)?.OnWindowActivated();
-        Opened += async (_, _) => { if (DataContext is MainViewModel vm) await vm.OnOpenedAsync(); };
+        Opened += async (_, _) =>
+        {
+            ReportScreen();
+            Screens.Changed += (_, _) => ReportScreen();
+            if (DataContext is MainViewModel vm) await vm.OnOpenedAsync();
+        };
+        PositionChanged += (_, _) => ReportScreen();
+        ScalingChanged += (_, _) => ReportScreen();
         Closing += (_, _) => (DataContext as MainViewModel)?.OnClosing();
     }
 
     private MainViewModel? Vm => DataContext as MainViewModel;
+
+    /// <summary>Usable area (physical pixels, without task bar) of the screen the window is on, for "fit to screen".</summary>
+    private void ReportScreen()
+    {
+        try
+        {
+            var screen = Screens.ScreenFromWindow(this) ?? Screens.Primary;
+            if (screen is null) return;
+            var area = screen.WorkingArea;
+            if (area.Width >= 100 && area.Height >= 100) Vm?.OnScreenChanged(new Core.Layout.ScreenSize(area.Width, area.Height));
+        }
+        catch (Exception ex) { Debug.WriteLine(ex); }
+    }
 
     private void OnDragOver(object? sender, DragEventArgs e)
     {
@@ -112,6 +132,28 @@ public partial class MainWindow : Window, IUiServices
         {
             Title = Loc.T("DlgImportPreset"),
             FileTypeFilter = [type, FilePickerFileTypes.All],
+        });
+        return files.Count > 0 ? files[0].TryGetLocalPath() : null;
+    }
+
+    public async Task<string?> PickImageFileAsync(string? current)
+    {
+        IStorageFolder? start = null;
+        try
+        {
+            var dir = string.IsNullOrWhiteSpace(current) ? null : Path.GetDirectoryName(current);
+            if (dir is not null && Directory.Exists(dir)) start = await StorageProvider.TryGetFolderFromPathAsync(dir);
+        }
+        catch { /* start in the default folder */ }
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = Loc.T("BackgroundImagePick"),
+            SuggestedStartLocation = start,
+            FileTypeFilter =
+            [
+                new FilePickerFileType(Loc.T("DlgImages")) { Patterns = ["*.jpg", "*.jpeg", "*.png", "*.webp", "*.bmp", "*.gif"] },
+                FilePickerFileTypes.All,
+            ],
         });
         return files.Count > 0 ? files[0].TryGetLocalPath() : null;
     }

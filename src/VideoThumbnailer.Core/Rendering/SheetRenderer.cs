@@ -29,6 +29,7 @@ public static class SheetRenderer
         var bmp = new SKBitmap(new SKImageInfo(layout.SheetWidth, layout.SheetHeight, SKColorType.Rgba8888, SKAlphaType.Premul));
         using var canvas = new SKCanvas(bmp);
         canvas.Clear(ParseColor(s.BackgroundColor, new SKColor(30, 30, 30)));
+        DrawBackgroundImage(canvas, s.BackgroundImage, layout.SheetWidth, layout.SheetHeight);
 
         using var tilePaint = new SKPaint();
         var sampling = new SKSamplingOptions(SKCubicResampler.Mitchell);
@@ -40,7 +41,7 @@ public static class SheetRenderer
             if (frame.Bitmap is { } fb)
             {
                 using var img = SKImage.FromBitmap(fb);
-                canvas.DrawImage(img, dest, sampling, tilePaint);
+                canvas.DrawImage(img, CoverSource(fb.Width, fb.Height, dest), dest, sampling, tilePaint);
             }
             else
             {
@@ -89,6 +90,51 @@ public static class SheetRenderer
     };
 
     // ---------------------------------------------------------------- helpers
+
+    /// <summary>Part of a picture that fills <paramref name="dest"/> without distortion (cut off evenly at two sides).</summary>
+    internal static SKRect CoverSource(int width, int height, SKRect dest)
+    {
+        if (width <= 0 || height <= 0 || dest.Width <= 0 || dest.Height <= 0) return new SKRect(0, 0, width, height);
+        var destAspect = dest.Width / dest.Height;
+        var srcAspect = (float)width / height;
+        if (Math.Abs(srcAspect - destAspect) < 0.0005f) return new SKRect(0, 0, width, height);
+        if (srcAspect > destAspect)
+        {
+            var w = height * destAspect;
+            var x = (width - w) / 2;
+            return new SKRect(x, 0, x + w, height);
+        }
+        var h = width / destAspect;
+        var y = (height - h) / 2;
+        return new SKRect(0, y, width, y + h);
+    }
+
+    private static void DrawBackgroundImage(SKCanvas canvas, BackgroundImageSettings bg, int width, int height)
+    {
+        if (!bg.Enabled || bg.Opacity <= 0 || BackgroundImageCache.Get(bg.Path) is not { } img) return;
+        using var paint = new SKPaint { Color = SKColors.White.WithAlpha((byte)Math.Round(255 * Math.Clamp(bg.Opacity, 0, 1))), IsAntialias = true };
+        var sampling = new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear);
+        var full = new SKRect(0, 0, width, height);
+        switch (bg.Mode)
+        {
+            case BackgroundImageMode.Stretch:
+                canvas.DrawImage(img, full, sampling, paint);
+                break;
+            case BackgroundImageMode.Center:
+                canvas.DrawImage(img, (width - img.Width) / 2f, (height - img.Height) / 2f, sampling, paint);
+                break;
+            case BackgroundImageMode.Tile:
+                using (var shader = img.ToShader(SKShaderTileMode.Repeat, SKShaderTileMode.Repeat, sampling))
+                {
+                    paint.Shader = shader;
+                    canvas.DrawRect(full, paint);
+                }
+                break;
+            default:
+                canvas.DrawImage(img, CoverSource(img.Width, img.Height, full), full, sampling, paint);
+                break;
+        }
+    }
 
     private static List<string> HeaderLines(SheetSettings s, MediaInfo info)
     {

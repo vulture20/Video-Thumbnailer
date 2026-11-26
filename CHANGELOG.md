@@ -7,6 +7,9 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 ## [Unveröffentlicht]
 
 ### Hinzugefügt
+- Spezial-Raster mit großen und kleinen Kacheln: neue Kachelreihe „Layout“ mit „Raster“ und vier Vorlagen (Groß oben, Groß Mitte, Zwei groß, Groß zuerst). Große Kacheln werden in voller Größe aufgenommen und kommen in der Zeitfolge dort dran, wo sie beginnen. Eigene Vorlagen als offenes JSON im Preset (`template`: Felder und Kacheln); Kommandozeile `--layout big-top|big-center|two-big|big-first|<Datei>|grid` ([#46], #24)
+- Bildgröße „Bildschirmbreite“ und „An Bildschirm anpassen“: das Sheet wird so breit wie der Bildschirm, auf dem das Fenster ist, bzw. so groß, dass es ganz ohne Scrollen darauf passt (physische Pixel ohne Taskleiste). Im Preset steht der Modus, die feste Breite bleibt Ersatz. Kommandozeile `--fit-screen off|width|both` und `--screen BxH`, sonst der zuletzt von der Oberfläche gesehene Bildschirm ([#46], #25)
+- Hintergrundbild hinter den Kacheln (unter „Erweitert“): füllen, strecken, kacheln oder zentriert, mit Deckkraft über der Hintergrundfarbe (Standard 0,5) für lesbare Zeitstempel; fehlt das Bild, gibt es einen Hinweis statt eines Fehlers. Beim Preset-Export wird ein Bild neben der Datei relativ gespeichert. Kommandozeile `--background-image`, `--background-mode`, `--background-opacity` ([#46], #26)
 - Videos per HTTP(S)-Adresse, ohne sie herunterzuladen: ffmpeg liest nur die Stellen um die Aufnahmezeitpunkte (Range-Anfragen, 30 s Zeitüberschreitung, automatisches Wiederverbinden). Oberfläche: Knopf mit Weltkugel in der Warteschlange oder Adresse aus dem Browser hineinziehen; Kommandozeile: URL statt Datei. Sheets landen im Ausgabeordner (sonst Bilder-Ordner bzw. aktueller Ordner); Name und `{folder}`/`{path}` kommen aus der Adresse, ohne Zugangsdaten und Query ([#45], #21)
 - Schwarze oder einfarbige Bilder (Abblende, Schnitt) werden durch das nächste gute Bild bis ±2 s davor/danach ersetzt, auch bei animierten Sheets und in der Live-Vorschau; der Zeitstempel zeigt den tatsächlichen Zeitpunkt. Standardmäßig an, abschaltbar unter „Erweitert“, `--no-skip-black`, Suchbereich `--black-search` ([#45], #22)
 - Aufnahmezeitpunkte von Hand: Kachel in der Live-Vorschau anklicken, Zeitpunkt per Schieberegler, Eingabe oder bildgenau wählen (die Vorschau zieht sofort mit), bei animierten Sheets auch die Länge des Ausschnitts; „✎ n von Hand ✕“ setzt alle zurück. Kommandozeile: `--times "1:00,-,5:30+2"`. Die Zeitpunkte gelten je Video, nicht im Preset ([#45], #23)
@@ -122,6 +125,7 @@ Erste Version.
 [#1]: https://github.com/vulture20/Video-Thumbnailer/pull/1
 [#2]: https://github.com/vulture20/Video-Thumbnailer/pull/2
 [#42]: https://github.com/vulture20/Video-Thumbnailer/pull/42
+[#46]: https://github.com/vulture20/Video-Thumbnailer/pull/46
 [#45]: https://github.com/vulture20/Video-Thumbnailer/pull/45
 [#44]: https://github.com/vulture20/Video-Thumbnailer/pull/44
 [#3]: https://github.com/vulture20/Video-Thumbnailer/pull/3

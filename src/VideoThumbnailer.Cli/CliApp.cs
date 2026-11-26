@@ -3,6 +3,7 @@ using VideoThumbnailer.Core;
 using VideoThumbnailer.Core.Batch;
 using VideoThumbnailer.Core.Ffmpeg;
 using VideoThumbnailer.Core.Input;
+using VideoThumbnailer.Core.Layout;
 using VideoThumbnailer.Core.Localization;
 using VideoThumbnailer.Core.Output;
 using VideoThumbnailer.Core.Settings;
@@ -69,6 +70,17 @@ public static class CliApp
 
     // ------------------------------------------------------------------ generate
 
+    /// <summary>Screen for "fit to screen": --screen, otherwise the one the GUI saw last, otherwise the fixed width.</summary>
+    private static void ApplyScreen(SheetSettings settings, GenerateOptions o, AppSettings app)
+    {
+        ScreenFitting.Current = o.Screen ?? app.LastScreen;
+        if (settings.FitToScreen == ScreenFit.Off || o.Quiet) return;
+        if (ScreenFitting.Current is { } screen)
+            Console.WriteLine(CliText.T("ScreenUsed", screen, CliText.T(o.Screen is not null ? "ScreenFromOption" : "ScreenFromGui")));
+        else
+            Console.WriteLine(CliText.T("ScreenUnknown"));
+    }
+
     private static async Task<int> GenerateAsync(GenerateOptions o)
     {
         var app = AppSettings.Load();
@@ -82,6 +94,7 @@ public static class CliApp
         foreach (var apply in o.Overrides) apply(settings);
         var problems = settings.Normalize();
         if (problems.Count > 0) throw new UsageException(string.Join(" ", problems));
+        ApplyScreen(settings, o, app);
 
         if (o.SavePresetAs is not null)
         {
@@ -311,7 +324,7 @@ public static class CliApp
                 var name = args.ElementAtOrDefault(1) ?? throw new UsageException(CliText.T("Usage", "presets export <name> <file>"));
                 var file = args.ElementAtOrDefault(2) ?? throw new UsageException(CliText.T("Usage", "presets export <name> <file>"));
                 var p = store.Find(name) ?? throw new UsageException(CliText.T("PresetNotFound", name));
-                PresetStore.SaveFile(p, file);
+                PresetStore.ExportFile(p, file);
                 Console.WriteLine(CliText.T("ExportedTo", file));
                 return ExitOk;
             }

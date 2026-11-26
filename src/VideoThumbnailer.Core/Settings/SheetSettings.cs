@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using VideoThumbnailer.Core.Layout;
 using VideoThumbnailer.Core.Localization;
 
 namespace VideoThumbnailer.Core.Settings;
@@ -17,6 +18,31 @@ public enum ImageFormat { Jpeg, Png, Webp }
 
 [JsonConverter(typeof(JsonStringEnumConverter<AnimationFormat>))]
 public enum AnimationFormat { Mp4, Webm, Gif }
+
+/// <summary>Sheet size from the screen (#25). The fixed <see cref="SheetSettings.SheetWidth"/> stays as fallback.</summary>
+[JsonConverter(typeof(JsonStringEnumConverter<ScreenFit>))]
+public enum ScreenFit
+{
+    /// <summary>Fixed width (<see cref="SheetSettings.SheetWidth"/> or <see cref="SheetSettings.TileWidth"/>).</summary>
+    Off,
+    /// <summary>As wide as the screen.</summary>
+    Width,
+    /// <summary>As large as fits on the screen without scrolling (width and height).</summary>
+    WidthAndHeight,
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter<BackgroundImageMode>))]
+public enum BackgroundImageMode
+{
+    /// <summary>Covers the whole sheet, cut off at the sides (keeps the aspect ratio).</summary>
+    Fill,
+    /// <summary>Stretched to the size of the sheet (aspect ratio may change).</summary>
+    Stretch,
+    /// <summary>Repeated in original size from the top left.</summary>
+    Tile,
+    /// <summary>Original size in the middle.</summary>
+    Center,
+}
 
 [JsonConverter(typeof(JsonStringEnumConverter<OutputLocation>))]
 public enum OutputLocation
@@ -44,8 +70,18 @@ public sealed class SheetSettings
 
     public int Columns { get; set; } = 4;
     public int Rows { get; set; } = 5;
+    /// <summary>
+    /// Grid with tiles of different sizes; null = plain grid of <see cref="Columns"/> × <see cref="Rows"/> tiles.
+    /// When set, columns and rows of the template are used instead.
+    /// </summary>
+    public GridTemplate? Template { get; set; }
     /// <summary>Total width of the sheet in pixels. Ignored when <see cref="TileWidth"/> is set.</summary>
     public int SheetWidth { get; set; } = 1920;
+    /// <summary>
+    /// Derive the size from the screen (<see cref="ScreenFitting.Current"/>). Without a known screen
+    /// (command line without --screen, headless) the fixed width applies.
+    /// </summary>
+    public ScreenFit FitToScreen { get; set; } = ScreenFit.Off;
     /// <summary>Optional fixed tile width; the sheet width is derived from it.</summary>
     public int? TileWidth { get; set; }
     public int Gap { get; set; } = 6;
@@ -62,6 +98,8 @@ public sealed class SheetSettings
     /// <summary>How far before and after the planned time (seconds) to look for a better frame.</summary>
     public double BlackFrameSearchSeconds { get; set; } = 2;
     public string BackgroundColor { get; set; } = "#FF1E1E1E";
+    /// <summary>Optional picture behind the tiles, drawn over <see cref="BackgroundColor"/>.</summary>
+    public BackgroundImageSettings BackgroundImage { get; set; } = new();
     /// <summary>Font family for all text. Empty = bundled DejaVu Sans.</summary>
     public string? FontFamily { get; set; }
     /// <summary>Language of texts drawn into the sheet ("en", "de"); null = same as the application.</summary>
@@ -100,6 +138,14 @@ public sealed class SheetSettings
         Header.FontSize = Math.Clamp(Header.FontSize, 4, 400);
         Header.TitleFontSize = Math.Clamp(Header.TitleFontSize, 4, 400);
         Output.Quality = Math.Clamp(Output.Quality, 1, 100);
+        BackgroundImage ??= new();
+        BackgroundImage.Opacity = Math.Clamp(BackgroundImage.Opacity, 0, 1);
+        if (string.IsNullOrWhiteSpace(BackgroundImage.Path)) BackgroundImage.Path = null;
+        if (Template is { } template)
+        {
+            var problems = template.Validate();
+            if (problems.Count > 0) errors.AddRange(problems);
+        }
         Animation.ClipSeconds = Math.Clamp(Animation.ClipSeconds, 0.5, 30);
         Animation.FramesPerSecond = Math.Clamp(Animation.FramesPerSecond, 1, 60);
         if (string.IsNullOrWhiteSpace(Output.FileNamePattern)) Output.FileNamePattern = "{name}";
@@ -109,6 +155,24 @@ public sealed class SheetSettings
             Output.SubfolderName = "thumbnails";
         return errors;
     }
+}
+
+public sealed class BackgroundImageSettings
+{
+    /// <summary>
+    /// Image file (JPG, PNG, WebP, BMP, GIF). Relative paths in a preset file are resolved against the folder of
+    /// that file when it is loaded, otherwise against the current folder. Null = no picture.
+    /// </summary>
+    public string? Path { get; set; }
+    public BackgroundImageMode Mode { get; set; } = BackgroundImageMode.Fill;
+    /// <summary>
+    /// 0..1: how strongly the picture shows over the background color. Below 1 it is blended with the background
+    /// color (darker with a dark color), so timestamps and the info header stay readable.
+    /// </summary>
+    public double Opacity { get; set; } = 0.5;
+
+    [JsonIgnore]
+    public bool Enabled => !string.IsNullOrWhiteSpace(Path);
 }
 
 public sealed class TimestampSettings

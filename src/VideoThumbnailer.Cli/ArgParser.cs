@@ -19,6 +19,8 @@ public sealed class GenerateOptions
     public bool DryRun { get; set; }
     public bool Quiet { get; set; }
     public string? SavePresetAs { get; set; }
+    /// <summary>Screen size for "fit to screen" (--screen); not part of the preset.</summary>
+    public Core.Layout.ScreenSize? Screen { get; set; }
     /// <summary>Capture times by hand (--times), for every input; not part of the preset.</summary>
     public IReadOnlyList<Core.Layout.ManualTime?>? ManualTimes { get; set; }
     /// <summary>Changes to apply on top of the preset, in command line order.</summary>
@@ -87,6 +89,24 @@ public static class ArgParser
                 case "--gap": { var v = NextInt(); o.Overrides.Add(s => s.Gap = v); break; }
                 case "--margin": { var v = NextInt(); o.Overrides.Add(s => s.Margin = v); break; }
                 case "--background": { var v = NextColor(); o.Overrides.Add(s => s.BackgroundColor = v); break; }
+                case "--background-image":
+                {
+                    var v = Next();
+                    string? path = v.ToLowerInvariant() is "none" or "off" or "" ? null : Path.GetFullPath(v);
+                    if (path is not null && !File.Exists(path)) throw new UsageException(CliText.T("FileNotFound", v, a));
+                    o.Overrides.Add(s => s.BackgroundImage.Path = path);
+                    break;
+                }
+                case "--background-mode": { var v = ParseEnum<BackgroundImageMode>(Next(), a); o.Overrides.Add(s => s.BackgroundImage.Mode = v); break; }
+                case "--background-opacity": { var v = NextDouble(); o.Overrides.Add(s => s.BackgroundImage.Opacity = v > 1 ? v / 100 : v); break; }
+                case "--layout": { var v = ParseLayout(Next(), a); o.Overrides.Add(s => s.Template = v?.Clone()); break; }
+                case "--fit-screen": { var v = ParseScreenFit(Next()); o.Overrides.Add(s => s.FitToScreen = v); break; }
+                case "--screen":
+                {
+                    var v = Next();
+                    o.Screen = Core.Layout.ScreenSize.TryParse(v, out var size) ? size : throw new UsageException(CliText.T("InvalidScreen", v, a));
+                    break;
+                }
                 case "--font": { var v = Next(); o.Overrides.Add(s => s.FontFamily = v); break; }
                 case "-f": case "--format": { var v = ParseFormat(Next()); o.Overrides.Add(s => s.Output.Format = v); break; }
                 case "-a": case "--animated":
@@ -196,6 +216,38 @@ public static class ArgParser
         "column" or "columns" or "col" or "columnmajor" => TileOrder.ColumnMajor,
         "random" => TileOrder.Random,
         _ => throw new UsageException(CliText.T("UnknownOrder", v)),
+    };
+
+    /// <summary>"grid" (plain grid), the name of a built-in special grid, or a JSON file with a template or preset.</summary>
+    public static Core.Layout.GridTemplate? ParseLayout(string v, string option)
+    {
+        var key = v.Replace("-", "").Replace("_", "");
+        if (key.ToLowerInvariant() is "grid" or "plain" or "none" or "uniform") return null;
+        if (Core.Layout.BuiltInTemplates.Find(key) is { } builtIn) return builtIn;
+        if (File.Exists(v))
+        {
+            Core.Layout.GridTemplate t;
+            try { t = Core.Layout.GridTemplate.LoadFile(v); }
+            catch (Exception ex) when (ex is System.Text.Json.JsonException or InvalidDataException or IOException)
+            { throw new UsageException(CliText.T("InvalidLayoutFile", v, ex.Message)); }
+            var problems = t.Validate();
+            if (problems.Count > 0) throw new UsageException(string.Join(" ", problems));
+            return t;
+        }
+        throw new UsageException(CliText.T("UnknownLayout", v, option,
+            "grid, " + string.Join(", ", Core.Layout.BuiltInTemplates.All.Select(t => KebabCase(t.Name)))));
+    }
+
+    /// <summary>"BigTop" -> "big-top" (how built-in grids are written on the command line).</summary>
+    public static string KebabCase(string name) =>
+        string.Concat(name.Select((c, i) => char.IsUpper(c) && i > 0 ? "-" + char.ToLowerInvariant(c) : char.ToLowerInvariant(c).ToString()));
+
+    public static ScreenFit ParseScreenFit(string v) => v.ToLowerInvariant() switch
+    {
+        "off" or "no" or "none" => ScreenFit.Off,
+        "width" => ScreenFit.Width,
+        "both" or "screen" or "full" or "widthandheight" => ScreenFit.WidthAndHeight,
+        _ => throw new UsageException(CliText.T("UnknownScreenFit", v)),
     };
 
     public static T ParseEnum<T>(string v, string option) where T : struct, Enum =>
