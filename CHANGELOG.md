@@ -7,8 +7,8 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 ## [Unveröffentlicht]
 
 ### Hinzugefügt
-- Animierte Sheets als MP4, WebM oder GIF: jede Kachel spielt einen kurzen Ausschnitt ab ihrem Zeitpunkt ab, Zeitstempel laufen mit; Schalter „Animiertes Sheet“ in der Ausgabe, Länge je Ausschnitt und Bilder pro Sekunde einstellbar; CLI `-a/--animated mp4|webm|gif`, `--clip-seconds`, `--fps`, `--still` ([#ANIM])
-- Animierte Sheets heißen `<Name>.sheet.mp4` usw. und werden beim Durchsuchen von Ordnern übersprungen ([#ANIM])
+- Animierte Sheets als MP4, WebM oder GIF: jede Kachel spielt einen kurzen Ausschnitt ab ihrem Zeitpunkt ab, Zeitstempel laufen mit; Schalter „Animiertes Sheet“ in der Ausgabe, Länge je Ausschnitt und Bilder pro Sekunde einstellbar; CLI `-a/--animated mp4|webm|gif`, `--clip-seconds`, `--fps`, `--still` ([#15])
+- Animierte Sheets heißen `<Name>.sheet.mp4` usw. und werden beim Durchsuchen von Ordnern übersprungen ([#15])
 
 ### Hinzugefügt
 - Live-Vorschau abschaltbar (Schalter über der Vorschau, wird gespeichert); ausgeschaltet läuft dafür kein ffmpeg ([#12])
@@ -81,3 +81,4 @@ Erste Version.
 [#11]: https://github.com/vulture20/Video-Thumbnailer/pull/11
 [#12]: https://github.com/vulture20/Video-Thumbnailer/pull/12
 [#10]: https://github.com/vulture20/Video-Thumbnailer/pull/10
+[#15]: https://github.com/vulture20/Video-Thumbnailer/pull/15
