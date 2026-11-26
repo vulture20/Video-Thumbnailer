@@ -177,6 +177,70 @@ public class GuiTests
 
 public class GuiPreviewTests
 {
+    /// <summary>
+    /// Renders the README screenshots (docs/images) when VTHUMB_README_SHOTS points to a folder: light "Simple" mode,
+    /// dark "Advanced" mode scrolled to the timestamp colors, and a narrow window with the folded queue, all with
+    /// real frames of a test clip. Without the variable it only checks that the scenes come up.
+    /// </summary>
+    [AvaloniaFact]
+    public async Task Readme_screenshots()
+    {
+        var t = PreviewSourceTests.Tools();
+        var home = TestUtil.TempDir();
+        AppPaths.SetRootOverride(home);
+        try
+        {
+            new AppSettings { FfmpegDownloadAsked = true, CheckFfmpegUpdates = false, Language = "English" }.Save();
+            var dir = Directory.CreateDirectory(Path.Combine(home, "Videos")).FullName;
+            var video = PreviewSourceTests.MakeVideo(t, dir);
+            File.Copy(video, Path.Combine(dir, "holiday-2026.mp4"));
+            File.Copy(video, Path.Combine(dir, "interview.mkv"));
+            var outDir = Environment.GetEnvironmentVariable("VTHUMB_README_SHOTS");
+            void Shot(Window w, string name)
+            {
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+                if (string.IsNullOrEmpty(outDir)) return;
+#pragma warning disable CS0618
+                w.CaptureRenderedFrame()?.Save(Path.Combine(outDir, name));
+#pragma warning restore CS0618
+            }
+
+            var window = new MainWindow();
+            var vm = new MainViewModel(window);
+            window.DataContext = vm;
+            window.Show();
+            vm.AddPaths([video, Path.Combine(dir, "holiday-2026.mp4"), Path.Combine(dir, "interview.mkv")]);
+            await vm.UpdatePreviewAsync();
+            Assert.Equal(Loc.T("PreviewNoteReal"), vm.PreviewNote);
+            Shot(window, "gui.png");
+
+            vm.Language = UiLanguage.German;
+            await vm.UpdatePreviewAsync();
+            Shot(window, "gui-de.png");
+            vm.Language = UiLanguage.English;
+
+            vm.IsAdvanced = true;
+            vm.Theme = UiTheme.Dark;
+            await vm.UpdatePreviewAsync();
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            window.FindControl<CheckBox>("MillisecondsCheck")!.BringIntoView();
+            Assert.True(window.FindControl<ColorField>("OutlineColorField")!.IsEffectivelyVisible);
+            Shot(window, "gui-dark.png");
+
+            vm.IsAdvanced = false;
+            vm.Theme = UiTheme.Light;
+            window.Width = 980;
+            await vm.UpdatePreviewAsync();
+            Assert.True(vm.IsQueueCollapsed);
+            Shot(window, "gui-narrow.png");
+            window.Close();
+        }
+        finally
+        {
+            AppPaths.SetRootOverride(null);
+        }
+    }
+
     [AvaloniaFact]
     public async Task Preview_shows_real_frames_and_video_data_of_the_selected_video()
     {

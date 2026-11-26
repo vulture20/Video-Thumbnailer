@@ -176,6 +176,11 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Eine Schrift für den ganzen Bogen (Info-Kopf und Zeitstempel), wie bisher im Preset (`fontFamily`); keine getrennten Schriften je Bereich | hält Presets und CLI unverändert; getrennte Schriften wären ein eigenes Thema |
 | 26.11.2026 | Schriften, die die Oberfläche nicht lesen kann (in der Testumgebung brachte eine Systemschrift Avalonia zum Absturz), werden in der Liste in der Standardschrift gezeigt statt die App abstürzen zu lassen | Absicherung gegen kaputte oder exotische Schriftdateien |
 
+### README-Screenshots (#NN)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 26.11.2026 | Die Bilder in `docs/images` (`gui.png`, `gui-de.png`, `gui-dark.png`, `gui-narrow.png`) erzeugt der Test `Readme_screenshots` (headless, echtes Testvideo per ffmpeg): `VTHUMB_README_SHOTS=$PWD/docs/images dotnet test --filter Readme_screenshots` (absoluter Pfad). Neu ist das Bild mit eingeklappter Warteschlange im schmalen Fenster | Bilder lassen sich nach jeder Oberflächenänderung mit einem Befehl neu erzeugen |
+
 ## Offen
 
 | Seit | Punkt | Stand |
@@ -187,9 +192,7 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Windows arm64 hat keinen fest hinterlegten ffmpeg-Build (BtbN hebt Builds nur 14 Tage auf, gyan.dev baut kein arm64) | bei einer dauerhaften arm64-Quelle nachziehen |
 | 26.11.2026 | Workflow „ffmpeg pins“ hat seit #19 noch keinen neuen Build eingetragen. Seine Commits mit `GITHUB_TOKEN` starten keine CI; wird `main` geschützt, schlägt sein direkter Push fehl. Die Adresse der Liste (`FfmpegPins.RemoteUrl`) enthält den Repo-Namen | ersten echten Lauf beobachten |
 | 26.11.2026 | Kommandozeile kann nicht alle Einstellungen als Option setzen (u. a. Zeitstempel-Farbe, Deckkraft, Schriftgröße, Kontur, Schatten, Millisekunden, Farben des Info-Kopfs); bisher nur über ein Preset | wird ergänzt |
-| 26.11.2026 | Farbauswahl- und Schriftauswahl-Dialog in der Oberfläche (bisher Hex-Textfelder bzw. Schriftname als Text) | Wunsch von Vulli, wird umgesetzt |
 | 26.11.2026 | Release-Notizen auf GitHub sind die automatisch erzeugte PR-Liste, nicht der CHANGELOG-Abschnitt. Das Release v0.3.0 heißt „v.0.3.0“ (Tippfehler im Titel) | Notizen beim nächsten Release aus dem CHANGELOG übernehmen; Titel von Hand korrigieren |
-| 26.11.2026 | Screenshots in `docs/images` stammen aus #8/#11 und zeigen weder den Schalter für animierte Sheets, die einklappbare Warteschlange noch die Farbfelder aus #18 | neu erzeugen, sobald Farb- und Schriftdialog fertig sind |
 
 ## Spätere Ideen (P2/P3, noch ohne Entscheidung)
 

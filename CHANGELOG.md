@@ -9,13 +9,12 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 ### Hinzugefügt
 - Farbwähler: Klick auf das Farbmuster neben einem Farbfeld öffnet Spektrum, Palette und Regler mit Deckkraft; die Hex-Eingabe bleibt ([#42])
 - Schriftauswahl: „…“ neben der Schriftart öffnet eine durchsuchbare Liste der installierten Schriften, jede in ihrer eigenen Schrift, mit Vorschau von Info-Kopf und Zeitstempel ([#42])
-### Geändert
-- Dokumentation auf den Stand von v0.5.0 gebracht: erledigte und doppelte offene Punkte in `docs/DECISIONS.md` bereinigt, überholte Entscheidungen markiert, README (Funktionen, Inhalt der ZIPs, Aufbau) aktualisiert; spätere Ideen aus der Spezifikation als Issues #21–#39 ([#41])
-### Hinzugefügt
 - Kommandozeile kann jetzt jede Preset-Einstellung setzen: Zeitstempel (`--timestamp-size`, `--timestamp-color`, `--timestamp-opacity`, `--timestamp-bold`, `--timestamp-padding`, `--outline-color`, `--outline-width`, `--no-outline`, `--shadow`/`--no-shadow`, `--shadow-color`, `--shadow-offset`, `--milliseconds`), Info-Kopf (`--title-size`, `--header-size`, `--title-color`, `--header-color`, `--line-spacing`), Einzelbilder (`--frames-folder`, `--no-frames`) sowie `--timestamps`, `--header`, `--portrait-swap`, `--no-keep-structure` und `--description` zum Zurückschalten bzw. für `--save-preset` ([#40])
 
 ### Geändert
+- Dokumentation auf den Stand von v0.5.0 gebracht: erledigte und doppelte offene Punkte in `docs/DECISIONS.md` bereinigt, überholte Entscheidungen markiert, README (Funktionen, Inhalt der ZIPs, Aufbau) aktualisiert; spätere Ideen aus der Spezifikation als Issues #21–#39 ([#41])
 - Farben auf der Kommandozeile werden geprüft: ungültige Werte (auch bei `--background`) brechen mit einer Meldung ab, statt still die Standardfarbe zu nehmen ([#40])
+- README-Screenshots neu: aktuelle Oberfläche mit echten Bildern, Schalter „Animiertes Sheet“, Farbfeldern in „Erweitert“ (dunkel) und eingeklappter Warteschlange im schmalen Fenster; erzeugt per Test `Readme_screenshots` ([#NN])
 
 ## [0.5.0] – 2026-11-26
 
@@ -120,6 +119,7 @@ Erste Version.
 [#1]: https://github.com/vulture20/Video-Thumbnailer/pull/1
 [#2]: https://github.com/vulture20/Video-Thumbnailer/pull/2
 [#42]: https://github.com/vulture20/Video-Thumbnailer/pull/42
+[#NN]: https://github.com/vulture20/Video-Thumbnailer/pull/NN
 [#3]: https://github.com/vulture20/Video-Thumbnailer/pull/3
 [#4]: https://github.com/vulture20/Video-Thumbnailer/pull/4
 [#5]: https://github.com/vulture20/Video-Thumbnailer/pull/5
