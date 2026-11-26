@@ -201,7 +201,7 @@
         <TextBlock Classes="section" Text="{l:T Processing}" IsVisible="{Binding IsAdvanced}" />
         <Grid ColumnDefinitions="180,*" RowDefinitions="Auto,Auto" RowSpacing="4" IsVisible="{Binding IsAdvanced}">
           <TextBlock Classes="label" Text="{l:T FfmpegProcesses}" />
-          <NumericUpDown Grid.Column="1" Value="{Binding MaxParallelProcesses}" Minimum="1" Maximum="64" FormatString="0" />
+          <NumericUpDown x:Name="ParallelProcesses" Grid.Column="1" Value="{Binding MaxParallelProcesses}" Minimum="1" Maximum="64" FormatString="0" />
           <TextBlock Grid.Row="1" Classes="label" Text="{l:T VideosInParallel}" />
           <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding MaxParallelVideos}" Minimum="1" Maximum="32" FormatString="0" />
         </Grid>

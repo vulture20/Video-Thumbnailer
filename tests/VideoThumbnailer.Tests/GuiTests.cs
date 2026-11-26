@@ -90,7 +90,7 @@ public class GuiTests
 
             // Simple mode is the default and hides advanced settings; the choice and the theme are saved.
             Assert.True(vm.IsSimple);
-            var processes = window.GetVisualDescendants().OfType<NumericUpDown>().First(n => n.Value == vm.MaxParallelProcesses);
+            var processes = window.FindControl<NumericUpDown>("ParallelProcesses")!;
             Assert.False(processes.IsEffectivelyVisible);
             window.FindControl<RadioButton>("AdvancedMode")!.IsChecked = true;
             Avalonia.Threading.Dispatcher.UIThread.RunJobs();
