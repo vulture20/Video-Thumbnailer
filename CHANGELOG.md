@@ -7,10 +7,10 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 ## [Unveröffentlicht]
 
 ### Hinzugefügt
-- Kommandozeile kann jetzt jede Preset-Einstellung setzen: Zeitstempel (`--timestamp-size`, `--timestamp-color`, `--timestamp-opacity`, `--timestamp-bold`, `--timestamp-padding`, `--outline-color`, `--outline-width`, `--no-outline`, `--shadow`/`--no-shadow`, `--shadow-color`, `--shadow-offset`, `--milliseconds`), Info-Kopf (`--title-size`, `--header-size`, `--title-color`, `--header-color`, `--line-spacing`), Einzelbilder (`--frames-folder`, `--no-frames`) sowie `--timestamps`, `--header`, `--portrait-swap`, `--no-keep-structure` und `--description` zum Zurückschalten bzw. für `--save-preset` ([#21])
+- Kommandozeile kann jetzt jede Preset-Einstellung setzen: Zeitstempel (`--timestamp-size`, `--timestamp-color`, `--timestamp-opacity`, `--timestamp-bold`, `--timestamp-padding`, `--outline-color`, `--outline-width`, `--no-outline`, `--shadow`/`--no-shadow`, `--shadow-color`, `--shadow-offset`, `--milliseconds`), Info-Kopf (`--title-size`, `--header-size`, `--title-color`, `--header-color`, `--line-spacing`), Einzelbilder (`--frames-folder`, `--no-frames`) sowie `--timestamps`, `--header`, `--portrait-swap`, `--no-keep-structure` und `--description` zum Zurückschalten bzw. für `--save-preset` ([#40])
 
 ### Geändert
-- Farben auf der Kommandozeile werden geprüft: ungültige Werte (auch bei `--background`) brechen mit einer Meldung ab, statt still die Standardfarbe zu nehmen ([#21])
+- Farben auf der Kommandozeile werden geprüft: ungültige Werte (auch bei `--background`) brechen mit einer Meldung ab, statt still die Standardfarbe zu nehmen ([#40])
 
 ## [0.5.0] – 2026-11-26
 
@@ -129,4 +129,4 @@ Erste Version.
 [#18]: https://github.com/vulture20/Video-Thumbnailer/pull/18
 [#17]: https://github.com/vulture20/Video-Thumbnailer/pull/17
 [#19]: https://github.com/vulture20/Video-Thumbnailer/pull/19
-[#21]: https://github.com/vulture20/Video-Thumbnailer/pull/21
+[#40]: https://github.com/vulture20/Video-Thumbnailer/pull/40
