@@ -15,6 +15,9 @@ public enum HeaderPosition { TopLeft, TopRight, BottomLeft, BottomRight }
 [JsonConverter(typeof(JsonStringEnumConverter<ImageFormat>))]
 public enum ImageFormat { Jpeg, Png, Webp }
 
+[JsonConverter(typeof(JsonStringEnumConverter<AnimationFormat>))]
+public enum AnimationFormat { Mp4, Webm, Gif }
+
 [JsonConverter(typeof(JsonStringEnumConverter<OutputLocation>))]
 public enum OutputLocation
 {
@@ -67,6 +70,7 @@ public sealed class SheetSettings
     public TimestampSettings Timestamp { get; set; } = new();
     public HeaderSettings Header { get; set; } = new();
     public OutputSettings Output { get; set; } = new();
+    public AnimationSettings Animation { get; set; } = new();
 
     public SheetSettings Clone()
     {
@@ -91,6 +95,8 @@ public sealed class SheetSettings
         Header.FontSize = Math.Clamp(Header.FontSize, 4, 400);
         Header.TitleFontSize = Math.Clamp(Header.TitleFontSize, 4, 400);
         Output.Quality = Math.Clamp(Output.Quality, 1, 100);
+        Animation.ClipSeconds = Math.Clamp(Animation.ClipSeconds, 0.5, 30);
+        Animation.FramesPerSecond = Math.Clamp(Animation.FramesPerSecond, 1, 60);
         if (string.IsNullOrWhiteSpace(Output.FileNamePattern)) Output.FileNamePattern = "{name}";
         if (Output.Location == OutputLocation.OutputFolder && string.IsNullOrWhiteSpace(Output.Folder))
             errors.Add(CoreText.T("OutputFolderMissing"));
@@ -156,4 +162,21 @@ public sealed class OutputSettings
     public bool SaveFrames { get; set; }
     /// <summary>Folder (relative to the sheet) for single frames. Same placeholders as the file name.</summary>
     public string FramesFolderPattern { get; set; } = "{name}_frames";
+}
+
+/// <summary>
+/// Animated sheet: every tile plays a short clip starting at its timestamp. When enabled, the sheet is
+/// written as video/GIF instead of a still image (<see cref="OutputSettings.Format"/> is not used then).
+/// </summary>
+public sealed class AnimationSettings
+{
+    public bool Enabled { get; set; }
+    public AnimationFormat Format { get; set; } = AnimationFormat.Mp4;
+    /// <summary>Length of each tile's clip in seconds (= length of the animation).</summary>
+    public double ClipSeconds { get; set; } = 3;
+    public int FramesPerSecond { get; set; } = 10;
+
+    /// <summary>Number of frames of the animation.</summary>
+    [JsonIgnore]
+    public int FrameCount => Math.Max(1, (int)Math.Round(ClipSeconds * FramesPerSecond));
 }

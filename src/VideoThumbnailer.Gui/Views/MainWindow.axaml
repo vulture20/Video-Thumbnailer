@@ -230,7 +230,22 @@
 
             <!-- Output: format buttons, quality slider, location -->
             <TextBlock Classes="section" Text="{l:T Output}" />
-            <UniformGrid Columns="3" ColumnSpacing="6">
+            <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,6">
+              <TextBlock Classes="label" Text="{l:T Animated}" ToolTip.Tip="{l:T AnimatedTip}" />
+              <ToggleSwitch x:Name="AnimatedSwitch" Grid.Column="1" IsChecked="{Binding Settings.Animated}" OnContent="" OffContent="" MinWidth="0" />
+            </Grid>
+            <UniformGrid Columns="3" ColumnSpacing="6" IsVisible="{Binding Settings.Animated}">
+              <RadioButton x:Name="FormatMp4" Classes="choice" GroupName="AnimationFormat" Content="MP4" IsChecked="{Binding Settings.IsMp4}" />
+              <RadioButton x:Name="FormatWebm" Classes="choice" GroupName="AnimationFormat" Content="WebM" IsChecked="{Binding Settings.IsWebm}" />
+              <RadioButton x:Name="FormatGif" Classes="choice" GroupName="AnimationFormat" Content="GIF" IsChecked="{Binding Settings.IsGif}" />
+            </UniformGrid>
+            <Grid ColumnDefinitions="*,190" RowDefinitions="Auto,Auto" RowSpacing="6" Margin="0,6,0,0" IsVisible="{Binding Settings.Animated}">
+              <TextBlock Classes="label" Text="{l:T ClipSeconds}" />
+              <NumericUpDown Grid.Column="1" Value="{Binding Settings.ClipSeconds}" Minimum="0.5" Maximum="30" Increment="0.5" FormatString="0.#" />
+              <TextBlock Grid.Row="1" Classes="label" Text="{l:T AnimationFps}" IsVisible="{Binding IsAdvanced}" />
+              <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding Settings.AnimationFps}" Minimum="1" Maximum="60" Increment="1" FormatString="0" IsVisible="{Binding IsAdvanced}" />
+            </Grid>
+            <UniformGrid Columns="3" ColumnSpacing="6" IsVisible="{Binding Settings.IsStill}">
               <RadioButton x:Name="FormatJpeg" Classes="choice" GroupName="OutputFormat" Content="JPG" IsChecked="{Binding Settings.IsJpeg}" />
               <RadioButton x:Name="FormatPng" Classes="choice" GroupName="OutputFormat" Content="PNG" IsChecked="{Binding Settings.IsPng}" />
               <RadioButton x:Name="FormatWebp" Classes="choice" GroupName="OutputFormat" Content="WebP" IsChecked="{Binding Settings.IsWebp}" />
@@ -259,7 +274,7 @@
               <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Settings.FileNamePattern}" ToolTip.Tip="{}{name} {ext} {preset} {cols} {rows} {date} {time}" />
               <TextBlock Grid.Row="2" Classes="label" Text="{l:T IfFileExists}" />
               <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{x:Static vm:SettingsViewModel.OverwriteModes}" DisplayMemberBinding="{ReflectionBinding Label}" SelectedValueBinding="{ReflectionBinding Value}" SelectedValue="{Binding Settings.Overwrite, Mode=TwoWay}" HorizontalAlignment="Stretch" />
-              <CheckBox Grid.Row="3" Grid.ColumnSpan="2" Content="{l:T SaveFrames}" IsChecked="{Binding Settings.SaveFrames}" />
+              <CheckBox Grid.Row="3" Grid.ColumnSpan="2" Content="{l:T SaveFrames}" IsChecked="{Binding Settings.SaveFrames}" IsEnabled="{Binding Settings.IsStill}" />
             </Grid>
 
             <!-- Processing (advanced) -->

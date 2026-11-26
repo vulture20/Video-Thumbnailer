@@ -51,8 +51,14 @@ internal static class HelpText
               --subfolder <name>     write into <video folder>/<name>
               --pattern <pattern>    file name, placeholders {name} {ext} {preset} {cols} {rows} {date} {time}
               --overwrite skip|overwrite|rename
-              --frames               also save every frame as its own image
+              --frames               also save every frame as its own image (still sheets only)
               --save-preset <name>   save the resulting settings as a preset
+
+        Animated sheet (every tile plays a short clip):
+          -a, --animated mp4|webm|gif  write an animated sheet instead of an image
+              --clip-seconds <s>     length of each clip and of the animation (default 3)
+              --fps <n>              frames per second (default 10)
+              --still                still image even if the preset is animated
 
         Processing:
           -j, --jobs <n>             max. parallel ffmpeg processes (default: CPU cores)
@@ -109,8 +115,14 @@ internal static class HelpText
               --subfolder <Name>     in <Videoordner>/<Name> schreiben
               --pattern <Muster>     Dateiname, Platzhalter {name} {ext} {preset} {cols} {rows} {date} {time}
               --overwrite skip|overwrite|rename
-              --frames               zusätzlich jedes Einzelbild als eigene Datei speichern
+              --frames               zusätzlich jedes Einzelbild als eigene Datei speichern (nur Standbild)
               --save-preset <Name>   resultierende Einstellungen als Preset speichern
+
+        Animiertes Sheet (jede Kachel spielt einen kurzen Ausschnitt ab):
+          -a, --animated mp4|webm|gif  animiertes Sheet statt eines Bildes erstellen
+              --clip-seconds <s>     Länge jedes Ausschnitts und der Animation (Standard 3)
+              --fps <n>              Bilder pro Sekunde (Standard 10)
+              --still                Standbild, auch wenn das Preset animiert ist
 
         Verarbeitung:
           -j, --jobs <n>             max. parallele ffmpeg-Prozesse (Standard: CPU-Kerne)

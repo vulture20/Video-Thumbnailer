@@ -12,7 +12,7 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Öffentliches GitHub-Repo `vulture20/Video-Thumbnailer` | |
 | 26.11.2026 | Lizenz AGPL-3.0 (`AGPL-3.0-only`) | |
 | 26.11.2026 | Plattformen Windows, Linux, macOS ab v1 | |
-| 26.11.2026 | Animierte Sheets (MP4/WebM/GIF …) erst nach v1 | MVP klein halten |
+| 26.11.2026 | Animierte Sheets (MP4/WebM/GIF …) erst nach v1 | MVP klein halten; umgesetzt nach v0.3.0, siehe „Animierte Sheets“ |
 | 26.11.2026 | Kommandozeile ist Teil von v1 | |
 | 26.11.2026 | Arbeit über Pull Requests | |
 | 26.11.2026 | MVP-Umfang bestätigt: alle P1-Punkte der Spezifikation, veröffentlicht als v0.1.0 und unter Windows getestet | von Vulli bestätigt |
@@ -109,6 +109,18 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 |---|---|---|
 | 26.11.2026 | Der Vorschau-Cache merkt sich Größe und Änderungszeit jeder gelesenen Datei. Weichen sie ab (Datei ersetzt, neu kodiert, noch im Schreiben), werden Videodaten und Bilder dieser Datei vergessen und neu gelesen (`PreviewSource.ForgetIfChanged`). Geprüft wird bei jeder Vorschau-Aktualisierung und wenn das Fenster wieder den Fokus bekommt; ein Bild, das während einer Änderung entstand, wird verworfen | billiger als ein Dateiwächter, deckt den üblichen Fall „Datei draußen geändert, zurück ins Programm“ ab |
 | 26.11.2026 | Live-Vorschau abschaltbar (Wunsch von Vulli): Schalter „Live-Vorschau“ oben rechts über der Vorschau, Standard an, gespeichert in `settings.json` (`livePreview`). Aus: laufendes Laden wird abgebrochen, Bild freigegeben, keine Vorschau gezeichnet und kein ffmpeg/ffprobe für die Vorschau gestartet; in der Mitte steht ein Hinweis, dass die Einstellungen trotzdem gelten | für langsame Rechner, Netzlaufwerke oder Akku; Schalter dort, wo die Vorschau ist |
+
+### Animierte Sheets
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 26.11.2026 | Animiertes Sheet = gleiches Raster wie das Standbild, jede Kachel spielt einen kurzen Ausschnitt ab ihrem Zeitpunkt ab; Zeitstempel laufen mit, Info-Kopf bleibt stehen | gleiche Gestaltung und Einstellungen wie beim Standbild |
+| 26.11.2026 | Formate MP4 (H.264, `yuv420p`, `faststart`), WebM (VP9) und GIF (eigene Palette, Bayer-Dithering, Endlosschleife). Ohne Ton | überall abspielbar bzw. für Web/Foren; Ton ergibt bei vielen gleichzeitigen Ausschnitten keinen Sinn |
+| 26.11.2026 | Standard: 3 s je Ausschnitt, 10 Bilder/s (einstellbar 0,5–30 s, 1–60 Bilder/s). Die Qualität (Schieberegler) steuert bei MP4/WebM den CRF-Wert, bei GIF hat sie keine Wirkung | kleine Dateien, flüssig genug für eine Übersicht |
+| 26.11.2026 | Animiert ist ein Schalter im Preset (`animation.enabled`); dann wird statt des Bildes die Animation gespeichert. Einzelbilder („jede Aufnahme speichern“) nur beim Standbild | ein Durchlauf, ein Ergebnis; Standbild und Animation lassen sich über zwei Presets erzeugen |
+| 26.11.2026 | Animierte Sheets heißen immer `<Name>.sheet.<mp4\|webm\|gif>`; Ordner-Scans überspringen solche Dateien | sonst würde `film.mp4` neben dem Video überschrieben bzw. beim nächsten Lauf selbst als Video erkannt |
+| 26.11.2026 | Ablauf: je Kachel ein ffmpeg-Prozess dekodiert den Ausschnitt in Kachelgröße als JPEG-Folge (im Speicher), dann zeichnet der vorhandene Renderer jedes Bild des Sheets und ein weiterer ffmpeg-Prozess kodiert sie | wiederverwendet Layout, Schriften und Zeitstempel-Stil; wenig Speicher (JPEG statt Rohbilder) |
+| 26.11.2026 | Bei Animation wird der Ausschnitt am Ende mit eingeplant (Zeitpunkte enden um die Ausschnittlänge früher), damit die letzte Kachel nicht leerläuft; endet ein Ausschnitt trotzdem früher, bleibt sein letztes Bild stehen | |
+| 26.11.2026 | Live-Vorschau zeigt bei Animation weiterhin ein Standbild (erstes Bild jeder Kachel) | Vorschau bleibt schnell |
 
 ## Offen
 

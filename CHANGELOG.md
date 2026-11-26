@@ -7,6 +7,10 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 ## [Unveröffentlicht]
 
 ### Hinzugefügt
+- Animierte Sheets als MP4, WebM oder GIF: jede Kachel spielt einen kurzen Ausschnitt ab ihrem Zeitpunkt ab, Zeitstempel laufen mit; Schalter „Animiertes Sheet“ in der Ausgabe, Länge je Ausschnitt und Bilder pro Sekunde einstellbar; CLI `-a/--animated mp4|webm|gif`, `--clip-seconds`, `--fps`, `--still` ([#ANIM])
+- Animierte Sheets heißen `<Name>.sheet.mp4` usw. und werden beim Durchsuchen von Ordnern übersprungen ([#ANIM])
+
+### Hinzugefügt
 - Live-Vorschau abschaltbar (Schalter über der Vorschau, wird gespeichert); ausgeschaltet läuft dafür kein ffmpeg ([#12])
 - Vorschau mit echten Bildern und echten Videodaten des gewählten Videos: Bilder von genau den Zeitpunkten des fertigen Bogens, Info-Kopf mit Größe, Dauer, Auflösung und Codecs. Lädt im Hintergrund und füllt sich nach und nach („Lade Bilder… n von m“); ohne ffmpeg oder bei nicht lesbaren Dateien weiter mit Beispielbildern ([#11])
 

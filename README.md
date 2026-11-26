@@ -16,6 +16,7 @@ Free, cross-platform video contact sheet generator with GUI and command line.
 - Zeitstempel in jeder Kachel (5 Positionen, Farbe, Deckkraft, Kontur, Schatten)
 - Info-Kopf mit frei konfigurierbaren Video-Infos (Name, Größe, Dauer, Auflösung, Codecs, Bitrate, FPS, Audio …)
 - Ausgabe als JPG, PNG oder WebP; optional jede Aufnahme als Einzelbild
+- Animierte Sheets als MP4, WebM oder GIF: jede Kachel spielt einen kurzen Ausschnitt ab ihrem Zeitpunkt ab, mit mitlaufendem Zeitstempel
 - Warteschlange mit Pause, Abbruch, Fortschritt und paralleler Verarbeitung über alle CPU-Kerne
 - Ausgabe in einen Ordner (optional mit Ordnerstruktur), neben das Video oder in einen Unterordner; Dateinamen-Muster
 - Presets als offene JSON-Dateien, 4 mitgelieferte Basis-Presets
@@ -58,6 +59,9 @@ vthumb -p Compact --columns 6 -f webp -o ~/Sheets --keep-structure ~/Videos
 
 # Nur anzeigen, was passieren würde
 vthumb --dry-run ~/Videos
+
+# Animiertes Sheet: jede Kachel spielt 3 Sekunden ab, als MP4 (oder webm, gif)
+vthumb -a mp4 --clip-seconds 3 --fps 10 film.mkv     # -> film.sheet.mp4
 
 # Eigene Einstellungen als Preset speichern
 vthumb --columns 5 --rows 6 --no-header --save-preset "5x6 ohne Kopf"

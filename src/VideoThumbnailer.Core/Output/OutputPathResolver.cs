@@ -50,10 +50,16 @@ public static partial class OutputPathResolver
         return string.IsNullOrWhiteSpace(result) ? Path.GetFileNameWithoutExtension(videoPath) : result;
     }
 
+    /// <summary>Marker in the name of animated sheets ("movie.sheet.mp4"), so they never replace a video and are skipped when folders are scanned.</summary>
+    public const string AnimatedMarker = ".sheet";
+
     /// <summary>Full path of the sheet file (before overwrite handling).</summary>
-    public static string ResolveSheetPath(SheetSettings s, string videoPath, string? inputRoot) =>
-        Path.Combine(ResolveDirectory(s.Output, videoPath, inputRoot),
-            ExpandPattern(s.Output.FileNamePattern, videoPath, s) + SheetRenderer.Extension(s.Output.Format));
+    public static string ResolveSheetPath(SheetSettings s, string videoPath, string? inputRoot)
+    {
+        var name = ExpandPattern(s.Output.FileNamePattern, videoPath, s);
+        if (s.Animation.Enabled) name += AnimatedMarker;
+        return Path.Combine(ResolveDirectory(s.Output, videoPath, inputRoot), name + SheetRenderer.Extension(s));
+    }
 
     /// <summary>Returns a free variant "name (2).ext" if the file exists.</summary>
     public static string MakeUnique(string path)

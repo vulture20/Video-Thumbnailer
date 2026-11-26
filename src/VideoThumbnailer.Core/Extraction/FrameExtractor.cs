@@ -9,7 +9,7 @@ namespace VideoThumbnailer.Core.Extraction;
 public sealed class FrameExtractor(string ffmpegPath)
 {
     // Tone mapping for HDR (PQ/HLG) sources. Needs zimg (zscale), which the downloaded builds include.
-    private const string HdrToneMap =
+    internal const string HdrToneMap =
         "zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=hable:desat=0,zscale=t=bt709:m=bt709:r=tv,format=yuv420p";
 
     /// <summary>

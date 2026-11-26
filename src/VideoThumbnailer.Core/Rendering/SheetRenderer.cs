@@ -71,6 +71,16 @@ public static class SheetRenderer
         data.SaveTo(output);
     }
 
+    /// <summary>File extension of the sheet: animation format if enabled, otherwise the image format.</summary>
+    public static string Extension(SheetSettings s) => s.Animation.Enabled ? Extension(s.Animation.Format) : Extension(s.Output.Format);
+
+    public static string Extension(AnimationFormat f) => f switch
+    {
+        AnimationFormat.Webm => ".webm",
+        AnimationFormat.Gif => ".gif",
+        _ => ".mp4",
+    };
+
     public static string Extension(ImageFormat f) => f switch
     {
         ImageFormat.Png => ".png",
