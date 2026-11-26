@@ -11,6 +11,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Fonts\DejaVuSans.ttf" LogicalName="VideoThumbnailer.Fonts.DejaVuSans.ttf" />
     <EmbeddedResource Include="Fonts\DejaVuSans-Bold.ttf" LogicalName="VideoThumbnailer.Fonts.DejaVuSans-Bold.ttf" />
+    <EmbeddedResource Include="Ffmpeg\ffmpeg-pins.json" LogicalName="VideoThumbnailer.Ffmpeg.ffmpeg-pins.json" />
     <None Include="Fonts\DejaVu-LICENSE.txt" CopyToOutputDirectory="PreserveNewest" Link="licenses\DejaVu-LICENSE.txt" />
   </ItemGroup>
   <ItemGroup>

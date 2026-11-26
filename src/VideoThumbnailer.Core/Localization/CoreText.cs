@@ -18,6 +18,7 @@ public static class CoreText
         ["FfmpegDoesNotRun"] = ("The downloaded ffmpeg does not run on this system.", "Das heruntergeladene ffmpeg läuft auf diesem System nicht."),
         ["ChecksumMismatch"] = ("Checksum mismatch for {0}: expected {1}, got {2}.", "Prüfsumme von {0} stimmt nicht: erwartet {1}, erhalten {2}."),
         ["NoSuitableBuild"] = ("No suitable ffmpeg build for '{0}' found in the latest release.", "Kein passender ffmpeg-Build für „{0}“ im aktuellen Release gefunden."),
+        ["SignatureMismatch"] = ("Code signature of {0} is invalid or not from the expected publisher (Team ID {1}, found {2}).", "Code-Signatur von {0} ist ungültig oder stammt nicht vom erwarteten Herausgeber (Team-ID {1}, gefunden {2})."),
         ["NoChecksum"] = ("No valid SHA-256 checksum published for {0}.", "Für {0} ist keine gültige SHA-256-Prüfsumme veröffentlicht."),
         ["ArchiveMissing"] = ("{0} does not contain: {1}", "{0} enthält nicht: {1}"),
 

@@ -41,8 +41,9 @@ public sealed class FfmpegInstaller
     }
 
     /// <summary>Installer for the current platform, or null if there is no download source for it.</summary>
-    public static FfmpegInstaller? ForCurrentPlatform(string? installRoot = null) =>
-        FfmpegSources.ForCurrentPlatform() is { } src ? new FfmpegInstaller(src, null, installRoot) : null;
+    /// <param name="latest">Newest build instead of the pinned one (see <see cref="FfmpegSources.ForCurrentPlatform"/>).</param>
+    public static FfmpegInstaller? ForCurrentPlatform(string? installRoot = null, bool latest = false) =>
+        FfmpegSources.ForCurrentPlatform(latest) is { } src ? new FfmpegInstaller(src, null, installRoot) : null;
 
     public IFfmpegSource Source => _source;
     public string InstallRoot => _root;
@@ -93,6 +94,9 @@ public sealed class FfmpegInstaller
             }
 
             foreach (var f in files) MakeExecutable(f);
+            if (OperatingSystem.IsMacOS() && release.MacTeamId is { } team)
+                foreach (var f in files)
+                    await VerifyMacSignatureAsync(f, team, ct).ConfigureAwait(false);
             var check = FfmpegLocator.FromDirectory(staging, FfmpegOrigin.Managed)
                         ?? throw new InvalidDataException(CoreText.T("ArchiveMissingBinaries"));
             if (await FfmpegLocator.GetVersionAsync(check.FfmpegPath, ct).ConfigureAwait(false) is null)
@@ -149,6 +153,34 @@ public sealed class FfmpegInstaller
         var hash = Convert.ToHexStringLower(await SHA256.HashDataAsync(fs, ct).ConfigureAwait(false));
         if (!string.Equals(hash, expectedSha256, StringComparison.OrdinalIgnoreCase))
             throw new InvalidDataException(CoreText.T("ChecksumMismatch", Path.GetFileName(file), expectedSha256, hash));
+    }
+
+    /// <summary>
+    /// Checks the Apple code signature of <paramref name="file"/> (codesign --verify --strict) and that it was signed
+    /// with the expected Team ID. A swapped file would need the publisher's Apple certificate to pass.
+    /// </summary>
+    private static async Task VerifyMacSignatureAsync(string file, string teamId, CancellationToken ct)
+    {
+        var (ok, _) = await RunCodesignAsync(ct, "--verify", "--strict", file).ConfigureAwait(false);
+        var (_, info) = ok ? await RunCodesignAsync(ct, "-dv", file).ConfigureAwait(false) : (false, "");
+        var actual = ParseTeamId(info);
+        if (!ok || !string.Equals(actual, teamId, StringComparison.Ordinal))
+            throw new InvalidDataException(CoreText.T("SignatureMismatch", Path.GetFileName(file), teamId, actual ?? "-"));
+    }
+
+    internal static string? ParseTeamId(string codesignOutput) =>
+        codesignOutput.Split('\n').Select(l => l.Trim()).FirstOrDefault(l => l.StartsWith("TeamIdentifier=", StringComparison.Ordinal))
+            ?["TeamIdentifier=".Length..] is { } id && id != "not set" ? id : null;
+
+    private static async Task<(bool Ok, string Stderr)> RunCodesignAsync(CancellationToken ct, params string[] args)
+    {
+        var psi = new System.Diagnostics.ProcessStartInfo("/usr/bin/codesign") { RedirectStandardError = true, RedirectStandardOutput = true };
+        foreach (var a in args) psi.ArgumentList.Add(a);
+        using var p = System.Diagnostics.Process.Start(psi) ?? throw new InvalidDataException("codesign");
+        var stderr = p.StandardError.ReadToEndAsync(ct);
+        await p.StandardOutput.ReadToEndAsync(ct).ConfigureAwait(false);
+        await p.WaitForExitAsync(ct).ConfigureAwait(false);
+        return (p.ExitCode == 0, await stderr.ConfigureAwait(false));
     }
 
     /// <summary>

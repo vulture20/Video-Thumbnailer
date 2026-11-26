@@ -12,8 +12,12 @@ internal static class HelpText
         Usage:
           vthumb [options] <file|folder>...      create sheets
           vthumb presets list|show|import|export|delete
-          vthumb ffmpeg status|check|install|update|uninstall
+          vthumb ffmpeg status|check|install|update|uninstall [--force] [--latest]
           vthumb --help | --version
+
+        ffmpeg download:
+          Installs the ffmpeg build fixed in this app version; its SHA-256 checksums are stored in the app.
+          --latest installs the newest build instead, checked only against the checksum on the download server.
 
         Language:
               --lang en|de|auto      language of help and messages (also VTHUMB_LANG)
@@ -76,8 +80,12 @@ internal static class HelpText
         Aufruf:
           vthumb [Optionen] <Datei|Ordner>...    Sheets erstellen
           vthumb presets list|show|import|export|delete
-          vthumb ffmpeg status|check|install|update|uninstall
+          vthumb ffmpeg status|check|install|update|uninstall [--force] [--latest]
           vthumb --help | --version
+
+        ffmpeg-Download:
+          Installiert den in dieser App-Version fest hinterlegten ffmpeg-Build; seine SHA-256-Prüfsummen stehen in der App.
+          --latest installiert stattdessen den neuesten Build, nur gegen die Prüfsumme auf dem Download-Server geprüft.
 
         Sprache:
               --lang en|de|auto      Sprache von Hilfe und Meldungen (auch VTHUMB_LANG)

@@ -41,6 +41,61 @@ public class FfmpegTests
         Assert.Equal(target.StartsWith("win") ? [".dll"] : null, a.Libraries);
     }
 
+    [Theory]
+    [InlineData("win-x64", ".dll")]
+    [InlineData("linux-x64", null)]
+    [InlineData("linux-arm64", null)]
+    [InlineData("osx-x64", null)]
+    [InlineData("osx-arm64", null)]
+    public void Embedded_pins_cover_every_platform_but_windows_arm64(string rid, string? library)
+    {
+        var pin = FfmpegPins.For(rid);
+        Assert.NotNull(pin);
+        var r = new PinnedSource(pin).ToRelease();
+        Assert.NotEmpty(r.Version);
+        Assert.Equal(["ffmpeg", "ffprobe"], r.Assets.SelectMany(a => a.Binaries).Order());
+        Assert.All(r.Assets, a =>
+        {
+            Assert.Matches("^[0-9a-f]{64}$", a.Sha256);
+            Assert.Equal("https", a.Url.Scheme);
+            Assert.DoesNotContain("latest", a.Url.AbsolutePath); // fixed file, not a moving "latest" link
+            Assert.Equal(library is null ? null : [library], a.Libraries);
+        });
+        Assert.Equal(rid.StartsWith("osx"), r.MacTeamId is { Length: 10 });
+        Assert.Null(FfmpegPins.For("win-arm64"));
+    }
+
+    [Fact]
+    public void Default_source_is_pinned_latest_is_not()
+    {
+        var pinned = FfmpegSources.ForCurrentPlatform();
+        Assert.NotNull(pinned);
+        Assert.Equal(FfmpegSources.CurrentRid() != "win-arm64", pinned.IsPinned);
+        Assert.False(FfmpegSources.ForCurrentPlatform(latest: true)!.IsPinned);
+    }
+
+    [Fact]
+    public async Task Pinned_source_needs_no_network()
+    {
+        var pin = FfmpegPins.Parse("""
+            { "platforms": { "x": { "source": "s", "homepage": "h", "version": "1.0", "macTeamId": "ABCDE12345",
+              "assets": [ { "fileName": "a.tar.xz", "url": "https://example.invalid/a.tar.xz", "sha256": "AB", "kind": "TarXz", "binaries": ["ffmpeg"] } ] } } }
+            """).Platforms["x"];
+        using var http = new HttpClient(new StaticHandler([]));
+        var r = await new PinnedSource(pin).GetLatestAsync(http, CancellationToken.None);
+        Assert.Equal("ab", r.Assets[0].Sha256);
+        Assert.Equal(ArchiveKind.TarXz, r.Assets[0].Kind);
+        Assert.Null(r.Assets[0].Libraries);
+        Assert.Equal("ABCDE12345", r.MacTeamId);
+    }
+
+    [Theory]
+    [InlineData("Executable=/x/ffmpeg\nIdentifier=ffmpeg\nTeamIdentifier=KU3N25YGLU\nSealed Resources=none", "KU3N25YGLU")]
+    [InlineData("Identifier=ffmpeg\nTeamIdentifier=not set", null)]
+    [InlineData("", null)]
+    public void Parses_team_id_from_codesign(string output, string? expected) =>
+        Assert.Equal(expected, FfmpegInstaller.ParseTeamId(output));
+
     [Fact]
     public void Extract_takes_shared_libraries_from_bin_but_nothing_else()
     {
