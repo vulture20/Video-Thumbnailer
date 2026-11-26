@@ -1,7 +1,8 @@
 name: ffmpeg pins
 
 # Keeps src/VideoThumbnailer.Core/Ffmpeg/ffmpeg-pins.json (fixed ffmpeg downloads with SHA-256) up to date.
-# Weekly or manually: looks for newer builds and, if there are any, opens a pull request to review and merge.
+# Weekly or manually on main: looks for newer builds and, if there are any, commits them straight to main. The app
+# loads this file from GitHub when it looks for ffmpeg, so new ffmpeg builds need no new app version.
 # On pull requests that touch the pins: downloads every pinned file again and checks it.
 # Runs on macOS so that the code signature (Team ID) of the macOS builds can be read with codesign.
 on:
@@ -16,7 +17,6 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
   pins:
@@ -42,21 +42,14 @@ jobs:
         with:
           name: ffmpeg-pins
           path: ${{ runner.temp }}/ffmpeg-pins.json
-      - name: Open pull request with the new pins
-        if: github.event_name != 'pull_request' && env.CHANGED == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Commit the new pins to main
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && env.CHANGED == 'true'
         run: |
           set -euo pipefail
           cp "$RUNNER_TEMP/ffmpeg-pins.json" "$PINS"
-          BRANCH=bot/ffmpeg-pins
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -B "$BRANCH"
-          git commit -am "ffmpeg pins: newer builds"
-          git push -f origin "$BRANCH"
-          if ! gh pr view "$BRANCH" > /dev/null 2>&1; then
-            gh pr create --head "$BRANCH" --title "ffmpeg: neuere Builds fest hinterlegen" \
-              --body "Automatisch von tools/ffmpeg-pins.py erstellt: neuere ffmpeg-Builds mit selbst berechneten SHA-256-Prüfsummen. Die Dateien wurden heruntergeladen und gegen die Prüfsummen der Anbieter geprüft. Nach dem Merge installieren neue App-Builds diese Versionen." \
-              || echo "::warning::Could not open a pull request (Settings > Actions > Allow GitHub Actions to create pull requests). Branch $BRANCH was pushed."
-          fi
+          git commit -m "ffmpeg pins: newer builds" -- "$PINS"
+          # Retry against new commits on main in the meantime (only this file changes, so a rebase cannot conflict).
+          for i in 1 2 3; do git push origin HEAD:main && exit 0; git pull --rebase origin main; done
+          exit 1

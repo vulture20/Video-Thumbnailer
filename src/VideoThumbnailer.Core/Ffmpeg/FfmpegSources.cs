@@ -37,12 +37,12 @@ public static class FfmpegSources
 {
     /// <summary>
     /// Picks the download source for the current OS/architecture, or null if none exists. By default the build fixed
-    /// in ffmpeg-pins.json (checksums stored in this app); <paramref name="latest"/> or a platform without a pinned
+    /// in ffmpeg-pins.json (checksums from this repository, see <see cref="FfmpegPins"/>); <paramref name="latest"/> or a platform without a pinned
     /// build (Windows arm64) uses the newest build, checked only against the checksum published next to it.
     /// </summary>
     public static IFfmpegSource? ForCurrentPlatform(bool latest = false)
     {
-        if (!latest && FfmpegPins.ForCurrentPlatform() is { } pin) return new PinnedSource(pin);
+        if (!latest && CurrentRid() is { } rid && FfmpegPins.For(rid) is { } pin) return new PinnedSource(rid, pin);
         return LatestForCurrentPlatform();
     }
 

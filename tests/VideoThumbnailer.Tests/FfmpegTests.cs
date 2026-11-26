@@ -51,7 +51,7 @@ public class FfmpegTests
     {
         var pin = FfmpegPins.For(rid);
         Assert.NotNull(pin);
-        var r = new PinnedSource(pin).ToRelease();
+        var r = PinnedSource.ToRelease(pin);
         Assert.NotEmpty(r.Version);
         Assert.Equal(["ffmpeg", "ffprobe"], r.Assets.SelectMany(a => a.Binaries).Order());
         Assert.All(r.Assets, a =>
@@ -74,19 +74,54 @@ public class FfmpegTests
         Assert.False(FfmpegSources.ForCurrentPlatform(latest: true)!.IsPinned);
     }
 
+    private static string PinJson(string generated, string version, string sha = "AB") => $$"""
+        { "generated": "{{generated}}", "platforms": { "x": { "source": "s", "homepage": "h", "version": "{{version}}", "macTeamId": "ABCDE12345",
+          "assets": [ { "fileName": "a.tar.xz", "url": "https://example.invalid/a.tar.xz", "sha256": "{{sha}}", "kind": "TarXz", "binaries": ["ffmpeg"] } ] } } }
+        """;
+
     [Fact]
-    public async Task Pinned_source_needs_no_network()
+    public async Task Pinned_source_without_list_url_uses_embedded_pin()
     {
-        var pin = FfmpegPins.Parse("""
-            { "platforms": { "x": { "source": "s", "homepage": "h", "version": "1.0", "macTeamId": "ABCDE12345",
-              "assets": [ { "fileName": "a.tar.xz", "url": "https://example.invalid/a.tar.xz", "sha256": "AB", "kind": "TarXz", "binaries": ["ffmpeg"] } ] } } }
-            """).Platforms["x"];
+        var pin = FfmpegPins.Parse(PinJson("2026-01-01", "1.0")).Platforms["x"];
         using var http = new HttpClient(new StaticHandler([]));
-        var r = await new PinnedSource(pin).GetLatestAsync(http, CancellationToken.None);
+        var r = await new PinnedSource("x", pin, remoteUrl: "").GetLatestAsync(http, CancellationToken.None);
+        Assert.Equal("1.0", r.Version);
         Assert.Equal("ab", r.Assets[0].Sha256);
         Assert.Equal(ArchiveKind.TarXz, r.Assets[0].Kind);
         Assert.Null(r.Assets[0].Libraries);
         Assert.Equal("ABCDE12345", r.MacTeamId);
+    }
+
+    [Fact]
+    public async Task Pinned_source_takes_newer_builds_from_the_list_in_the_repo()
+    {
+        var embedded = FfmpegPins.Parse(PinJson("2026-01-01", "1.0")).Platforms["x"];
+        var remote = PinJson("9999-01-01", "2.0", new string('c', 64));
+        using var http = new HttpClient(new StaticHandler(System.Text.Encoding.UTF8.GetBytes(remote)));
+        var r = await new PinnedSource("x", embedded, "https://example.invalid/pins.json").GetLatestAsync(http, CancellationToken.None);
+        Assert.Equal("2.0", r.Version);
+        Assert.Equal(new string('c', 64), r.Assets[0].Sha256);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.NotFound, "")]
+    [InlineData(HttpStatusCode.OK, "not json")]
+    [InlineData(HttpStatusCode.OK, "{ \"generated\": \"9999-01-01\", \"platforms\": {} }")]       // no entry for this platform
+    [InlineData(HttpStatusCode.OK, "old")]                                                               // older than the embedded list
+    [InlineData(HttpStatusCode.OK, "bad hash")]                                                          // invalid entry
+    public async Task Pinned_source_falls_back_to_embedded_pin(HttpStatusCode status, string body)
+    {
+        body = body switch
+        {
+            "old" => PinJson("1999-01-01", "2.0", new string('c', 64)),
+            "bad hash" => PinJson("9999-01-01", "2.0", "xyz"),
+            _ => body,
+        };
+        var embedded = FfmpegPins.Parse(PinJson("2026-01-01", "1.0")).Platforms["x"];
+        // The embedded list of the app decides about "older"; the test list is compared against it.
+        using var http = new HttpClient(new StaticHandler(System.Text.Encoding.UTF8.GetBytes(body), status));
+        var r = await new PinnedSource("x", embedded, "https://example.invalid/pins.json").GetLatestAsync(http, CancellationToken.None);
+        Assert.Equal("1.0", r.Version);
     }
 
     [Theory]
@@ -226,9 +261,9 @@ public class FfmpegTests
                 [new FfmpegAsset("pkg.zip", new Uri("https://example.invalid/pkg.zip"), sha, ArchiveKind.Zip, ["ffmpeg", "ffprobe"])]));
     }
 
-    private sealed class StaticHandler(byte[] body) : HttpMessageHandler
+    private sealed class StaticHandler(byte[] body, HttpStatusCode status = HttpStatusCode.OK) : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
-            Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(body) });
+            Task.FromResult(new HttpResponseMessage(status) { Content = new ByteArrayContent(body) });
     }
 }

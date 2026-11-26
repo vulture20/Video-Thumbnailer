@@ -16,7 +16,8 @@ internal static class HelpText
           vthumb --help | --version
 
         ffmpeg download:
-          Installs the ffmpeg build fixed in this app version; its SHA-256 checksums are stored in the app.
+          Installs the fixed ffmpeg build from the list in the project repository (SHA-256 stored there, not on the
+          download server; the list built into the app is used if GitHub cannot be reached).
           --latest installs the newest build instead, checked only against the checksum on the download server.
 
         Language:
@@ -84,7 +85,8 @@ internal static class HelpText
           vthumb --help | --version
 
         ffmpeg-Download:
-          Installiert den in dieser App-Version fest hinterlegten ffmpeg-Build; seine SHA-256-Prüfsummen stehen in der App.
+          Installiert den fest hinterlegten ffmpeg-Build aus der Liste im Projekt-Repository (SHA-256 steht dort, nicht
+          auf dem Download-Server; ohne Verbindung zu GitHub gilt die in die App eingebaute Liste).
           --latest installiert stattdessen den neuesten Build, nur gegen die Prüfsumme auf dem Download-Server geprüft.
 
         Sprache:
