@@ -92,7 +92,9 @@ public static class CliApp
         }
 
         if (o.Inputs.Count == 0) throw new UsageException(CliText.T("NoInputs"));
-        var missing = o.Inputs.Where(p => !File.Exists(p) && !Directory.Exists(p)).ToList();
+        // Sheets of remote videos have no folder next to the video: without -o they go into the current folder.
+        OutputPathResolver.RemoteFallbackFolder = Environment.CurrentDirectory;
+        var missing = o.Inputs.Where(p => !VideoSource.IsUrl(p) && !File.Exists(p) && !Directory.Exists(p)).ToList();
         foreach (var m in missing) Console.Error.WriteLine(CliText.T("NotFoundWarning", m));
 
         var inputs = VideoScanner.Scan(o.Inputs, o.Recursive ?? app.Recursive);
@@ -113,7 +115,7 @@ public static class CliApp
         var tools = await EnsureFfmpegAsync(o.FfmpegDir ?? app.FfmpegDirectory, o.Yes, app);
         if (tools is null) return ExitNoFfmpeg;
 
-        var jobs = inputs.Select(v => new ThumbnailJob(v.Path, v.Root)).ToList();
+        var jobs = inputs.Select(v => new ThumbnailJob(v.Path, v.Root) { ManualTimes = o.ManualTimes }).ToList();
         var options = new BatchOptions();
         if ((o.Jobs ?? app.MaxParallelProcesses) is { } j) options.MaxParallelProcesses = Math.Max(1, j);
         options.MaxParallelVideos = Math.Max(1, o.Videos ?? app.MaxParallelVideos ?? Math.Max(1, options.MaxParallelProcesses / 2));

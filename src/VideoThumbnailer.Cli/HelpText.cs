@@ -10,7 +10,7 @@ internal static class HelpText
         vthumb - create video contact sheets (thumbnail sheets)
 
         Usage:
-          vthumb [options] <file|folder>...      create sheets
+          vthumb [options] <file|folder|URL>...  create sheets
           vthumb presets list|show|import|export|delete
           vthumb ffmpeg status|check|install|update|uninstall [--force] [--latest]
           vthumb --help | --version
@@ -30,6 +30,9 @@ internal static class HelpText
           -r, --recursive            scan sub folders (default: on)
               --no-recursive         only the given folders
           -n, --dry-run              list videos and output paths, create nothing
+          http(s)://…                videos on a web server are read directly, only the parts around the
+                                     capture times are downloaded (server must support range requests to be fast).
+                                     Their sheets go to -o, otherwise into the current folder.
 
         Preset and layout:
           -p, --preset <name|file>   preset name or path to a .vtpreset.json file
@@ -40,6 +43,11 @@ internal static class HelpText
               --gap <px> / --margin <px>
               --order row|column|random
               --skip-start <%> / --skip-end <%>   ignore start/end of the video
+              --times <list>         capture times by hand, one per tile in timeline order, for every input:
+                                     e.g. "1:00,5:30,-,1:02:10.5"; "-" = automatic; "+s" sets the clip length
+                                     of animated sheets ("5:30+2")
+              --skip-black / --no-skip-black  replace black or one-colored frames by one close by (default: on)
+              --black-search <s>     how far before/after to look (default 2)
               --no-portrait-swap     keep columns/rows for portrait videos (--portrait-swap: swap them)
               --background <color>   --font <family>
 
@@ -90,7 +98,7 @@ internal static class HelpText
         vthumb - Video-Kontaktabzüge (Thumbnail-Sheets) erstellen
 
         Aufruf:
-          vthumb [Optionen] <Datei|Ordner>...    Sheets erstellen
+          vthumb [Optionen] <Datei|Ordner|URL>... Sheets erstellen
           vthumb presets list|show|import|export|delete
           vthumb ffmpeg status|check|install|update|uninstall [--force] [--latest]
           vthumb --help | --version
@@ -110,6 +118,9 @@ internal static class HelpText
           -r, --recursive            Unterordner durchsuchen (Standard: an)
               --no-recursive         nur die angegebenen Ordner
           -n, --dry-run              Videos und Ausgabepfade auflisten, nichts erstellen
+          http(s)://…                Videos auf einem Webserver werden direkt gelesen, nur die Stellen um die
+                                     Aufnahmezeitpunkte werden geladen (schnell nur, wenn der Server Range-Anfragen
+                                     kann). Ihre Sheets landen in -o, sonst im aktuellen Ordner.
 
         Preset und Layout:
           -p, --preset <Name|Datei>  Preset-Name oder Pfad zu einer .vtpreset.json-Datei
@@ -120,6 +131,12 @@ internal static class HelpText
               --gap <px> / --margin <px>
               --order row|column|random
               --skip-start <%> / --skip-end <%>   Anfang/Ende des Videos auslassen
+              --times <Liste>        Aufnahmezeitpunkte von Hand, je Kachel in Zeitfolge, für jede Eingabe:
+                                     z. B. "1:00,5:30,-,1:02:10.5"; "-" = automatisch; "+s" setzt die Länge des
+                                     Ausschnitts bei animierten Sheets ("5:30+2")
+              --skip-black / --no-skip-black  schwarze oder einfarbige Bilder durch ein Bild kurz davor/danach
+                                     ersetzen (Standard: an)
+              --black-search <s>     so weit davor/danach suchen (Standard 2)
               --no-portrait-swap     Spalten/Zeilen bei Hochkant-Videos nicht tauschen (--portrait-swap: tauschen)
               --background <Farbe>   --font <Schriftfamilie>
 

@@ -62,6 +62,7 @@ internal static class CliText
         // argument parsing
         ["NeedsValue"] = ("Option {0} needs a value.", "Option {0} braucht einen Wert."),
         ["NeedsInt"] = ("Option {0} needs a whole number.", "Option {0} braucht eine ganze Zahl."),
+        ["InvalidTimes"] = ("Invalid time in {0}: '{1}'. Use seconds, mm:ss or hh:mm:ss, '-' for automatic, '+s' for the clip length.", "Ungültiger Zeitpunkt bei {0}: „{1}“. Erlaubt sind Sekunden, mm:ss oder hh:mm:ss, „-“ für automatisch, „+s“ für die Länge des Ausschnitts."),
         ["NeedsNumber"] = ("Option {0} needs a number.", "Option {0} braucht eine Zahl."),
         ["UnknownOption"] = ("Unknown option: {0}", "Unbekannte Option: {0}"),
         ["UnknownAnimationFormat"] = ("Unknown animation format '{0}' (mp4, webm, gif).", "Unbekanntes Animationsformat „{0}“ (mp4, webm, gif)."),

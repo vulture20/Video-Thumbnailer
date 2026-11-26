@@ -1,6 +1,7 @@
 using SkiaSharp;
 using VideoThumbnailer.Core.Extraction;
 using VideoThumbnailer.Core.Ffmpeg;
+using VideoThumbnailer.Core.Input;
 using VideoThumbnailer.Core.Layout;
 using VideoThumbnailer.Core.Localization;
 using VideoThumbnailer.Core.Media;
@@ -18,7 +19,9 @@ public sealed class SheetGenerator(FfmpegTools tools, SemaphoreSlim processLimit
     private readonly FrameExtractor _extractor = new(tools.FfmpegPath);
     private readonly ClipExtractor _clips = new(tools.FfmpegPath);
 
-    public async Task<SheetResult> GenerateAsync(string videoPath, string? inputRoot, SheetSettings settings, IProgress<double>? progress, CancellationToken ct)
+    /// <param name="manualTimes">Capture times chosen by hand for this video, by tile in timeline order (null = automatic).</param>
+    public async Task<SheetResult> GenerateAsync(string videoPath, string? inputRoot, SheetSettings settings, IProgress<double>? progress, CancellationToken ct,
+                                                 IReadOnlyList<ManualTime?>? manualTimes = null)
     {
         var s = settings;
         var target = OutputPathResolver.ResolveSheetPath(s, videoPath, inputRoot);
@@ -41,43 +44,49 @@ public sealed class SheetGenerator(FfmpegTools tools, SemaphoreSlim processLimit
         progress?.Report(0.05);
 
         var aspect = info.Video.DisplayAspect;
-        var seed = StringComparer.Ordinal.GetHashCode(Path.GetFileName(videoPath));
+        var seed = StringComparer.Ordinal.GetHashCode(VideoSource.FileName(videoPath));
         var layout = GridLayout.Create(s, aspect, SheetRenderer.MeasureHeader(s, info), new Random(seed));
         if (s.Animation.Enabled)
         {
             // Leave room for the clip at the end so the last tile does not run out of video.
             var clipShare = info.Duration > 0 ? 100.0 * s.Animation.ClipSeconds / info.Duration : 0;
             var animTimes = TimestampPlanner.Plan(info.Duration, layout.Tiles.Count, s.SkipStartPercent,
-                                                  Math.Min(45, s.SkipEndPercent + clipShare));
+                                                  Math.Min(45, s.SkipEndPercent + clipShare), manualTimes);
             return await GenerateAnimatedAsync(s, info, layout, animTimes, target, progress, ct).ConfigureAwait(false);
         }
 
-        var times = TimestampPlanner.Plan(info.Duration, layout.Tiles.Count, s.SkipStartPercent, s.SkipEndPercent);
+        var plan = TimestampPlanner.Plan(info.Duration, layout.Tiles.Count, s.SkipStartPercent, s.SkipEndPercent, manualTimes);
+        // Actual capture times: a black frame may be replaced by one close by (times chosen by hand are kept).
+        var times = plan.Select(p => p.Time).ToArray();
+        var search = s.SkipBlackFrames ? s.BlackFrameSearchSeconds : 0;
 
         var frames = new CapturedFrame[times.Length];
         var fullFrames = s.Output.SaveFrames ? new SKBitmap?[times.Length] : null;
         var done = 0;
         try
         {
-            var tasks = times.Select(async (t, i) =>
+            var tasks = plan.Select(async (p, i) =>
             {
                 await WaitIfPausedAsync(ct).ConfigureAwait(false);
                 await processLimiter.WaitAsync(ct).ConfigureAwait(false);
                 SKBitmap? bmp;
+                var t = p.Time;
+                var window = p.Manual ? 0 : search;
                 try
                 {
                     if (fullFrames is not null)
                     {
-                        var full = await _extractor.ExtractAsync(info, t, null, null, ct).ConfigureAwait(false);
+                        (var full, t) = await _extractor.ExtractNonBlankAsync(info, t, null, null, window, ct).ConfigureAwait(false);
                         fullFrames[i] = full;
                         bmp = full?.Resize(new SKImageInfo(layout.TileWidth, layout.TileHeight), new SKSamplingOptions(SKCubicResampler.Mitchell));
                     }
                     else
                     {
-                        bmp = await _extractor.ExtractAsync(info, t, layout.TileWidth, layout.TileHeight, ct).ConfigureAwait(false);
+                        (bmp, t) = await _extractor.ExtractNonBlankAsync(info, t, layout.TileWidth, layout.TileHeight, window, ct).ConfigureAwait(false);
                     }
                 }
                 finally { processLimiter.Release(); }
+                times[i] = t;
                 frames[i] = new CapturedFrame(t, bmp);
                 progress?.Report(0.05 + 0.85 * Interlocked.Increment(ref done) / times.Length);
             }).ToList();
@@ -105,17 +114,32 @@ public sealed class SheetGenerator(FfmpegTools tools, SemaphoreSlim processLimit
         }
     }
 
-    private async Task<SheetResult> GenerateAnimatedAsync(SheetSettings s, MediaInfo info, GridLayout layout, double[] times,
+    private async Task<SheetResult> GenerateAnimatedAsync(SheetSettings s, MediaInfo info, GridLayout layout, PlannedTime[] plan,
                                                           string target, IProgress<double>? progress, CancellationToken ct)
     {
         var a = s.Animation;
+        var times = plan.Select(p => p.Time).ToArray();
         var clips = new IReadOnlyList<byte[]>[times.Length];
+        var search = s.SkipBlackFrames ? s.BlackFrameSearchSeconds : 0;
         var done = 0;
-        var tasks = times.Select(async (t, i) =>
+        var tasks = plan.Select(async (p, i) =>
         {
             await WaitIfPausedAsync(ct).ConfigureAwait(false);
             await processLimiter.WaitAsync(ct).ConfigureAwait(false);
-            try { clips[i] = await _clips.ExtractAsync(info, t, a.ClipSeconds, a.FramesPerSecond, layout.TileWidth, layout.TileHeight, ct).ConfigureAwait(false); }
+            try
+            {
+                var seconds = ClipLength(p, a);
+                var clip = await _clips.ExtractAsync(info, p.Time, seconds, a.FramesPerSecond, layout.TileWidth, layout.TileHeight, ct).ConfigureAwait(false);
+                // Clip starts on a black frame: start it at the nearest good frame instead.
+                if (!p.Manual && search > 0 && clip.Count > 0 && BlankFrames.IsBlank(clip[0])
+                    && await _extractor.FindNonBlankAsync(info, p.Time, search, layout.TileWidth, layout.TileHeight, ct).ConfigureAwait(false) is { } found)
+                {
+                    found.Bitmap.Dispose();
+                    var moved = await _clips.ExtractAsync(info, found.Time, seconds, a.FramesPerSecond, layout.TileWidth, layout.TileHeight, ct).ConfigureAwait(false);
+                    if (moved.Count > 0) { clip = moved; times[i] = found.Time; }
+                }
+                clips[i] = clip;
+            }
             finally { processLimiter.Release(); }
             progress?.Report(0.05 + 0.6 * Interlocked.Increment(ref done) / times.Length);
         }).ToList();
@@ -126,7 +150,8 @@ public sealed class SheetGenerator(FfmpegTools tools, SemaphoreSlim processLimit
 
         Directory.CreateDirectory(Path.GetDirectoryName(target)!);
         var tmp = target + ".part";
-        var frameCount = a.FrameCount;
+        // Clips may have their own length (chosen by hand): the animation runs as long as the longest one.
+        var frameCount = plan.Max(p => FrameCount(ClipLength(p, a), a.FramesPerSecond));
         await processLimiter.WaitAsync(ct).ConfigureAwait(false);
         try
         {
@@ -174,11 +199,16 @@ public sealed class SheetGenerator(FfmpegTools tools, SemaphoreSlim processLimit
         return new SheetResult(JobStatus.Done, target, missing > 0 ? CoreText.T("FramesMissing", missing) : null);
     }
 
+    /// <summary>Clip length of one tile: chosen by hand or the setting, within the allowed range.</summary>
+    internal static double ClipLength(PlannedTime p, AnimationSettings a) => Math.Clamp(p.ClipSeconds ?? a.ClipSeconds, 0.5, 30);
+
+    private static int FrameCount(double seconds, int fps) => Math.Max(1, (int)Math.Round(seconds * fps));
+
     private static async Task SaveFramesAsync(SheetSettings s, string videoPath, string sheetPath, SKBitmap?[] frames, double[] times)
     {
         var dir = Path.Combine(Path.GetDirectoryName(sheetPath)!, OutputPathResolver.ExpandPattern(s.Output.FramesFolderPattern, videoPath, s));
         Directory.CreateDirectory(dir);
-        var name = Path.GetFileNameWithoutExtension(videoPath);
+        var name = VideoSource.NameWithoutExtension(videoPath);
         var ext = SheetRenderer.Extension(s.Output.Format);
         for (var i = 0; i < frames.Length; i++)
         {

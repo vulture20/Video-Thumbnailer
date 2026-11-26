@@ -13,6 +13,12 @@ public sealed class ThumbnailJob(string inputPath, string? inputRoot = null)
     public string? Message { get; private set; }
     public string? OutputPath { get; private set; }
     public TimeSpan Elapsed { get; private set; }
+    /// <summary>
+    /// Capture times chosen by hand, by tile in timeline order; null entries (and tiles beyond the list) stay automatic.
+    /// They belong to this video only, not to the preset. Replace the whole array to change them.
+    /// </summary>
+    public IReadOnlyList<Layout.ManualTime?>? ManualTimes { get; set; }
+    public bool HasManualTimes => ManualTimes?.Any(t => t is not null) == true;
 
     public event Action<ThumbnailJob>? Changed;
 

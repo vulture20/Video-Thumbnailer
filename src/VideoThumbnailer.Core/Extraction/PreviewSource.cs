@@ -3,6 +3,7 @@ using SkiaSharp;
 using VideoThumbnailer.Core.Ffmpeg;
 using VideoThumbnailer.Core.Layout;
 using VideoThumbnailer.Core.Media;
+using VideoThumbnailer.Core.Rendering;
 
 namespace VideoThumbnailer.Core.Extraction;
 
@@ -21,8 +22,9 @@ public sealed class PreviewSource(FfmpegTools tools, int maxParallel = 4)
     private readonly FrameExtractor _extractor = new(tools.FfmpegPath);
     private readonly SemaphoreSlim _limiter = new(Math.Max(1, maxParallel));
     private readonly ConcurrentDictionary<string, Task<MediaInfo>> _info = new(StringComparer.Ordinal);
-    private readonly ConcurrentDictionary<(string Path, long Ms), SKBitmap> _frames = new();
-    private readonly ConcurrentQueue<(string Path, long Ms)> _order = new();
+    // Key: file, planned time, search window for black frames (0 = off); value: frame and the time actually used.
+    private readonly ConcurrentDictionary<(string Path, long Ms, long SearchMs), CapturedFrame> _frames = new();
+    private readonly ConcurrentQueue<(string Path, long Ms, long SearchMs)> _order = new();
     private readonly ConcurrentDictionary<string, (long Length, DateTime Written)> _stamps = new(StringComparer.Ordinal);
 
     public FfmpegTools Tools { get; } = tools;
@@ -60,6 +62,7 @@ public sealed class PreviewSource(FfmpegTools tools, int maxParallel = 4)
 
     private static (long, DateTime) Stamp(string path)
     {
+        if (Input.VideoSource.IsUrl(path)) return (0, DateTime.MinValue); // remote: read once per session
         try
         {
             var fi = new FileInfo(path);
@@ -70,30 +73,48 @@ public sealed class PreviewSource(FfmpegTools tools, int maxParallel = 4)
 
     private static long Key(double time) => (long)Math.Round(time * 1000);
 
-    /// <summary>A cached frame (null if it has not been extracted yet). The bitmap stays owned by the cache.</summary>
-    public SKBitmap? TryGetFrame(string path, double time) => _frames.TryGetValue((path, Key(time)), out var b) ? b : null;
+    /// <summary>
+    /// A cached frame with the time it was taken at (null if it has not been extracted yet). With
+    /// <paramref name="blackSearch"/> &gt; 0 a black frame was replaced by a good one nearby, as on the real sheet.
+    /// The bitmap stays owned by the cache.
+    /// </summary>
+    public CapturedFrame? TryGetFrame(string path, double time, double blackSearch = 0) =>
+        _frames.TryGetValue((path, Key(time), Key(blackSearch)), out var f) ? f : null;
+
+    /// <summary>Frame for a planned time: black frames are only skipped for automatic times, as on the real sheet.</summary>
+    public CapturedFrame? TryGetFrame(string path, PlannedTime planned, double blackSearch = 0) =>
+        TryGetFrame(path, planned.Time, planned.Manual ? 0 : blackSearch);
 
     /// <summary>Extracts every frame that is not cached yet; <paramref name="onFrame"/> runs after each new one.</summary>
-    public async Task LoadFramesAsync(MediaInfo info, IReadOnlyList<double> times, Action? onFrame, CancellationToken ct)
+    public Task LoadFramesAsync(MediaInfo info, IReadOnlyList<double> times, Action? onFrame, CancellationToken ct) =>
+        LoadFramesAsync(info, times.Select(t => new PlannedTime(t)).ToList(), 0, onFrame, ct);
+
+    /// <summary>
+    /// Extracts every frame that is not cached yet; <paramref name="onFrame"/> runs after each new one. Automatic
+    /// times skip black frames within ±<paramref name="blackSearch"/> seconds (0 = off).
+    /// </summary>
+    public async Task LoadFramesAsync(MediaInfo info, IReadOnlyList<PlannedTime> times, double blackSearch, Action? onFrame, CancellationToken ct)
     {
         if (info.Video is null) return;
         var w = FrameWidth;
         var h = GridLayout.ComputeTileHeight(w, info.Video.DisplayAspect);
-        var todo = times.Where(t => TryGetFrame(info.Path, t) is null).Distinct().ToList();
-        await Task.WhenAll(todo.Select(async t =>
+        var todo = times.Select(p => (p.Time, Search: p.Manual ? 0 : Math.Max(0, blackSearch)))
+                        .Where(x => TryGetFrame(info.Path, x.Time, x.Search) is null).Distinct().ToList();
+        await Task.WhenAll(todo.Select(async x =>
         {
             await _limiter.WaitAsync(ct).ConfigureAwait(false);
             SKBitmap? bmp;
+            double actual;
             try
             {
                 ct.ThrowIfCancellationRequested();
-                bmp = await _extractor.ExtractAsync(info, t, w, h, ct).ConfigureAwait(false);
+                (bmp, actual) = await _extractor.ExtractNonBlankAsync(info, x.Time, w, h, x.Search, ct).ConfigureAwait(false);
             }
             finally { _limiter.Release(); }
             if (bmp is null) return;
-            var key = (info.Path, Key(t));
+            var key = (info.Path, Key(x.Time), Key(x.Search));
             // The file was forgotten (changed) while this frame was extracted: do not cache a stale frame.
-            if (TryGetInfoUnchecked(info.Path) != info || !_frames.TryAdd(key, bmp)) { bmp.Dispose(); return; }
+            if (TryGetInfoUnchecked(info.Path) != info || !_frames.TryAdd(key, new CapturedFrame(actual, bmp))) { bmp.Dispose(); return; }
             _order.Enqueue(key);
             Trim();
             onFrame?.Invoke();

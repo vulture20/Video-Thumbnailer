@@ -37,6 +37,7 @@ public class CliTests
         ["columns"] = ["-c", "7"], ["rows"] = ["--rows", "2"], ["sheetWidth"] = ["-w", "1000"], ["tileWidth"] = ["--tile-width", "300"],
         ["gap"] = ["--gap", "1"], ["margin"] = ["--margin", "1"], ["portraitSwapGrid"] = ["--no-portrait-swap"],
         ["order"] = ["--order", "random"], ["skipStartPercent"] = ["--skip-start", "5"], ["skipEndPercent"] = ["--skip-end", "5"],
+        ["skipBlackFrames"] = ["--no-skip-black"], ["blackFrameSearchSeconds"] = ["--black-search", "5"],
         ["backgroundColor"] = ["--background", "#000000"], ["fontFamily"] = ["--font", "Arial"], ["textLanguage"] = ["--sheet-lang", "de"],
         ["timestamp.enabled"] = ["--no-timestamps"], ["timestamp.position"] = ["--timestamp-pos", "TopLeft"],
         ["timestamp.fontSize"] = ["--timestamp-size", "20"], ["timestamp.bold"] = ["--no-timestamp-bold"],
@@ -130,6 +131,9 @@ public class CliTests
     [InlineData("--columns", "x")]
     [InlineData("--format", "bmp")]
     [InlineData("--timestamp-pos", "middle")]
+    [InlineData("--times", "1:00,abc")]
+    [InlineData("--times", "1:75")]
+    [InlineData("--times", "5+0")]
     public void Rejects_bad_arguments(params string[] args)
     {
         Assert.Throws<UsageException>(() => ArgParser.ParseGenerate(args));

@@ -30,13 +30,21 @@ public partial class MainWindow : Window, IUiServices
 
     private void OnDragOver(object? sender, DragEventArgs e)
     {
-        e.DragEffects = e.DataTransfer.TryGetFiles() is { Length: > 0 } ? DragDropEffects.Copy : DragDropEffects.None;
+        e.DragEffects = e.DataTransfer.TryGetFiles() is { Length: > 0 } || DroppedUrlText(e) is not null ? DragDropEffects.Copy : DragDropEffects.None;
+    }
+
+    /// <summary>Text dragged from a browser's address bar or a link, if it is a web address.</summary>
+    private static string? DroppedUrlText(DragEventArgs e)
+    {
+        var text = e.DataTransfer.TryGetText();
+        return text is not null && text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Any(Core.Input.VideoSource.IsUrl) ? text : null;
     }
 
     private void OnDrop(object? sender, DragEventArgs e)
     {
         var paths = e.DataTransfer.TryGetFiles()?.Select(f => f.TryGetLocalPath()).OfType<string>().ToList();
         if (paths is { Count: > 0 }) Vm?.AddPaths(paths);
+        else if (DroppedUrlText(e) is { } text) Vm?.AddUrls(text);
     }
 
     private void OnQueueSelectionChanged(object? sender, SelectionChangedEventArgs e)
@@ -47,6 +55,16 @@ public partial class MainWindow : Window, IUiServices
         // The preview follows the most recently selected video.
         if (e.AddedItems.OfType<JobViewModel>().LastOrDefault() is { } latest) Vm.PreviewJob = latest;
         else if (Vm.SelectedJobs.Count > 0) Vm.PreviewJob = Vm.SelectedJobs[^1];
+    }
+
+    /// <summary>Click on a tile of the preview: choose its capture time.</summary>
+    private async void OnPreviewPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (Vm is not { CanEditTiles: true } vm || sender is not Image img || img.Bounds.Width <= 0 || img.Bounds.Height <= 0) return;
+        if (!e.GetCurrentPoint(img).Properties.IsLeftButtonPressed) return;
+        var p = e.GetPosition(img);
+        e.Handled = true;
+        await vm.EditTileAtAsync(p.X / img.Bounds.Width, p.Y / img.Bounds.Height);
     }
 
     private void OnQueueDoubleTapped(object? sender, TappedEventArgs e)
@@ -112,11 +130,15 @@ public partial class MainWindow : Window, IUiServices
 
     public Task<string?> PickFontAsync(string? current) => FontPickerWindow.ShowAsync(this, current);
 
+    public Task<TileTimeResult> EditTileTimeAsync(TileTimeViewModel editor) => TileTimeWindow.ShowAsync(this, editor);
+
     public void OpenPath(string path)
     {
         try
         {
-            if (File.Exists(path) || Directory.Exists(path))
+            if (Core.Input.VideoSource.IsUrl(path))
+                _ = Launcher.LaunchUriAsync(new Uri(path));
+            else if (File.Exists(path) || Directory.Exists(path))
                 _ = Launcher.LaunchFileInfoAsync(new FileInfo(path));
         }
         catch (Exception ex) { Debug.WriteLine(ex); }

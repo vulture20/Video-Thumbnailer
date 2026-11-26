@@ -9,7 +9,7 @@ public static class FfprobeReader
 {
     public static async Task<MediaInfo> ReadAsync(string ffprobePath, string videoPath, CancellationToken ct = default)
     {
-        string[] args = ["-v", "error", "-print_format", "json", "-show_format", "-show_streams", videoPath];
+        List<string> args = ["-v", "error", .. Input.VideoSource.InputOptions(videoPath), "-print_format", "json", "-show_format", "-show_streams", videoPath];
         var result = await ProcessRunner.RunAsync(ffprobePath, args, ct).ConfigureAwait(false);
         if (result.ExitCode != 0)
             throw new InvalidDataException(CoreText.T("FfprobeFailed", result.ExitCode, result.StdErr.Trim()));
@@ -75,7 +75,7 @@ public static class FfprobeReader
             title = Str(ftags, "title");
 
         long size = format.ValueKind == JsonValueKind.Object ? Long(format, "size") ?? 0 : 0;
-        if (size == 0 && File.Exists(videoPath)) size = new FileInfo(videoPath).Length;
+        if (size == 0 && !Input.VideoSource.IsUrl(videoPath) && File.Exists(videoPath)) size = new FileInfo(videoPath).Length;
 
         var duration = format.ValueKind == JsonValueKind.Object ? Dbl(format, "duration") ?? 0 : 0;
         if (duration <= 0) duration = streamDuration;

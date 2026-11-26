@@ -36,17 +36,18 @@ public sealed class ClipExtractor(string ffmpegPath)
         filters.Add("format=yuvj420p");
 
         var frameCount = Math.Max(1, (int)Math.Round(seconds * fps));
-        var args = new List<string>
-        {
+        List<string> args =
+        [
             "-hide_banner", "-loglevel", "error", "-nostdin",
             "-ss", start.ToString("0.###", CultureInfo.InvariantCulture),
+            .. Input.VideoSource.InputOptions(info.Path),
             "-i", info.Path,
             "-map", $"0:{video.Index}",
             "-an", "-sn", "-dn",
             "-vf", string.Join(",", filters),
             "-frames:v", frameCount.ToString(CultureInfo.InvariantCulture),
             "-f", "image2pipe", "-c:v", "mjpeg", "-q:v", "3", "-",
-        };
+        ];
         var result = await ProcessRunner.RunAsync(ffmpegPath, args, ct).ConfigureAwait(false);
         return result.StdOut.Length == 0 ? [] : SplitJpegs(result.StdOut);
     }

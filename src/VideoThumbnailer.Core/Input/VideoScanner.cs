@@ -25,7 +25,7 @@ public static partial class VideoScanner
 
     /// <summary>
     /// Expands files and folders into a de-duplicated, sorted list of video files.
-    /// Files given explicitly are always included, even with an unknown extension; folder scans skip animated sheets.
+    /// HTTP(S) addresses are taken as they are. Files given explicitly are always included, even with an unknown extension; folder scans skip animated sheets.
     /// </summary>
     public static IReadOnlyList<VideoInput> Scan(IEnumerable<string> paths, bool recursive, IReadOnlySet<string>? extensions = null)
     {
@@ -34,6 +34,12 @@ public static partial class VideoScanner
         var result = new List<VideoInput>();
         foreach (var raw in paths)
         {
+            if (VideoSource.IsUrl(raw))
+            {
+                // Remote video: read directly by ffmpeg, no folder structure.
+                if (seen.Add(raw)) result.Add(new VideoInput(raw, null));
+                continue;
+            }
             var p = System.IO.Path.GetFullPath(raw);
             if (File.Exists(p))
             {

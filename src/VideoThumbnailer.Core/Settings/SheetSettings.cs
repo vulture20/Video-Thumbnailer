@@ -57,6 +57,10 @@ public sealed class SheetSettings
     public double SkipStartPercent { get; set; } = 2;
     /// <summary>Percentage of the duration skipped at the end (credits).</summary>
     public double SkipEndPercent { get; set; } = 2;
+    /// <summary>Replace (nearly) black or single-colored frames (fades, cuts) by a good frame close by.</summary>
+    public bool SkipBlackFrames { get; set; } = true;
+    /// <summary>How far before and after the planned time (seconds) to look for a better frame.</summary>
+    public double BlackFrameSearchSeconds { get; set; } = 2;
     public string BackgroundColor { get; set; } = "#FF1E1E1E";
     /// <summary>Font family for all text. Empty = bundled DejaVu Sans.</summary>
     public string? FontFamily { get; set; }
@@ -90,6 +94,7 @@ public sealed class SheetSettings
         Margin = Math.Clamp(Margin, 0, 500);
         SkipStartPercent = Math.Clamp(SkipStartPercent, 0, 45);
         SkipEndPercent = Math.Clamp(SkipEndPercent, 0, 45);
+        BlackFrameSearchSeconds = Math.Clamp(BlackFrameSearchSeconds, 0.5, 30);
         Timestamp.FontSize = Math.Clamp(Timestamp.FontSize, 4, 400);
         Timestamp.Opacity = Math.Clamp(Timestamp.Opacity, 0, 1);
         Header.FontSize = Math.Clamp(Header.FontSize, 4, 400);
