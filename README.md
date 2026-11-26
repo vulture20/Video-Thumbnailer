@@ -7,25 +7,28 @@ Free, cross-platform video contact sheet generator with GUI and command line.
 
 ![Beispiel-Sheet](docs/images/example-sheet.jpg)
 
-## Funktionen (v1)
+## Funktionen
 
 - Einzelne Dateien oder ganze Ordner (rekursiv) per Dialog, Drag & Drop oder Kommandozeile
 - Alle Formate, die ffmpeg lesen kann (MP4, MKV, AVI, MOV, WebM, WMV, TS …), inkl. 10-Bit/HDR, AV1, gedrehte und anamorphe Videos
 - Raster aus Spalten × Zeilen, Breite, Abstand, Rand; automatische Kachelhöhe, Anpassung für Hochkant-Videos
 - Reihenfolge zeilenweise, spaltenweise oder zufällig
-- Zeitstempel in jeder Kachel (5 Positionen, Farbe, Deckkraft, Kontur, Schatten)
-- Info-Kopf mit frei konfigurierbaren Video-Infos (Name, Größe, Dauer, Auflösung, Codecs, Bitrate, FPS, Audio …)
+- Zeitstempel in jeder Kachel (5 Positionen, Farbe, Deckkraft, Kontur- und Schattenfarbe, optional mit Millisekunden)
+- Info-Kopf mit frei konfigurierbaren Video-Infos (Name, Größe, Dauer, Auflösung, Codecs, Bitrate, FPS, Audio …), eigene Titel- und Textfarbe
 - Ausgabe als JPG, PNG oder WebP; optional jede Aufnahme als Einzelbild
 - Animierte Sheets als MP4, WebM oder GIF: jede Kachel spielt einen kurzen Ausschnitt ab ihrem Zeitpunkt ab, mit mitlaufendem Zeitstempel
-- Warteschlange mit Pause, Abbruch, Fortschritt und paralleler Verarbeitung über alle CPU-Kerne
+- Warteschlange mit Pause, Abbruch, Fortschritt und paralleler Verarbeitung über alle CPU-Kerne; klappt in schmalen Fenstern zu einer Leiste ein
 - Ausgabe in einen Ordner (optional mit Ordnerstruktur), neben das Video oder in einen Unterordner; Dateinamen-Muster
 - Presets als offene JSON-Dateien, 4 mitgelieferte Basis-Presets
 - Oberfläche, Kommandozeile und Texte im Sheet auf Deutsch und Englisch (folgt der Systemsprache, umschaltbar)
 - Live-Vorschau des Kontaktbogens beim Einstellen, mit echten Bildern und Videodaten des gewählten Videos: Raster, Info-Kopf, Zeitstempel, Farben und Bildgröße wie im Ergebnis (abschaltbar)
 - Einstellungen im Modus „Einfach“ (nur das Wichtigste) oder „Erweitert“ (alles); Darstellung hell, dunkel oder wie das System
-- ffmpeg wird nicht mitgeliefert, sondern nach Rückfrage automatisch geladen (mit SHA-256-Prüfung und Update-Funktion). Ein vorhandenes ffmpeg wird automatisch gefunden.
+- ffmpeg wird nicht mitgeliefert, sondern nach Rückfrage automatisch geladen: ein fest hinterlegter Build mit SHA-256-Prüfsumme aus diesem Repo, mit Update-Funktion. Ein vorhandenes ffmpeg wird automatisch gefunden.
+- Installer für Windows, AppImage für Linux, DMG für macOS sowie portable ZIPs
 
 ![Oberfläche, Modus „Einfach“](docs/images/gui.png)
+
+<sub>Die Bilder stammen aus v0.2.0/v0.3.0: animierte Sheets, die einklappbare Warteschlange und die Farbfelder sind darauf noch nicht zu sehen.</sub>
 
 ![Modus „Erweitert“ in dunkler Darstellung](docs/images/gui-dark.png)
 
@@ -38,7 +41,7 @@ Fertige Programme gibt es unter [Releases](https://github.com/vulture20/Video-Th
 | Windows | `…-win-x64-setup.exe` (bzw. `arm64`) | Installer mit Startmenü-Eintrag, ohne Administratorrechte. Nicht signiert: SmartScreen warnt, „Weitere Informationen“ → „Trotzdem ausführen“ |
 | Linux | `…-linux-x64.AppImage` (bzw. `arm64`) | ausführbar machen und starten (`chmod +x …AppImage`); Kommandozeile: `./…AppImage vthumb --help` |
 | macOS | `…-osx-arm64.dmg` (Apple Silicon) bzw. `osx-x64` (Intel) | App in „Programme“ ziehen. Nicht notarisiert: beim ersten Start Rechtsklick → „Öffnen“ bestätigen; die Kommandozeile liegt in `Video-Thumbnailer.app/Contents/MacOS/vthumb` |
-| alle | `…-<system>.zip` | portable Fassung mit zwei Einzeldateien: `VideoThumbnailer` (Oberfläche) und `vthumb` (Kommandozeile) |
+| alle | `…-<system>.zip` | portable Fassung: `VideoThumbnailer` (Oberfläche) und `vthumb` (Kommandozeile) als Einzeldateien, dazu `LICENSE`, `README.md` und `licenses/` (Lizenz der Schrift) |
 
 Die Prüfsummen aller Dateien stehen in `checksums.sha256`.
 
@@ -123,9 +126,10 @@ Aufbau:
 - `src/VideoThumbnailer.Gui` – Oberfläche (Avalonia)
 - `tests/VideoThumbnailer.Tests` – Unit-, Integrations- und GUI-Tests (headless)
 - `assets/branding` – Icon und Banner (SVG-Quellen, Build-Skript `build.py`)
-- `packaging/linux` – `.desktop`-Datei und Icons im hicolor-Schema
+- `packaging/windows`, `packaging/linux`, `packaging/macos` – Installer (Inno Setup), AppImage (mit `.desktop`-Datei und hicolor-Icons) und DMG
+- `tools/ffmpeg-pins.py` – erzeugt die Liste der fest hinterlegten ffmpeg-Builds
 
-Entscheidungen und offene Punkte: [docs/DECISIONS.md](docs/DECISIONS.md) · Änderungen: [CHANGELOG.md](CHANGELOG.md)
+Entscheidungen und offene Punkte: [docs/DECISIONS.md](docs/DECISIONS.md) · Änderungen: [CHANGELOG.md](CHANGELOG.md) · Ideen für später: [Issues](https://github.com/vulture20/Video-Thumbnailer/issues)
 
 ## Lizenz
 
