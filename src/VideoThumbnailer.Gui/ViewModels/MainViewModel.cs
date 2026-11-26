@@ -8,6 +8,7 @@ using VideoThumbnailer.Core.Ffmpeg;
 using VideoThumbnailer.Core.Input;
 using VideoThumbnailer.Core.Settings;
 using VideoThumbnailer.Core.Util;
+using VideoThumbnailer.Gui.Localization;
 
 namespace VideoThumbnailer.Gui.ViewModels;
 
@@ -37,15 +38,29 @@ public partial class MainViewModel : ObservableObject
     private bool _isRunning;
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(PauseButtonText))] private bool _isPaused;
     [ObservableProperty] private double _overallProgress;
-    [ObservableProperty] private string _statusText = "Add videos or folders to the queue (drag & drop works too).";
+    [ObservableProperty] private string _statusText = Loc.T("StatusIntro");
+    [ObservableProperty] private UiLanguage _language;
 
+    public static Choice[] Languages { get; } = Choice.ForEnum<UiLanguage>("Lang");
     public bool IsIdle => !IsRunning;
-    public string PauseButtonText => IsPaused ? "Resume" : "Pause";
+    public string PauseButtonText => Loc.T(IsPaused ? "Resume" : "Pause");
+
+    partial void OnLanguageChanged(UiLanguage value)
+    {
+        Loc.Instance.Language = value;
+        _app.Language = value == UiLanguage.System ? null : value.ToString();
+        OnPropertyChanged(nameof(PauseButtonText));
+        foreach (var j in Jobs) j.Refresh();
+        if (!IsRunning) StatusText = Loc.T("StatusIntro");
+    }
 
     public MainViewModel(IUiServices ui)
     {
         _ui = ui;
         _app = AppSettings.Load();
+        Language = Enum.TryParse<UiLanguage>(_app.Language, true, out var lang) ? lang : UiLanguage.System;
+        Loc.Instance.Language = Language;
+        StatusText = Loc.T("StatusIntro");
         Ffmpeg = new FfmpegViewModel(ui, _app);
         Recursive = _app.Recursive;
         MaxParallelProcesses = _app.MaxParallelProcesses ?? BatchOptions.DefaultParallelism;
@@ -72,7 +87,7 @@ public partial class MainViewModel : ObservableObject
                     _presets.Save(p);
                     ReloadPresets(p.Name);
                 }
-                catch (Exception ex) { StatusText = "Could not load preset: " + ex.Message; }
+                catch (Exception ex) { StatusText = Loc.T("StatusPresetLoadFailed", ex.Message); }
             }
             else inputs.Add(a);
         }
@@ -110,7 +125,7 @@ public partial class MainViewModel : ObservableObject
             Jobs.Add(vm);
             added++;
         }
-        StatusText = added == 0 ? "No new videos found." : $"{added} video(s) added.";
+        StatusText = added == 0 ? Loc.T("StatusNoNewVideos") : Loc.T("StatusAdded", added);
         StartCommand.NotifyCanExecuteChanged();
         ClearAllCommand.NotifyCanExecuteChanged();
     }
@@ -121,7 +136,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private async Task AddFolderAsync()
     {
-        var folder = await _ui.PickFolderAsync("Add folder");
+        var folder = await _ui.PickFolderAsync(Loc.T("DlgAddFolder"));
         if (folder is null) return;
         _app.LastInputFolder = folder;
         AddPaths([folder]);
@@ -180,7 +195,7 @@ public partial class MainViewModel : ObservableObject
     {
         var settings = CurrentSettings();
         var problems = settings.Clone().Normalize();
-        if (problems.Count > 0) { await _ui.ShowMessageAsync("Check settings", string.Join("\n", problems)); return; }
+        if (problems.Count > 0) { await _ui.ShowMessageAsync(Loc.T("DlgCheckSettings"), string.Join("\n", problems)); return; }
 
         var tools = await Ffmpeg.EnsureAsync();
         if (tools is null) return;
@@ -188,7 +203,7 @@ public partial class MainViewModel : ObservableObject
         SaveAppSettings();
         foreach (var j in Jobs.Where(j => j.Status is JobStatus.Cancelled)) j.Job.Reset();
         var jobs = Jobs.Select(j => j.Job).Where(j => j.Status == JobStatus.Pending).ToList();
-        if (jobs.Count == 0) { StatusText = "Nothing to do: all videos are finished. Clear finished entries or retry failed ones."; return; }
+        if (jobs.Count == 0) { StatusText = Loc.T("StatusNothingToDo"); return; }
 
         _processor = new BatchProcessor(tools);
         _cts = new CancellationTokenSource();
@@ -199,8 +214,10 @@ public partial class MainViewModel : ObservableObject
         {
             var options = new BatchOptions { MaxParallelProcesses = (int)MaxParallelProcesses, MaxParallelVideos = (int)MaxParallelVideos };
             var stats = await Task.Run(() => _processor.RunAsync(jobs, settings, options, _cts.Token));
-            StatusText = $"Finished in {Formatting.Duration(stats.Elapsed.TotalSeconds)}: {stats.Done} created, {stats.Skipped} skipped, {stats.Failed} failed" +
-                         (stats.Cancelled > 0 ? $", {stats.Cancelled} cancelled." : ".");
+            var elapsed = Formatting.Duration(stats.Elapsed.TotalSeconds);
+            StatusText = stats.Cancelled > 0
+                ? Loc.T("StatusFinishedCancelled", elapsed, stats.Done, stats.Skipped, stats.Failed, stats.Cancelled)
+                : Loc.T("StatusFinished", elapsed, stats.Done, stats.Skipped, stats.Failed);
         }
         finally
         {
@@ -227,7 +244,7 @@ public partial class MainViewModel : ObservableObject
     {
         _processor?.Pause.Resume();
         _cts?.Cancel();
-        StatusText = "Cancelling…";
+        StatusText = Loc.T("StatusCancelling");
     }
 
     private void UpdateStats()
@@ -240,8 +257,8 @@ public partial class MainViewModel : ObservableObject
         var failed = Jobs.Count(j => j.Status == JobStatus.Failed);
         var skipped = Jobs.Count(j => j.Status == JobStatus.Skipped);
         var running = Jobs.Count(j => j.Status == JobStatus.Running);
-        StatusText = $"{(IsPaused ? "Paused" : "Running")} · {done + failed + skipped}/{total} finished ({done} ok, {skipped} skipped, {failed} failed) · " +
-                     $"{running} active · {Formatting.Duration(_runClock.Elapsed.TotalSeconds)}";
+        StatusText = Loc.T("StatusProgress", Loc.T(IsPaused ? "StatusPaused" : "StatusRunning"), done + failed + skipped, total,
+            done, skipped, failed, running, Formatting.Duration(_runClock.Elapsed.TotalSeconds));
     }
 
     // ------------------------------------------------------------------ presets
@@ -251,23 +268,23 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private async Task SavePresetAsync()
     {
-        var initial = SelectedPreset is { } p && !PresetStore.IsBuiltIn(p.Name) ? p.Name : "My preset";
-        var name = await _ui.PromptTextAsync("Save preset", "Name of the preset:", initial);
+        var initial = SelectedPreset is { } p && !PresetStore.IsBuiltIn(p.Name) ? p.Name : Loc.T("DlgPresetDefaultName");
+        var name = await _ui.PromptTextAsync(Loc.T("DlgSavePreset"), Loc.T("DlgPresetName"), initial);
         if (string.IsNullOrWhiteSpace(name)) return;
-        if (PresetStore.IsBuiltIn(name)) { await _ui.ShowMessageAsync("Save preset", "Built-in presets cannot be overwritten. Please choose another name."); return; }
+        if (PresetStore.IsBuiltIn(name)) { await _ui.ShowMessageAsync(Loc.T("DlgSavePreset"), Loc.T("DlgBuiltInNoOverwrite")); return; }
         var s = Settings.ToSettings(name.Trim());
         s.Description = null;
         _presets.Save(s);
         ReloadPresets(s.Name);
-        StatusText = $"Preset '{s.Name}' saved.";
+        StatusText = Loc.T("StatusPresetSaved", s.Name);
     }
 
     [RelayCommand]
     private async Task DeletePresetAsync()
     {
         if (SelectedPreset is not { } p) return;
-        if (PresetStore.IsBuiltIn(p.Name)) { await _ui.ShowMessageAsync("Delete preset", "Built-in presets cannot be deleted."); return; }
-        if (!await _ui.ConfirmAsync("Delete preset", $"Delete preset '{p.Name}'?")) return;
+        if (PresetStore.IsBuiltIn(p.Name)) { await _ui.ShowMessageAsync(Loc.T("DlgDeletePreset"), Loc.T("DlgBuiltInNoDelete")); return; }
+        if (!await _ui.ConfirmAsync(Loc.T("DlgDeletePreset"), Loc.T("DlgDeletePresetQuestion", p.Name))) return;
         _presets.Delete(p.Name);
         ReloadPresets(null);
         if (SelectedPreset is { } sel) Settings.Load(sel);
@@ -285,7 +302,7 @@ public partial class MainViewModel : ObservableObject
             ReloadPresets(p.Name);
             if (SelectedPreset is { } sel) Settings.Load(sel);
         }
-        catch (Exception ex) { await _ui.ShowMessageAsync("Import preset", "Could not read the preset: " + ex.Message); }
+        catch (Exception ex) { await _ui.ShowMessageAsync(Loc.T("DlgImportPreset"), Loc.T("DlgImportFailed", ex.Message)); }
     }
 
     [RelayCommand]
@@ -295,7 +312,7 @@ public partial class MainViewModel : ObservableObject
         var file = await _ui.PickPresetFileAsync(save: true, PresetStore.SafeFileNameForExport(s.Name));
         if (file is null) return;
         PresetStore.SaveFile(s, file);
-        StatusText = $"Preset exported to {file}";
+        StatusText = Loc.T("StatusPresetExported", file);
     }
 
     [RelayCommand]
@@ -307,7 +324,7 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private async Task BrowseOutputFolderAsync()
     {
-        var folder = await _ui.PickFolderAsync("Output folder");
+        var folder = await _ui.PickFolderAsync(Loc.T("DlgOutputFolder"));
         if (folder is not null) Settings.OutputFolder = folder;
     }
 

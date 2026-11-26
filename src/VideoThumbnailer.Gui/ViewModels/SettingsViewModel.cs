@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using VideoThumbnailer.Gui.Localization;
 using VideoThumbnailer.Core.Settings;
 
 namespace VideoThumbnailer.Gui.ViewModels;
@@ -8,12 +9,14 @@ public partial class SettingsViewModel : ObservableObject
 {
     private SheetSettings _source = BuiltInPresets.Default;
 
-    public static TileOrder[] Orders { get; } = Enum.GetValues<TileOrder>();
-    public static OverlayPosition[] TimestampPositions { get; } = Enum.GetValues<OverlayPosition>();
-    public static HeaderPosition[] HeaderPositions { get; } = Enum.GetValues<HeaderPosition>();
-    public static ImageFormat[] Formats { get; } = Enum.GetValues<ImageFormat>();
-    public static OutputLocation[] Locations { get; } = Enum.GetValues<OutputLocation>();
-    public static OverwriteMode[] OverwriteModes { get; } = Enum.GetValues<OverwriteMode>();
+    public static Choice[] Orders { get; } = Choice.ForEnum<TileOrder>("Order");
+    public static Choice[] TimestampPositions { get; } = Choice.ForEnum<OverlayPosition>("Pos");
+    public static Choice[] HeaderPositions { get; } = Choice.ForEnum<HeaderPosition>("Pos");
+    public static Choice[] Formats { get; } = Choice.ForEnum<ImageFormat>("Format");
+    public static Choice[] Locations { get; } = Choice.ForEnum<OutputLocation>("Location");
+    public static Choice[] OverwriteModes { get; } = Choice.ForEnum<OverwriteMode>("Overwrite");
+
+    public SettingsViewModel() => Loc.Instance.LanguageChanged += () => OnPropertyChanged(nameof(PlaceholderHelp));
 
     // Layout
     [ObservableProperty] private decimal _columns;
@@ -57,7 +60,7 @@ public partial class SettingsViewModel : ObservableObject
 
     public bool IsOutputFolder => Location == OutputLocation.OutputFolder;
     public bool IsSubfolder => Location == OutputLocation.SubfolderNextToVideo;
-    public string PlaceholderHelp => "Placeholders: " + string.Join(" ", Core.Rendering.InfoTemplate.Placeholders.Select(p => "{" + p + "}"));
+    public string PlaceholderHelp => Loc.T("Placeholders", string.Join(" ", Core.Rendering.InfoTemplate.Placeholders.Select(p => "{" + p + "}")));
 
     public void Load(SheetSettings s)
     {

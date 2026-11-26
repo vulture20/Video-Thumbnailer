@@ -1,0 +1,188 @@
+namespace VideoThumbnailer.Gui.Localization;
+
+public readonly record struct Entry(string En, string De);
+
+/// <summary>All GUI texts. Keys are used in XAML via the T markup extension and in code via Loc.T.</summary>
+internal static class Strings
+{
+    public static readonly IReadOnlyDictionary<string, Entry> Table = new Dictionary<string, Entry>
+    {
+        // ---- queue toolbar
+        ["AddFiles"] = new("Add files…", "Dateien hinzufügen…"),
+        ["AddFolder"] = new("Add folder…", "Ordner hinzufügen…"),
+        ["IncludeSubfolders"] = new("Include subfolders", "Unterordner einbeziehen"),
+        ["RemoveSelected"] = new("Remove selected", "Auswahl entfernen"),
+        ["ClearFinished"] = new("Clear finished", "Erledigte leeren"),
+        ["ClearAll"] = new("Clear all", "Alle leeren"),
+        ["RetryFailed"] = new("Retry failed", "Fehlgeschlagene wiederholen"),
+        ["Sort"] = new("Sort ▾", "Sortieren ▾"),
+        ["SortByName"] = new("By name", "Nach Name"),
+        ["SortByFolder"] = new("By folder", "Nach Ordner"),
+        ["SortBySize"] = new("By size (largest first)", "Nach Größe (größte zuerst)"),
+        ["SortByStatus"] = new("By status", "Nach Status"),
+        ["DropHere"] = new("Drop videos or folders here", "Videos oder Ordner hierher ziehen"),
+
+        // ---- run controls
+        ["Start"] = new("Start", "Start"),
+        ["Pause"] = new("Pause", "Pause"),
+        ["Resume"] = new("Resume", "Fortsetzen"),
+        ["Cancel"] = new("Cancel", "Abbrechen"),
+
+        // ---- job status
+        ["JobWaiting"] = new("Waiting", "Wartet"),
+        ["JobDone"] = new("Done", "Fertig"),
+        ["JobSkipped"] = new("Skipped", "Übersprungen"),
+        ["JobFailed"] = new("Failed", "Fehler"),
+        ["JobCancelled"] = new("Cancelled", "Abgebrochen"),
+
+        // ---- status line
+        ["StatusIntro"] = new("Add videos or folders to the queue (drag & drop works too).", "Videos oder Ordner zur Warteschlange hinzufügen (auch per Drag & Drop)."),
+        ["StatusNoNewVideos"] = new("No new videos found.", "Keine neuen Videos gefunden."),
+        ["StatusAdded"] = new("{0} video(s) added.", "{0} Video(s) hinzugefügt."),
+        ["StatusNothingToDo"] = new("Nothing to do: all videos are finished. Clear finished entries or retry failed ones.", "Nichts zu tun: Alle Videos sind fertig. Erledigte leeren oder Fehlgeschlagene wiederholen."),
+        ["StatusFinished"] = new("Finished in {0}: {1} created, {2} skipped, {3} failed.", "Fertig in {0}: {1} erstellt, {2} übersprungen, {3} fehlgeschlagen."),
+        ["StatusFinishedCancelled"] = new("Finished in {0}: {1} created, {2} skipped, {3} failed, {4} cancelled.", "Fertig in {0}: {1} erstellt, {2} übersprungen, {3} fehlgeschlagen, {4} abgebrochen."),
+        ["StatusCancelling"] = new("Cancelling…", "Wird abgebrochen…"),
+        ["StatusRunning"] = new("Running", "Läuft"),
+        ["StatusPaused"] = new("Paused", "Pausiert"),
+        ["StatusProgress"] = new("{0} · {1}/{2} finished ({3} ok, {4} skipped, {5} failed) · {6} active · {7}", "{0} · {1}/{2} fertig ({3} ok, {4} übersprungen, {5} fehlgeschlagen) · {6} aktiv · {7}"),
+        ["StatusPresetSaved"] = new("Preset '{0}' saved.", "Preset „{0}“ gespeichert."),
+        ["StatusPresetExported"] = new("Preset exported to {0}", "Preset exportiert nach {0}"),
+        ["StatusPresetLoadFailed"] = new("Could not load preset: {0}", "Preset konnte nicht geladen werden: {0}"),
+
+        // ---- settings: preset
+        ["Preset"] = new("Preset", "Preset"),
+        ["SaveAs"] = new("Save as…", "Speichern unter…"),
+        ["Delete"] = new("Delete", "Löschen"),
+        ["Reset"] = new("Reset", "Zurücksetzen"),
+        ["ResetTip"] = new("Discard changes and reload the selected preset", "Änderungen verwerfen und gewähltes Preset neu laden"),
+        ["Import"] = new("Import…", "Importieren…"),
+        ["Export"] = new("Export…", "Exportieren…"),
+
+        // ---- settings: layout
+        ["Layout"] = new("Layout", "Layout"),
+        ["ColumnsRows"] = new("Columns × rows", "Spalten × Zeilen"),
+        ["SheetWidth"] = new("Sheet width (px)", "Bildbreite (px)"),
+        ["GapMargin"] = new("Gap / margin (px)", "Abstand / Rand (px)"),
+        ["TimelineFlow"] = new("Timeline flow", "Reihenfolge"),
+        ["SkipStartEnd"] = new("Skip start / end (%)", "Anfang / Ende auslassen (%)"),
+        ["Background"] = new("Background", "Hintergrund"),
+        ["FontFamily"] = new("Font family", "Schriftart"),
+        ["FontFamilyPlaceholder"] = new("(built-in DejaVu Sans)", "(mitgelieferte DejaVu Sans)"),
+        ["PortraitSwap"] = new("Portrait videos: swap columns and rows", "Hochkant-Videos: Spalten und Zeilen tauschen"),
+
+        // ---- settings: timestamps
+        ["Timestamps"] = new("Timestamps", "Zeitstempel"),
+        ["ShowTimestamps"] = new("Show timestamp in every tile", "Zeitstempel in jeder Kachel anzeigen"),
+        ["Position"] = new("Position", "Position"),
+        ["FontSize"] = new("Font size", "Schriftgröße"),
+        ["ColorOpacity"] = new("Color / opacity", "Farbe / Deckkraft"),
+        ["Outline"] = new("Outline (px)", "Kontur (px)"),
+        ["DropShadow"] = new("Drop shadow", "Schlagschatten"),
+
+        // ---- settings: header
+        ["InfoHeader"] = new("Info header", "Info-Kopf"),
+        ["ShowHeader"] = new("Show video information", "Video-Informationen anzeigen"),
+        ["HeaderFontSize"] = new("Font size (title / text)", "Schriftgröße (Titel / Text)"),
+        ["Placeholders"] = new("Placeholders: {0}", "Platzhalter: {0}"),
+
+        // ---- settings: output
+        ["Output"] = new("Output", "Ausgabe"),
+        ["FormatQuality"] = new("Format / quality", "Format / Qualität"),
+        ["SaveTo"] = new("Save to", "Speichern in"),
+        ["OutputFolder"] = new("Output folder", "Ausgabeordner"),
+        ["KeepStructure"] = new("Keep folder structure of added folders", "Ordnerstruktur der hinzugefügten Ordner beibehalten"),
+        ["SubfolderName"] = new("Subfolder name", "Name des Unterordners"),
+        ["FileNamePattern"] = new("File name pattern", "Dateinamen-Muster"),
+        ["IfFileExists"] = new("If file exists", "Wenn Datei existiert"),
+        ["SaveFrames"] = new("Also save every frame as a single image", "Jede Aufnahme zusätzlich als Einzelbild speichern"),
+
+        // ---- settings: processing
+        ["Processing"] = new("Processing", "Verarbeitung"),
+        ["FfmpegProcesses"] = new("ffmpeg processes", "ffmpeg-Prozesse"),
+        ["VideosInParallel"] = new("Videos in parallel", "Videos parallel"),
+
+        // ---- settings: language
+        ["Language"] = new("Language", "Sprache"),
+
+        // ---- enum values
+        ["Order.RowMajor"] = new("Row by row", "Zeilenweise"),
+        ["Order.ColumnMajor"] = new("Column by column", "Spaltenweise"),
+        ["Order.Random"] = new("Random", "Zufällig"),
+        ["Pos.TopLeft"] = new("Top left", "Oben links"),
+        ["Pos.TopRight"] = new("Top right", "Oben rechts"),
+        ["Pos.BottomLeft"] = new("Bottom left", "Unten links"),
+        ["Pos.BottomRight"] = new("Bottom right", "Unten rechts"),
+        ["Pos.Center"] = new("Center", "Mitte"),
+        ["Format.Jpeg"] = new("JPG", "JPG"),
+        ["Format.Png"] = new("PNG", "PNG"),
+        ["Format.Webp"] = new("WebP", "WebP"),
+        ["Location.OutputFolder"] = new("Output folder", "Ausgabeordner"),
+        ["Location.NextToVideo"] = new("Next to the video", "Neben dem Video"),
+        ["Location.SubfolderNextToVideo"] = new("Subfolder next to the video", "Unterordner neben dem Video"),
+        ["Overwrite.Skip"] = new("Skip", "Überspringen"),
+        ["Overwrite.Overwrite"] = new("Overwrite", "Überschreiben"),
+        ["Overwrite.Rename"] = new("Keep both (rename)", "Beide behalten (umbenennen)"),
+        ["Lang.System"] = new("System language", "Systemsprache"),
+        ["Lang.English"] = new("English", "English"),
+        ["Lang.German"] = new("Deutsch", "Deutsch"),
+
+        // ---- ffmpeg panel
+        ["Ffmpeg"] = new("ffmpeg", "ffmpeg"),
+        ["FfmpegChecking"] = new("Checking ffmpeg…", "ffmpeg wird geprüft…"),
+        ["FfmpegNotFound"] = new("ffmpeg not found", "ffmpeg nicht gefunden"),
+        ["FfmpegNotFoundAuto"] = new("It is downloaded automatically when needed (you will be asked first).", "Es wird bei Bedarf automatisch heruntergeladen (nach Rückfrage)."),
+        ["FfmpegNotFoundManual"] = new("Please install ffmpeg and ffprobe or choose their folder.", "Bitte ffmpeg und ffprobe installieren oder ihren Ordner auswählen."),
+        ["FfmpegManaged"] = new("ffmpeg: downloaded by Video-Thumbnailer", "ffmpeg: von Video-Thumbnailer heruntergeladen"),
+        ["FfmpegCustom"] = new("ffmpeg: custom folder", "ffmpeg: eigener Ordner"),
+        ["FfmpegSystem"] = new("ffmpeg: system installation (PATH)", "ffmpeg: Systeminstallation (PATH)"),
+        ["FfmpegBuildInfo"] = new("Build {0} from {1}, installed {2}", "Build {0} von {1}, installiert am {2}"),
+        ["FfmpegInstallUpdate"] = new("Install update", "Update installieren"),
+        ["FfmpegReinstall"] = new("Reinstall", "Neu installieren"),
+        ["FfmpegDownload"] = new("Download ffmpeg", "ffmpeg herunterladen"),
+        ["FfmpegCheckUpdate"] = new("Check for update", "Auf Update prüfen"),
+        ["FfmpegWeekly"] = new("Check for ffmpeg updates weekly", "Wöchentlich nach ffmpeg-Updates suchen"),
+        ["FfmpegSource"] = new("Download source: {0}", "Download-Quelle: {0}"),
+        ["FfmpegNoSource"] = new("no automatic download for this platform", "kein automatischer Download für diese Plattform"),
+        ["FfmpegCustomPlaceholder"] = new("Custom ffmpeg folder (optional)", "Eigener ffmpeg-Ordner (optional)"),
+        ["FfmpegClearCustomTip"] = new("Use downloaded / system ffmpeg", "Heruntergeladenes bzw. System-ffmpeg verwenden"),
+        ["FfmpegDownloading"] = new("Downloading {0}: {1}", "Lade {0}: {1}"),
+        ["FfmpegDownloadingOf"] = new("Downloading {0}: {1} of {2}", "Lade {0}: {1} von {2}"),
+        ["FfmpegUpdateAvailable"] = new("Update available: build {0} (installed: {1})", "Update verfügbar: Build {0} (installiert: {1})"),
+        ["Unknown"] = new("unknown", "unbekannt"),
+
+        // ---- dialogs
+        ["Ok"] = new("OK", "OK"),
+        ["Yes"] = new("Yes", "Ja"),
+        ["No"] = new("No", "Nein"),
+        ["DlgAddVideos"] = new("Add videos", "Videos hinzufügen"),
+        ["DlgVideos"] = new("Videos", "Videos"),
+        ["DlgAddFolder"] = new("Add folder", "Ordner hinzufügen"),
+        ["DlgOutputFolder"] = new("Output folder", "Ausgabeordner"),
+        ["DlgPresetFileType"] = new("Video-Thumbnailer preset", "Video-Thumbnailer-Preset"),
+        ["DlgExportPreset"] = new("Export preset", "Preset exportieren"),
+        ["DlgImportPreset"] = new("Import preset", "Preset importieren"),
+        ["DlgCheckSettings"] = new("Check settings", "Einstellungen prüfen"),
+        ["DlgSavePreset"] = new("Save preset", "Preset speichern"),
+        ["DlgPresetName"] = new("Name of the preset:", "Name des Presets:"),
+        ["DlgPresetDefaultName"] = new("My preset", "Mein Preset"),
+        ["DlgBuiltInNoOverwrite"] = new("Built-in presets cannot be overwritten. Please choose another name.", "Eingebaute Presets können nicht überschrieben werden. Bitte einen anderen Namen wählen."),
+        ["DlgDeletePreset"] = new("Delete preset", "Preset löschen"),
+        ["DlgBuiltInNoDelete"] = new("Built-in presets cannot be deleted.", "Eingebaute Presets können nicht gelöscht werden."),
+        ["DlgDeletePresetQuestion"] = new("Delete preset '{0}'?", "Preset „{0}“ löschen?"),
+        ["DlgImportFailed"] = new("Could not read the preset: {0}", "Das Preset konnte nicht gelesen werden: {0}"),
+        ["DlgFfmpegMissingTitle"] = new("ffmpeg missing", "ffmpeg fehlt"),
+        ["DlgFfmpegMissingManual"] = new("Video-Thumbnailer needs ffmpeg and ffprobe. Please install them (e.g. with your package manager) or choose their folder in the settings.", "Video-Thumbnailer braucht ffmpeg und ffprobe. Bitte installieren (z. B. über die Paketverwaltung) oder ihren Ordner in den Einstellungen auswählen."),
+        ["DlgFfmpegNeededTitle"] = new("ffmpeg needed", "ffmpeg wird benötigt"),
+        ["DlgFfmpegNeeded"] = new("Video-Thumbnailer uses ffmpeg to read videos. ffmpeg is not installed yet.\n\nDownload it now from {0}?\nSize about 100–150 MB. It is stored in:\n{1}\n\nThe download is verified with SHA-256.", "Video-Thumbnailer liest Videos mit ffmpeg. ffmpeg ist noch nicht installiert.\n\nJetzt von {0} herunterladen?\nGröße etwa 100–150 MB. Speicherort:\n{1}\n\nDer Download wird per SHA-256 geprüft."),
+        ["DlgDownload"] = new("Download", "Herunterladen"),
+        ["DlgNotNow"] = new("Not now", "Jetzt nicht"),
+        ["DlgFfmpegFolderTitle"] = new("Folder containing ffmpeg and ffprobe", "Ordner mit ffmpeg und ffprobe"),
+        ["DlgFfmpegFolder"] = new("ffmpeg folder", "ffmpeg-Ordner"),
+        ["DlgFfmpegFolderMissing"] = new("{0} and {1} were not found in this folder.", "{0} und {1} wurden in diesem Ordner nicht gefunden."),
+        ["DlgFfmpegUpToDate"] = new("ffmpeg is up to date (build {0}).", "ffmpeg ist aktuell (Build {0})."),
+        ["DlgFfmpegNotManaged"] = new("Latest available build: {0}. Your current ffmpeg is not managed by Video-Thumbnailer.", "Neuester Build: {0}. Das aktuelle ffmpeg wird nicht von Video-Thumbnailer verwaltet."),
+        ["DlgFfmpegCheckFailed"] = new("Could not check for updates: {0}", "Update-Prüfung fehlgeschlagen: {0}"),
+        ["DlgFfmpegDownloadFailed"] = new("ffmpeg download failed", "ffmpeg-Download fehlgeschlagen"),
+    };
+}

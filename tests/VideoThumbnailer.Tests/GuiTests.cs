@@ -2,8 +2,10 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
+using Avalonia.VisualTree;
 using VideoThumbnailer.Core;
 using VideoThumbnailer.Core.Settings;
+using VideoThumbnailer.Gui.Localization;
 using VideoThumbnailer.Gui.ViewModels;
 using VideoThumbnailer.Gui.Views;
 
@@ -62,6 +64,29 @@ public class GuiTests
                 window.CaptureRenderedFrame()?.Save(shot);
 #pragma warning restore CS0618
             }
+
+            // Language switch updates bound texts and the enum labels live.
+            vm.Language = UiLanguage.German;
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            var addFiles = window.GetVisualDescendants().OfType<Button>().First(b => b.Command == vm.AddFilesCommand);
+            Assert.Equal("Dateien hinzufügen…", addFiles.Content);
+            Assert.Equal("Zeilenweise", SettingsViewModel.Orders[0].Label);
+            Assert.Equal("Pause", vm.PauseButtonText);
+            var de = Environment.GetEnvironmentVariable("VTHUMB_SCREENSHOT_DE");
+            if (!string.IsNullOrEmpty(de))
+            {
+#pragma warning disable CS0618
+                window.CaptureRenderedFrame()?.Save(de);
+#pragma warning restore CS0618
+            }
+            vm.Language = UiLanguage.English;
+            Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+            Assert.Equal("Add files…", addFiles.Content);
+            Assert.Equal("English", AppSettings.Load().Language ?? "English"); // saved on close below
+
+            // Changing a combo box value through the bound Choice list reaches the settings.
+            vm.Settings.Order = TileOrder.ColumnMajor;
+            Assert.Equal(TileOrder.ColumnMajor, vm.Settings.ToSettings("x").Order);
 
             vm.ClearAllCommand.Execute(null);
             Assert.Empty(vm.Jobs);

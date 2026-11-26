@@ -19,6 +19,7 @@ Free, cross-platform video contact sheet generator with GUI and command line.
 - Warteschlange mit Pause, Abbruch, Fortschritt und paralleler Verarbeitung über alle CPU-Kerne
 - Ausgabe in einen Ordner (optional mit Ordnerstruktur), neben das Video oder in einen Unterordner; Dateinamen-Muster
 - Presets als offene JSON-Dateien, 4 mitgelieferte Basis-Presets
+- Oberfläche auf Deutsch und Englisch (folgt der Systemsprache, umschaltbar)
 - ffmpeg wird nicht mitgeliefert, sondern nach Rückfrage automatisch geladen (mit SHA-256-Prüfung und Update-Funktion). Ein vorhandenes ffmpeg wird automatisch gefunden.
 
 ![Oberfläche](docs/images/gui.png)

@@ -9,7 +9,11 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 ### Hinzugefügt
 - Eigenes App-Icon (Filmstreifen mit Vorschauraster und Play-Bild) für Windows (`.ico`, in `VideoThumbnailer.exe` und `vthumb.exe`), macOS (`.icns`) und Linux (hicolor-Icons und `.desktop`-Datei unter `packaging/linux`); Fenstericon in der GUI ([#3])
 - README-Banner und Social-Preview-Bild ([#3])
-- Diese `CHANGELOG.md`
+- Diese `CHANGELOG.md` ([#4])
+- Oberfläche auf Deutsch und Englisch: folgt standardmäßig der Systemsprache, umschaltbar in den Einstellungen, ohne Neustart ([#5])
+
+### Geändert
+- Einstellungsspalte etwas breiter, Beschriftungen brechen bei Bedarf um ([#5])
 
 ## [0.1.0] – 2026-11-26
 
@@ -37,3 +41,5 @@ Erste Version.
 [#1]: https://github.com/vulture20/Video-Thumbnailer/pull/1
 [#2]: https://github.com/vulture20/Video-Thumbnailer/pull/2
 [#3]: https://github.com/vulture20/Video-Thumbnailer/pull/3
+[#4]: https://github.com/vulture20/Video-Thumbnailer/pull/4
+[#5]: https://github.com/vulture20/Video-Thumbnailer/pull/5
