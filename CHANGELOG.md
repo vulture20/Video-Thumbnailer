@@ -7,8 +7,8 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 ## [Unveröffentlicht]
 
 ### Hinzugefügt
-- Farbwähler: Klick auf das Farbmuster neben einem Farbfeld öffnet Spektrum, Palette und Regler mit Deckkraft; die Hex-Eingabe bleibt ([#NN])
-- Schriftauswahl: „…“ neben der Schriftart öffnet eine durchsuchbare Liste der installierten Schriften, jede in ihrer eigenen Schrift, mit Vorschau von Info-Kopf und Zeitstempel ([#NN])
+- Farbwähler: Klick auf das Farbmuster neben einem Farbfeld öffnet Spektrum, Palette und Regler mit Deckkraft; die Hex-Eingabe bleibt ([#42])
+- Schriftauswahl: „…“ neben der Schriftart öffnet eine durchsuchbare Liste der installierten Schriften, jede in ihrer eigenen Schrift, mit Vorschau von Info-Kopf und Zeitstempel ([#42])
 
 ## [0.5.0] – 2026-11-26
 
@@ -112,7 +112,7 @@ Erste Version.
 [0.1.0]: https://github.com/vulture20/Video-Thumbnailer/releases/tag/v0.1.0
 [#1]: https://github.com/vulture20/Video-Thumbnailer/pull/1
 [#2]: https://github.com/vulture20/Video-Thumbnailer/pull/2
-[#NN]: https://github.com/vulture20/Video-Thumbnailer/pull/NN
+[#42]: https://github.com/vulture20/Video-Thumbnailer/pull/42
 [#3]: https://github.com/vulture20/Video-Thumbnailer/pull/3
 [#4]: https://github.com/vulture20/Video-Thumbnailer/pull/4
 [#5]: https://github.com/vulture20/Video-Thumbnailer/pull/5

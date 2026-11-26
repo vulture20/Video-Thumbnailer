@@ -160,7 +160,7 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Farben bleiben Textfelder (#RRGGBB oder #AARRGGBB, AA = Deckkraft) mit Farbmuster daneben (Schachbrett zeigt Transparenz), kein Farbwähler. Ungültige Werte bleiben stehen, werden mit „?“ markiert, und der Bogen nimmt solange die Standardfarbe. Geprüft wird mit demselben Parser wie beim Rendern | kein zusätzliches Paket (Avalonia-ColorPicker ist eigenständig); die Werte passen 1:1 zum Preset-JSON |
 | 26.11.2026 | Schattenfarbe ist nur bei aktivem Schlagschatten bearbeitbar; Farbe/Deckkraft und Kontur/Konturfarbe stehen in getrennten Zeilen | in der 350 px breiten Spalte passen #AARRGGBB-Werte sonst nicht ganz hinein |
 
-### Farbwähler und Schriftauswahl (#NN)
+### Farbwähler und Schriftauswahl (#42)
 | Datum | Entscheidung | Begründung / Anmerkung |
 |---|---|---|
 | 26.11.2026 | Farbwähler (Wunsch von Vulli) mit dem offiziellen Paket `Avalonia.Controls.ColorPicker` 12.2.0: Klick auf das Farbmuster öffnet ein Aufklappfenster mit Spektrum, Palette und Reglern inkl. Deckkraft. Jede Änderung wird sofort als #AARRGGBB ins Feld geschrieben (Vorschau zieht mit); die Hex-Eingabe bleibt. Ersetzt die Entscheidung „kein Farbwähler“ aus #18 | gleiche Quelle und Version wie Avalonia; ein Aufklappfenster statt eines eigenen Fensters, weil man die Wirkung in der Vorschau sofort sieht |
