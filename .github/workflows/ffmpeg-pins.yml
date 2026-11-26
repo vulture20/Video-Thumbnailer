@@ -1,0 +1,62 @@
+name: ffmpeg pins
+
+# Keeps src/VideoThumbnailer.Core/Ffmpeg/ffmpeg-pins.json (fixed ffmpeg downloads with SHA-256) up to date.
+# Weekly or manually: looks for newer builds and, if there are any, opens a pull request to review and merge.
+# On pull requests that touch the pins: downloads every pinned file again and checks it.
+# Runs on macOS so that the code signature (Team ID) of the macOS builds can be read with codesign.
+on:
+  schedule:
+    - cron: '17 5 * * 1'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - src/VideoThumbnailer.Core/Ffmpeg/ffmpeg-pins.json
+      - tools/ffmpeg-pins.py
+      - .github/workflows/ffmpeg-pins.yml
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  pins:
+    runs-on: macos-latest
+    env:
+      PINS: src/VideoThumbnailer.Core/Ffmpeg/ffmpeg-pins.json
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify pinned files
+        if: github.event_name == 'pull_request' && hashFiles('src/VideoThumbnailer.Core/Ffmpeg/ffmpeg-pins.json') != ''
+        run: python3 tools/ffmpeg-pins.py verify "$PINS"
+      - name: Look for newer builds
+        run: |
+          python3 tools/ffmpeg-pins.py generate "$RUNNER_TEMP/ffmpeg-pins.json"
+          # The date alone is no change.
+          if [ -f "$PINS" ] && diff <(grep -v '"generated"' "$PINS") <(grep -v '"generated"' "$RUNNER_TEMP/ffmpeg-pins.json"); then
+            echo "CHANGED=false" >> "$GITHUB_ENV"
+          else
+            echo "CHANGED=true" >> "$GITHUB_ENV"
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ffmpeg-pins
+          path: ${{ runner.temp }}/ffmpeg-pins.json
+      - name: Open pull request with the new pins
+        if: github.event_name != 'pull_request' && env.CHANGED == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cp "$RUNNER_TEMP/ffmpeg-pins.json" "$PINS"
+          BRANCH=bot/ffmpeg-pins
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git commit -am "ffmpeg pins: newer builds"
+          git push -f origin "$BRANCH"
+          if ! gh pr view "$BRANCH" > /dev/null 2>&1; then
+            gh pr create --head "$BRANCH" --title "ffmpeg: neuere Builds fest hinterlegen" \
+              --body "Automatisch von tools/ffmpeg-pins.py erstellt: neuere ffmpeg-Builds mit selbst berechneten SHA-256-Prüfsummen. Die Dateien wurden heruntergeladen und gegen die Prüfsummen der Anbieter geprüft. Nach dem Merge installieren neue App-Builds diese Versionen." \
+              || echo "::warning::Could not open a pull request (Settings > Actions > Allow GitHub Actions to create pull requests). Branch $BRANCH was pushed."
+          fi
