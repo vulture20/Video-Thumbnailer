@@ -28,9 +28,9 @@ Free, cross-platform video contact sheet generator with GUI and command line.
 
 ![Oberfläche, Modus „Einfach“](docs/images/gui.png)
 
-<sub>Die Bilder stammen aus v0.2.0/v0.3.0: animierte Sheets, die einklappbare Warteschlange und die Farbfelder sind darauf noch nicht zu sehen.</sub>
+![Modus „Erweitert“ in dunkler Darstellung, mit Farbfeldern und Farbwähler am Farbmuster](docs/images/gui-dark.png)
 
-![Modus „Erweitert“ in dunkler Darstellung](docs/images/gui-dark.png)
+![Schmales Fenster: die Warteschlange ist zu einer Leiste eingeklappt](docs/images/gui-narrow.png)
 
 ## Download und Start
 
