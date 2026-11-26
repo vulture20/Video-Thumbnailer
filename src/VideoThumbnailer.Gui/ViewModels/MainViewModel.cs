@@ -55,6 +55,8 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(PreviewTitle))] private JobViewModel? _previewJob;
     public string PreviewTitle => PreviewJob?.FileName ?? Loc.T("PreviewSampleName");
     [ObservableProperty] private string _previewNote = Loc.T("PreviewNote");
+    /// <summary>Live preview on (default) or off; off stops rendering and every ffmpeg run for the preview.</summary>
+    [ObservableProperty] private bool _livePreview = true;
     [ObservableProperty] private string _previewNoteTip = Loc.T("PreviewNoteTip");
     public string QueueTitle => Loc.T("QueueTitle", Jobs.Count);
 
@@ -112,6 +114,7 @@ public partial class MainViewModel : ObservableObject
         Language = Enum.TryParse<UiLanguage>(_app.Language, true, out var lang) ? lang : UiLanguage.System;
         Loc.Instance.Language = Language;
         IsAdvanced = _app.AdvancedMode;
+        LivePreview = _app.LivePreview;
         Theme = Enum.TryParse<UiTheme>(_app.Theme, true, out var theme) ? theme : UiTheme.System;
         ApplyTheme(Theme);
         StatusText = Loc.T("StatusIntro");
@@ -177,9 +180,29 @@ public partial class MainViewModel : ObservableObject
 
     partial void OnPreviewJobChanged(JobViewModel? value) => SchedulePreview();
 
+    partial void OnLivePreviewChanged(bool value)
+    {
+        _app.LivePreview = value;
+        if (value) { SchedulePreview(); return; }
+        // Off: stop everything that is running for the preview and free the image.
+        _previewTimer.Stop();
+        _previewGeneration++;
+        _previewCts?.Cancel();
+        var old = PreviewImage;
+        PreviewImage = null;
+        old?.Dispose();
+    }
+
+    /// <summary>The window got the focus again: a video may have changed on disk meanwhile, so check the preview.</summary>
+    public void OnWindowActivated()
+    {
+        if (LivePreview && PreviewJob is not null && _previewSource?.ForgetIfChanged(PreviewJob.Job.InputPath) == true) SchedulePreview();
+    }
+
     /// <summary>Re-renders the preview shortly after the last change (several changes in a row render once).</summary>
     private void SchedulePreview()
     {
+        if (!LivePreview) return;
         _previewTimer.Stop();
         _previewTimer.Start();
     }
@@ -262,6 +285,7 @@ public partial class MainViewModel : ObservableObject
     /// <summary>Renders the preview synchronously from what is known right now (start-up and tests).</summary>
     public void RenderPreviewNow()
     {
+        if (!LivePreview) return;
         _previewGeneration++;
         try
         {
@@ -283,6 +307,7 @@ public partial class MainViewModel : ObservableObject
     public async Task UpdatePreviewAsync()
     {
         _previewTimer.Stop(); // this run covers any change that was still waiting
+        if (!LivePreview) return;
         var generation = ++_previewGeneration;
         _previewCts?.Cancel();
         var cts = _previewCts = new CancellationTokenSource();

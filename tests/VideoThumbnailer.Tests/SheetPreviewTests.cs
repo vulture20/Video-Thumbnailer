@@ -44,10 +44,10 @@ public class PreviewSourceTests
         return t;
     }
 
-    internal static string MakeVideo(Core.Ffmpeg.FfmpegTools t, string dir)
+    internal static string MakeVideo(Core.Ffmpeg.FfmpegTools t, string dir, int seconds = 6)
     {
         var path = Path.Combine(dir, "clip.mp4");
-        Assert.True(TestUtil.Run(t.FfmpegPath, "-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=size=320x180:rate=25:duration=6", path));
+        Assert.True(TestUtil.Run(t.FfmpegPath, "-v", "error", "-y", "-f", "lavfi", "-i", $"testsrc2=size=320x180:rate=25:duration={seconds}", path));
         return path;
     }
 
@@ -78,6 +78,27 @@ public class PreviewSourceTests
         calls = 0;
         await source.LoadFramesAsync(info, times, () => Interlocked.Increment(ref calls), CancellationToken.None);
         Assert.Equal(0, calls);
+    }
+
+    [Fact]
+    public async Task Changed_file_is_forgotten_and_read_again()
+    {
+        var t = Tools();
+        var dir = TestUtil.TempDir();
+        var video = MakeVideo(t, dir);
+        var source = new Core.Extraction.PreviewSource(t, 2);
+        var info = await source.GetInfoAsync(video, CancellationToken.None);
+        var times = SheetPreview.PlanTimes(BuiltInPresets.Default, info);
+        await source.LoadFramesAsync(info, times, null, CancellationToken.None);
+        Assert.NotNull(source.TryGetFrame(video, times[0]));
+        Assert.False(source.ForgetIfChanged(video));
+
+        MakeVideo(t, dir, seconds: 3); // same path, other content
+        File.SetLastWriteTimeUtc(video, DateTime.UtcNow.AddMinutes(1));
+        Assert.Null(source.TryGetInfo(video));
+        Assert.Null(source.TryGetFrame(video, times[0]));
+        var again = await source.GetInfoAsync(video, CancellationToken.None);
+        Assert.InRange(again.Duration, 2.5, 3.5);
     }
 
     [Fact]

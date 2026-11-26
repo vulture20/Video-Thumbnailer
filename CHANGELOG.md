@@ -7,10 +7,14 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 ## [Unveröffentlicht]
 
 ### Hinzugefügt
+- Live-Vorschau abschaltbar (Schalter über der Vorschau, wird gespeichert); ausgeschaltet läuft dafür kein ffmpeg ([#12])
 - Vorschau mit echten Bildern und echten Videodaten des gewählten Videos: Bilder von genau den Zeitpunkten des fertigen Bogens, Info-Kopf mit Größe, Dauer, Auflösung und Codecs. Lädt im Hintergrund und füllt sich nach und nach („Lade Bilder… n von m“); ohne ffmpeg oder bei nicht lesbaren Dateien weiter mit Beispielbildern ([#11])
 
 ### Geändert
 - Release-Dateien tragen die Version im Namen, z. B. `Video-Thumbnailer-0.3.0-win-x64.zip` (auch der Ordner im ZIP) ([#10])
+
+### Behoben
+- Vorschau erkennt, wenn sich eine Videodatei auf der Festplatte geändert hat (Größe oder Änderungszeit), und liest sie neu ([#12])
 
 ## [0.2.0] – 2026-11-26
 
@@ -71,4 +75,5 @@ Erste Version.
 [#7]: https://github.com/vulture20/Video-Thumbnailer/pull/7
 [#8]: https://github.com/vulture20/Video-Thumbnailer/pull/8
 [#11]: https://github.com/vulture20/Video-Thumbnailer/pull/11
+[#12]: https://github.com/vulture20/Video-Thumbnailer/pull/12
 [#10]: https://github.com/vulture20/Video-Thumbnailer/pull/10

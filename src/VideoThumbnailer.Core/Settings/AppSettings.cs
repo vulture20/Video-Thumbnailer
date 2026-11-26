@@ -22,6 +22,8 @@ public sealed class AppSettings
     public string? Language { get; set; }
     /// <summary>GUI shows all settings (true) or only the basic ones (false, default).</summary>
     public bool AdvancedMode { get; set; }
+    /// <summary>GUI live preview of the sheet (default on). Off = no preview rendering and no ffmpeg runs for it.</summary>
+    public bool LivePreview { get; set; } = true;
     /// <summary>GUI colour theme ("Light", "Dark"); null = follow the system.</summary>
     public string? Theme { get; set; }
 

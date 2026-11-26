@@ -181,6 +181,20 @@ public class GuiPreviewTests
 #pragma warning restore CS0618
             }
 
+            // Live preview off: image freed, nothing rendered or extracted, choice saved; on again renders.
+            window.FindControl<ToggleSwitch>("LivePreviewSwitch")!.IsChecked = false;
+            Assert.False(vm.LivePreview);
+            Assert.Null(vm.PreviewImage);
+            vm.Settings.Columns = 3;
+            await vm.UpdatePreviewAsync();
+            Assert.Null(vm.PreviewImage);
+            Assert.True(window.FindControl<StackPanel>("PreviewOff")!.IsEffectivelyVisible);
+            vm.SaveAppSettings();
+            Assert.False(AppSettings.Load().LivePreview);
+            vm.LivePreview = true;
+            await vm.UpdatePreviewAsync();
+            Assert.NotNull(vm.PreviewImage);
+
             // Fewer tiles: the frames for the new capture times are loaded, still all real.
             vm.Settings.Columns = 2;
             vm.Settings.Rows = 2;

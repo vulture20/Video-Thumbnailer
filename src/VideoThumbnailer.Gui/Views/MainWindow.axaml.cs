@@ -16,6 +16,7 @@ public partial class MainWindow : Window, IUiServices
         InitializeComponent();
         AddHandler(DragDrop.DragOverEvent, OnDragOver);
         AddHandler(DragDrop.DropEvent, OnDrop);
+        Activated += (_, _) => (DataContext as MainViewModel)?.OnWindowActivated();
         Opened += async (_, _) => { if (DataContext is MainViewModel vm) await vm.OnOpenedAsync(); };
         Closing += (_, _) => (DataContext as MainViewModel)?.OnClosing();
     }
