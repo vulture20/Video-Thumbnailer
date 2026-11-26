@@ -19,6 +19,7 @@ Vorschau mit echten Bildern des gewählten Videos; Versionsnummer in den Release
 - CI prüft auf macOS den echten ffmpeg-Download (ffmpeg.martin-riedl.de) und erstellt damit ein Test-Sheet ([#13])
 
 ### Behoben
+- macOS: ffmpeg-Download schlug mit „404“ fehl, weil der Download-Dienst keine HEAD-Anfragen beantwortet; Fehlermeldungen nennen jetzt die betroffene Adresse ([#13])
 - Vorschau erkennt, wenn sich eine Videodatei auf der Festplatte geändert hat (Größe oder Änderungszeit), und liest sie neu ([#12])
 
 ## [0.2.0] – 2026-11-26
