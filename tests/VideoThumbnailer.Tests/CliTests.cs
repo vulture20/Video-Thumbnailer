@@ -60,6 +60,17 @@ public class CliTests
         ["template"] = ["--layout", "big-top"], ["fitToScreen"] = ["--fit-screen", "both"],
         ["backgroundImage.path"] = ["--background-image", SomeImage], ["backgroundImage.mode"] = ["--background-mode", "tile"],
         ["backgroundImage.opacity"] = ["--background-opacity", "80"],
+        ["tileStyle.borderWidth"] = ["--tile-border", "2"], ["tileStyle.borderColor"] = ["--tile-border-color", "#FF00FF00"],
+        ["tileStyle.shadow"] = ["--tile-shadow"], ["tileStyle.shadowColor"] = ["--tile-shadow-color", "#FF00FF00"],
+        ["tileStyle.shadowOffset"] = ["--tile-shadow-offset", "8"], ["tileStyle.shadowBlur"] = ["--tile-shadow-blur", "1"],
+        ["tileStyle.grayscale"] = ["--grayscale"], ["tileStyle.corners"] = ["--corners", "cut"], ["tileStyle.cornerRadius"] = ["--corner-radius", "3"],
+        ["sheetBorderWidth"] = ["--sheet-border", "2"], ["sheetBorderColor"] = ["--sheet-border-color", "#FF00FF00"],
+        ["header.comment"] = ["--comment", "hello"],
+        ["watermark.text"] = ["--watermark", "(c)"], ["watermark.imagePath"] = ["--watermark-image", SomeImage],
+        ["watermark.position"] = ["--watermark-pos", "tiled"], ["watermark.size"] = ["--watermark-size", "50"],
+        ["watermark.opacity"] = ["--watermark-opacity", "90"], ["watermark.color"] = ["--watermark-color", "#FF00FF00"],
+        ["watermark.perTile"] = ["--watermark-per-tile"],
+        ["animation.audio"] = ["--audio"],
     };
 
     /// <summary>An existing file for --background-image (the option checks that it exists).</summary>

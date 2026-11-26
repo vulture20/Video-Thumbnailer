@@ -31,28 +31,71 @@ public static class SheetRenderer
         canvas.Clear(ParseColor(s.BackgroundColor, new SKColor(30, 30, 30)));
         DrawBackgroundImage(canvas, s.BackgroundImage, layout.SheetWidth, layout.SheetHeight);
 
-        using var tilePaint = new SKPaint();
-        var sampling = new SKSamplingOptions(SKCubicResampler.Mitchell);
-        for (var i = 0; i < layout.Tiles.Count && i < frames.Count; i++)
+        var style = s.TileStyle ?? new TileStyleSettings();
+        var count = Math.Min(layout.Tiles.Count, frames.Count);
+        var shapes = new SKPath[count];
+        for (var i = 0; i < count; i++) shapes[i] = TileShape(ToRect(layout.Tiles[i]), style);
+        try
         {
-            var rect = layout.Tiles[i];
-            var dest = new SKRect(rect.X, rect.Y, rect.X + rect.Width, rect.Y + rect.Height);
-            var frame = frames[i];
-            if (frame.Bitmap is { } fb)
+            // All shadows first, so a shadow never covers the neighbouring tile.
+            if (style.Shadow)
+                foreach (var shape in shapes) DrawTileShadow(canvas, shape, style);
+
+            using var tilePaint = new SKPaint();
+            using var gray = style.Grayscale ? SKColorFilter.CreateColorMatrix(GrayscaleMatrix) : null;
+            tilePaint.ColorFilter = gray;
+            var sampling = new SKSamplingOptions(SKCubicResampler.Mitchell);
+            for (var i = 0; i < count; i++)
             {
-                using var img = SKImage.FromBitmap(fb);
-                canvas.DrawImage(img, CoverSource(fb.Width, fb.Height, dest), dest, sampling, tilePaint);
+                var dest = ToRect(layout.Tiles[i]);
+                var frame = frames[i];
+                canvas.Save();
+                if (style.Corners != TileCorners.Square) canvas.ClipPath(shapes[i], antialias: true);
+                if (frame.Bitmap is { } fb)
+                {
+                    using var img = SKImage.FromBitmap(fb);
+                    canvas.DrawImage(img, CoverSource(fb.Width, fb.Height, dest), dest, sampling, tilePaint);
+                }
+                else
+                {
+                    DrawMissingTile(canvas, dest, s);
+                }
+                if (style.BorderWidth > 0)
+                {
+                    // Twice as wide on the outline, clipped to the tile: the visible half lies inside, following the corners.
+                    canvas.ClipPath(shapes[i], antialias: true);
+                    using var border = new SKPaint
+                    {
+                        IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = style.BorderWidth * 2,
+                        StrokeJoin = style.Corners == TileCorners.Cut ? SKStrokeJoin.Bevel : SKStrokeJoin.Miter,
+                        Color = ParseColor(style.BorderColor, SKColors.White),
+                    };
+                    canvas.DrawPath(shapes[i], border);
+                }
+                canvas.Restore();
+                if (s.Watermark is { Enabled: true, PerTile: true })
+                    DrawWatermark(canvas, s, dest, shapes[i], style.Corners != TileCorners.Square);
+                if (s.Timestamp.Enabled)
+                    DrawTimestamp(canvas, dest, s, frame.Time);
             }
-            else
-            {
-                DrawMissingTile(canvas, dest, s);
-            }
-            if (s.Timestamp.Enabled)
-                DrawTimestamp(canvas, dest, s, frame.Time);
+        }
+        finally
+        {
+            foreach (var p in shapes) p?.Dispose();
         }
 
         if (layout.HeaderHeight > 0)
             DrawHeader(canvas, s, info, layout.HeaderRect);
+
+        if (s.Watermark is { Enabled: true, PerTile: false })
+            DrawWatermark(canvas, s, new SKRect(0, 0, layout.SheetWidth, layout.SheetHeight), null, false);
+
+        if (s.SheetBorderWidth > 0)
+        {
+            var w = s.SheetBorderWidth;
+            using var border = new SKPaint { IsAntialias = true, Style = SKPaintStyle.Stroke, StrokeWidth = w, Color = ParseColor(s.SheetBorderColor, SKColors.White) };
+            canvas.DrawRect(new SKRect(w / 2, w / 2, layout.SheetWidth - w / 2, layout.SheetHeight - w / 2), border);
+        }
 
         canvas.Flush();
         return bmp;
@@ -79,7 +122,10 @@ public static class SheetRenderer
     {
         AnimationFormat.Webm => ".webm",
         AnimationFormat.Gif => ".gif",
-        _ => ".mp4",
+        AnimationFormat.Webp => ".webp",
+        AnimationFormat.Apng => ".png",
+        AnimationFormat.Ogv => ".ogv",
+        _ => ".mp4", // H.264 and H.265
     };
 
     public static string Extension(ImageFormat f) => f switch
@@ -90,6 +136,147 @@ public static class SheetRenderer
     };
 
     // ---------------------------------------------------------------- helpers
+
+    private static SKRect ToRect(TileRect r) => new(r.X, r.Y, r.X + r.Width, r.Y + r.Height);
+
+    /// <summary>Luminance (Rec. 709) into all three channels, alpha unchanged.</summary>
+    private static readonly float[] GrayscaleMatrix =
+    [
+        0.2126f, 0.7152f, 0.0722f, 0, 0,
+        0.2126f, 0.7152f, 0.0722f, 0, 0,
+        0.2126f, 0.7152f, 0.0722f, 0, 0,
+        0, 0, 0, 1, 0,
+    ];
+
+    /// <summary>Outline of a tile: rectangle, rounded rectangle or rectangle with cut corners (#27).</summary>
+    internal static SKPath TileShape(SKRect r, TileStyleSettings style)
+    {
+        var path = new SKPath();
+        var c = Math.Min(style.CornerRadius, Math.Min(r.Width, r.Height) / 2);
+        if (style.Corners == TileCorners.Square || c <= 0)
+        {
+            path.AddRect(r);
+        }
+        else if (style.Corners == TileCorners.Rounded)
+        {
+            path.AddRoundRect(r, c, c);
+        }
+        else
+        {
+            path.MoveTo(r.Left + c, r.Top);
+            path.LineTo(r.Right - c, r.Top);
+            path.LineTo(r.Right, r.Top + c);
+            path.LineTo(r.Right, r.Bottom - c);
+            path.LineTo(r.Right - c, r.Bottom);
+            path.LineTo(r.Left + c, r.Bottom);
+            path.LineTo(r.Left, r.Bottom - c);
+            path.LineTo(r.Left, r.Top + c);
+            path.Close();
+        }
+        return path;
+    }
+
+    private static void DrawTileShadow(SKCanvas canvas, SKPath shape, TileStyleSettings style)
+    {
+        using var paint = new SKPaint
+        {
+            IsAntialias = true,
+            Color = ParseColor(style.ShadowColor, new SKColor(0, 0, 0, 180)),
+            MaskFilter = style.ShadowBlur > 0 ? SKMaskFilter.CreateBlur(SKBlurStyle.Normal, style.ShadowBlur / 2) : null,
+        };
+        canvas.Save();
+        canvas.Translate(style.ShadowOffset, style.ShadowOffset);
+        canvas.DrawPath(shape, paint);
+        canvas.Restore();
+    }
+
+    /// <summary>
+    /// Watermark (#29) in <paramref name="area"/> (the sheet or one tile): the picture, or the text when there is none.
+    /// Its width is <see cref="WatermarkSettings.Size"/> of the area width; a missing picture draws nothing.
+    /// </summary>
+    private static void DrawWatermark(SKCanvas canvas, SheetSettings s, SKRect area, SKPath? clip, bool clipToShape)
+    {
+        var wm = s.Watermark;
+        if (wm.Opacity <= 0 || area.Width < 2 || area.Height < 2) return;
+        var opacity = (float)Math.Clamp(wm.Opacity, 0, 1);
+        var width = (float)(area.Width * Math.Clamp(wm.Size, 0.01, 1));
+
+        SKImage? image = null;
+        SKFont? font = null;
+        string text = "";
+        float height;
+        if (wm.HasImage)
+        {
+            if ((image = ImageFileCache.Get(wm.ImagePath)) is null || image.Width <= 0) return;
+            height = width * image.Height / image.Width;
+        }
+        else
+        {
+            text = (wm.Text ?? "").Replace("\r\n", " ").Replace('\n', ' ').Trim();
+            if (text.Length == 0) return;
+            font = new SKFont(FontProvider.Get(s.FontFamily, true), 100) { Edging = SKFontEdging.Antialias };
+            var measured = font.MeasureText(text);
+            if (measured <= 0) { font.Dispose(); return; }
+            font.Size = 100 * width / measured;
+            height = font.Size * 1.2f;
+        }
+        // Never larger than the area (very long texts, tall pictures).
+        if (height > area.Height)
+        {
+            var k = area.Height / height;
+            width *= k; height *= k;
+            if (font is not null) font.Size *= k;
+        }
+
+        using (font)
+        {
+            canvas.Save();
+            canvas.ClipRect(area);
+            if (clipToShape && clip is not null) canvas.ClipPath(clip, antialias: true);
+            var m = Math.Max(2, Math.Min(area.Width, area.Height) * 0.03f);
+            if (wm.Position == WatermarkPosition.Tiled)
+            {
+                var stepX = width * 1.5f;
+                var stepY = height * 2.5f;
+                var row = 0;
+                for (var y = area.Top + m; y < area.Bottom; y += stepY, row++)
+                    for (var x = area.Left + m - (row % 2 == 1 ? stepX / 2 : 0); x < area.Right; x += stepX)
+                        DrawWatermarkItem(canvas, image, font, text, wm, opacity, new SKRect(x, y, x + width, y + height));
+            }
+            else
+            {
+                var x = wm.Position switch
+                {
+                    WatermarkPosition.TopLeft or WatermarkPosition.BottomLeft => area.Left + m,
+                    WatermarkPosition.Center => area.MidX - width / 2,
+                    _ => area.Right - m - width,
+                };
+                var y = wm.Position switch
+                {
+                    WatermarkPosition.TopLeft or WatermarkPosition.TopRight => area.Top + m,
+                    WatermarkPosition.Center => area.MidY - height / 2,
+                    _ => area.Bottom - m - height,
+                };
+                DrawWatermarkItem(canvas, image, font, text, wm, opacity, new SKRect(x, y, x + width, y + height));
+            }
+            canvas.Restore();
+        }
+    }
+
+    private static void DrawWatermarkItem(SKCanvas canvas, SKImage? image, SKFont? font, string text, WatermarkSettings wm, float opacity, SKRect r)
+    {
+        if (image is not null)
+        {
+            using var paint = new SKPaint { Color = SKColors.White.WithAlpha((byte)Math.Round(255 * opacity)), IsAntialias = true };
+            canvas.DrawImage(image, r, new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear), paint);
+            return;
+        }
+        if (font is null) return;
+        using var fill = new SKPaint { IsAntialias = true, Color = WithOpacity(ParseColor(wm.Color, SKColors.White), opacity) };
+        var mt = font.Metrics;
+        var baseline = r.Top + (r.Height - (mt.Descent - mt.Ascent)) / 2 - mt.Ascent;
+        canvas.DrawText(text, r.Left, baseline, SKTextAlign.Left, font, fill);
+    }
 
     /// <summary>Part of a picture that fills <paramref name="dest"/> without distortion (cut off evenly at two sides).</summary>
     internal static SKRect CoverSource(int width, int height, SKRect dest)
@@ -111,7 +298,7 @@ public static class SheetRenderer
 
     private static void DrawBackgroundImage(SKCanvas canvas, BackgroundImageSettings bg, int width, int height)
     {
-        if (!bg.Enabled || bg.Opacity <= 0 || BackgroundImageCache.Get(bg.Path) is not { } img) return;
+        if (!bg.Enabled || bg.Opacity <= 0 || ImageFileCache.Get(bg.Path) is not { } img) return;
         using var paint = new SKPaint { Color = SKColors.White.WithAlpha((byte)Math.Round(255 * Math.Clamp(bg.Opacity, 0, 1))), IsAntialias = true };
         var sampling = new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear);
         var full = new SKRect(0, 0, width, height);
@@ -139,7 +326,8 @@ public static class SheetRenderer
     private static List<string> HeaderLines(SheetSettings s, MediaInfo info)
     {
         var lang = s.EffectiveTextLanguage;
-        var lines = InfoTemplate.Expand(s.Header.EffectiveTemplate(lang), info, lang)
+        var template = InfoTemplate.WithComment(s.Header.EffectiveTemplate(lang), s.Header.Comment);
+        var lines = InfoTemplate.Expand(template, info, lang, s.Header.Comment)
             .Split('\n')
             .Select(l => l.TrimEnd())
             .ToList();

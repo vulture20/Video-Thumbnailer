@@ -28,6 +28,8 @@ public static class CoreText
         ["TemplateTileOutside"] = ("Grid template '{0}': tile at {1},{2} (size {3}) lies outside the grid.", "Raster-Vorlage „{0}“: Kachel bei {1},{2} (Größe {3}) liegt außerhalb des Rasters."),
         ["TemplateTileOverlap"] = ("Grid template '{0}': tile at {1},{2} overlaps another tile.", "Raster-Vorlage „{0}“: Kachel bei {1},{2} überdeckt eine andere Kachel."),
         ["TemplateIgnored"] = ("The grid template is not usable, the plain grid is used instead.", "Die Raster-Vorlage ist nicht verwendbar, es gilt das einfache Raster."),
+        ["WatermarkImageMissing"] = ("Watermark picture not found or not readable: {0}", "Wasserzeichen-Bild nicht gefunden oder nicht lesbar: {0}"),
+        ["EncoderMissing"] = ("This ffmpeg has no encoder '{0}' for the chosen animation format.", "Diesem ffmpeg fehlt der Encoder „{0}“ für das gewählte Animationsformat."),
         ["BackgroundImageMissing"] = ("Background image not found or not readable: {0}", "Hintergrundbild nicht gefunden oder nicht lesbar: {0}"),
 
         // built-in preset descriptions

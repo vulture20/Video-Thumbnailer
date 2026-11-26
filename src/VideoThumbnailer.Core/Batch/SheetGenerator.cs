@@ -119,6 +119,10 @@ public sealed class SheetGenerator(FfmpegTools tools, SemaphoreSlim processLimit
                                                           string target, IProgress<double>? progress, CancellationToken ct)
     {
         var a = s.Animation;
+        var withAudio = a.Audio && AnimationSettings.SupportsAudio(a.Format) && info.Audio is not null;
+        var encoders = await AnimationEncoder.GetEncodersAsync(tools.FfmpegPath, ct).ConfigureAwait(false);
+        if (AnimationEncoder.MissingEncoder(s, withAudio, encoders) is { } missingEncoder)
+            return new SheetResult(JobStatus.Failed, null, CoreText.T("EncoderMissing", missingEncoder));
         var times = plan.Select(p => p.Time).ToArray();
         var clips = new IReadOnlyList<byte[]>[times.Length];
         var search = s.SkipBlackFrames ? s.BlackFrameSearchSeconds : 0;
@@ -154,10 +158,13 @@ public sealed class SheetGenerator(FfmpegTools tools, SemaphoreSlim processLimit
         var tmp = target + ".part";
         // Clips may have their own length (chosen by hand): the animation runs as long as the longest one.
         var frameCount = plan.Max(p => FrameCount(ClipLength(p, a), a.FramesPerSecond));
+        AudioClip? audio = null;
+        if (withAudio && AudioTile(layout, clips) is { } at)
+            audio = new AudioClip(info.Path, times[at], Math.Min(ClipLength(plan[at], a), (double)frameCount / a.FramesPerSecond));
         await processLimiter.WaitAsync(ct).ConfigureAwait(false);
         try
         {
-            await using (var encoder = AnimationEncoder.Start(tools.FfmpegPath, tmp, s, layout.SheetWidth, layout.SheetHeight))
+            await using (var encoder = AnimationEncoder.Start(tools.FfmpegPath, tmp, s, layout.SheetWidth, layout.SheetHeight, audio, encoders))
             {
                 var current = new SKBitmap?[clips.Length];
                 try
@@ -201,13 +208,31 @@ public sealed class SheetGenerator(FfmpegTools tools, SemaphoreSlim processLimit
         return new SheetResult(JobStatus.Done, target, Notes(s, missing));
     }
 
-    /// <summary>Remarks for a finished sheet: missing frames, background picture that could not be read.</summary>
+    /// <summary>
+    /// Tile whose sound goes into the animation: the biggest one (special grids), of equal size the earliest;
+    /// tiles without a clip are passed over. Null = none.
+    /// </summary>
+    internal static int? AudioTile(GridLayout layout, IReadOnlyList<IReadOnlyList<byte[]>> clips)
+    {
+        int? best = null;
+        for (var i = 0; i < layout.Tiles.Count && i < clips.Count; i++)
+        {
+            if (clips[i].Count == 0) continue;
+            if (best is not { } b || Area(layout.Tiles[i]) > Area(layout.Tiles[b])) best = i;
+        }
+        return best;
+        static long Area(TileRect t) => (long)t.Width * t.Height;
+    }
+
+    /// <summary>Remarks for a finished sheet: missing frames, pictures that could not be read.</summary>
     private static string? Notes(SheetSettings s, int missingFrames)
     {
         var notes = new List<string>();
         if (missingFrames > 0) notes.Add(CoreText.T("FramesMissing", missingFrames));
-        if (s.BackgroundImage.Enabled && BackgroundImageCache.Get(s.BackgroundImage.Path) is null)
+        if (s.BackgroundImage.Enabled && ImageFileCache.Get(s.BackgroundImage.Path) is null)
             notes.Add(CoreText.T("BackgroundImageMissing", s.BackgroundImage.Path));
+        if (s.Watermark.HasImage && ImageFileCache.Get(s.Watermark.ImagePath) is null)
+            notes.Add(CoreText.T("WatermarkImageMissing", s.Watermark.ImagePath));
         return notes.Count > 0 ? string.Join("; ", notes) : null;
     }
 

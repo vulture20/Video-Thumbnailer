@@ -45,10 +45,24 @@ public sealed class PresetStore
                 ?? throw new InvalidDataException($"Preset file is empty: {path}");
         if (string.IsNullOrWhiteSpace(p.Name)) p.Name = Path.GetFileName(path).Replace(FileExtension, "");
         p.BackgroundImage ??= new BackgroundImageSettings();
-        // A background picture given relative to the preset file (e.g. lying next to it) becomes an absolute path.
-        if (p.BackgroundImage.Path is { Length: > 0 } bg && !Path.IsPathRooted(bg))
-            p.BackgroundImage.Path = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(path))!, bg));
+        p.Watermark ??= new WatermarkSettings();
+        p.TileStyle ??= new TileStyleSettings();
+        // Pictures given relative to the preset file (e.g. lying next to it) become absolute paths.
+        var dir = Path.GetDirectoryName(Path.GetFullPath(path))!;
+        p.BackgroundImage.Path = Absolute(p.BackgroundImage.Path, dir);
+        p.Watermark.ImagePath = Absolute(p.Watermark.ImagePath, dir);
         return p;
+    }
+
+    private static string? Absolute(string? file, string dir) =>
+        file is { Length: > 0 } f && !Path.IsPathRooted(f) ? Path.GetFullPath(Path.Combine(dir, f)) : file;
+
+    /// <summary>A picture in <paramref name="dir"/> or below as relative path with "/", otherwise unchanged.</summary>
+    private static string? Relative(string? file, string dir)
+    {
+        if (file is not { Length: > 0 } f || !Path.IsPathRooted(f)) return file;
+        var rel = Path.GetRelativePath(dir, f);
+        return !Path.IsPathRooted(rel) && !rel.StartsWith("..", StringComparison.Ordinal) ? rel.Replace('\\', '/') : file;
     }
 
     public string Save(SheetSettings preset)
@@ -67,19 +81,15 @@ public sealed class PresetStore
     }
 
     /// <summary>
-    /// Writes a preset for passing on. A background picture in the folder of the file (or below) is stored relative
-    /// to it, so the preset and the picture can be copied together; other pictures keep their absolute path.
+    /// Writes a preset for passing on. Pictures (background, watermark) in the folder of the file (or below) are stored relative
+    /// to it, so the preset and the pictures can be copied together; other pictures keep their absolute path.
     /// </summary>
     public static void ExportFile(SheetSettings preset, string path)
     {
         var p = preset.Clone();
-        if (p.BackgroundImage.Path is { Length: > 0 } bg && Path.IsPathRooted(bg))
-        {
-            var dir = Path.GetDirectoryName(Path.GetFullPath(path))!;
-            var rel = Path.GetRelativePath(dir, bg);
-            if (!Path.IsPathRooted(rel) && !rel.StartsWith("..", StringComparison.Ordinal))
-                p.BackgroundImage.Path = rel.Replace('\\', '/');
-        }
+        var dir = Path.GetDirectoryName(Path.GetFullPath(path))!;
+        p.BackgroundImage.Path = Relative(p.BackgroundImage.Path, dir);
+        p.Watermark.ImagePath = Relative(p.Watermark.ImagePath, dir);
         SaveFile(p, path);
     }
 

@@ -17,7 +17,30 @@ public enum HeaderPosition { TopLeft, TopRight, BottomLeft, BottomRight }
 public enum ImageFormat { Jpeg, Png, Webp }
 
 [JsonConverter(typeof(JsonStringEnumConverter<AnimationFormat>))]
-public enum AnimationFormat { Mp4, Webm, Gif }
+public enum AnimationFormat
+{
+    /// <summary>MP4 with H.264.</summary>
+    Mp4,
+    /// <summary>WebM with VP9.</summary>
+    Webm,
+    Gif,
+    /// <summary>MP4 with H.265/HEVC (smaller, not played everywhere).</summary>
+    H265,
+    /// <summary>Animated WebP.</summary>
+    Webp,
+    /// <summary>Animated PNG (lossless, large).</summary>
+    Apng,
+    /// <summary>Ogg with Theora.</summary>
+    Ogv,
+}
+
+/// <summary>Shape of the tile corners (#27).</summary>
+[JsonConverter(typeof(JsonStringEnumConverter<TileCorners>))]
+public enum TileCorners { Square, Rounded, Cut }
+
+/// <summary>Where the watermark goes (#29).</summary>
+[JsonConverter(typeof(JsonStringEnumConverter<WatermarkPosition>))]
+public enum WatermarkPosition { TopLeft, TopRight, BottomLeft, BottomRight, Center, Tiled }
 
 /// <summary>Sheet size from the screen (#25). The fixed <see cref="SheetSettings.SheetWidth"/> stays as fallback.</summary>
 [JsonConverter(typeof(JsonStringEnumConverter<ScreenFit>))]
@@ -109,6 +132,14 @@ public sealed class SheetSettings
     [JsonIgnore]
     public string EffectiveTextLanguage => Lang.Normalize(TextLanguage) ?? Lang.Current;
 
+    /// <summary>Border, shadow, gray scale and corners of the tiles (#27).</summary>
+    public TileStyleSettings TileStyle { get; set; } = new();
+    /// <summary>Line around the whole sheet, drawn inside its edge (0 = none).</summary>
+    public float SheetBorderWidth { get; set; }
+    public string SheetBorderColor { get; set; } = "#FFFFFFFF";
+    /// <summary>Picture or text over the sheet or every tile (#29).</summary>
+    public WatermarkSettings Watermark { get; set; } = new();
+
     public TimestampSettings Timestamp { get; set; } = new();
     public HeaderSettings Header { get; set; } = new();
     public OutputSettings Output { get; set; } = new();
@@ -141,6 +172,18 @@ public sealed class SheetSettings
         BackgroundImage ??= new();
         BackgroundImage.Opacity = Math.Clamp(BackgroundImage.Opacity, 0, 1);
         if (string.IsNullOrWhiteSpace(BackgroundImage.Path)) BackgroundImage.Path = null;
+        TileStyle ??= new();
+        TileStyle.BorderWidth = Math.Clamp(TileStyle.BorderWidth, 0, 100);
+        TileStyle.ShadowOffset = Math.Clamp(TileStyle.ShadowOffset, 0, 100);
+        TileStyle.ShadowBlur = Math.Clamp(TileStyle.ShadowBlur, 0, 100);
+        TileStyle.CornerRadius = Math.Clamp(TileStyle.CornerRadius, 0, 500);
+        SheetBorderWidth = Math.Clamp(SheetBorderWidth, 0, 500);
+        Watermark ??= new();
+        Watermark.Size = Math.Clamp(Watermark.Size, 0.01, 1);
+        Watermark.Opacity = Math.Clamp(Watermark.Opacity, 0, 1);
+        if (string.IsNullOrWhiteSpace(Watermark.ImagePath)) Watermark.ImagePath = null;
+        if (string.IsNullOrEmpty(Watermark.Text)) Watermark.Text = null;
+        if (string.IsNullOrEmpty(Header.Comment)) Header.Comment = null;
         if (Template is { } template)
         {
             var problems = template.Validate();
@@ -173,6 +216,44 @@ public sealed class BackgroundImageSettings
 
     [JsonIgnore]
     public bool Enabled => !string.IsNullOrWhiteSpace(Path);
+}
+
+public sealed class TileStyleSettings
+{
+    /// <summary>Line along the edge of every tile, drawn inside the tile (0 = none), so the layout stays the same.</summary>
+    public float BorderWidth { get; set; }
+    public string BorderColor { get; set; } = "#FFFFFFFF";
+    /// <summary>Drop shadow behind every tile; it falls into the gap, so it needs a gap or margin of about its offset.</summary>
+    public bool Shadow { get; set; }
+    public string ShadowColor { get; set; } = "#B4000000";
+    public float ShadowOffset { get; set; } = 4;
+    public float ShadowBlur { get; set; } = 4;
+    /// <summary>Tiles in shades of gray (the frames saved separately stay in color).</summary>
+    public bool Grayscale { get; set; }
+    public TileCorners Corners { get; set; } = TileCorners.Square;
+    /// <summary>Size of rounded or cut corners in pixels.</summary>
+    public float CornerRadius { get; set; } = 12;
+}
+
+public sealed class WatermarkSettings
+{
+    /// <summary>Text of the watermark; used when there is no picture.</summary>
+    public string? Text { get; set; }
+    /// <summary>Picture (PNG with transparency works best). Relative paths like the background picture. Wins over the text.</summary>
+    public string? ImagePath { get; set; }
+    public WatermarkPosition Position { get; set; } = WatermarkPosition.BottomRight;
+    /// <summary>Width of the watermark as a share (0.01..1) of the sheet width, or of the tile width with <see cref="PerTile"/>.</summary>
+    public double Size { get; set; } = 0.2;
+    public double Opacity { get; set; } = 0.5;
+    /// <summary>Color of the text.</summary>
+    public string Color { get; set; } = "#FFFFFFFF";
+    /// <summary>In every tile instead of once over the sheet.</summary>
+    public bool PerTile { get; set; }
+
+    [JsonIgnore]
+    public bool HasImage => !string.IsNullOrWhiteSpace(ImagePath);
+    [JsonIgnore]
+    public bool Enabled => HasImage || !string.IsNullOrWhiteSpace(Text);
 }
 
 public sealed class TimestampSettings
@@ -212,6 +293,11 @@ public sealed class HeaderSettings
     public string Color { get; set; } = "#FFE6E6E6";
     public string TitleColor { get; set; } = "#FFFFFFFF";
     public float LineSpacing { get; set; } = 1.25f;
+    /// <summary>
+    /// Own text (#28), e.g. "Holiday 2026". Goes where the template has <c>{comment}</c>, otherwise below the last line.
+    /// Several lines are allowed. Part of the header: not shown when the header is off.
+    /// </summary>
+    public string? Comment { get; set; }
 }
 
 public sealed class OutputSettings
@@ -244,6 +330,16 @@ public sealed class AnimationSettings
     /// <summary>Length of each tile's clip in seconds (= length of the animation).</summary>
     public double ClipSeconds { get; set; } = 3;
     public int FramesPerSecond { get; set; } = 10;
+    /// <summary>
+    /// Sound of one tile (the biggest, of equal ones the earliest) for MP4, H.265, WebM and OGV. GIF, WebP and APNG
+    /// cannot hold sound; there it is ignored.
+    /// </summary>
+    public bool Audio { get; set; }
+
+    /// <summary>Formats that can carry sound.</summary>
+    public static bool SupportsAudio(AnimationFormat f) => f is AnimationFormat.Mp4 or AnimationFormat.H265 or AnimationFormat.Webm or AnimationFormat.Ogv;
+    /// <summary>Formats where the quality setting has an effect.</summary>
+    public static bool HasQuality(AnimationFormat f) => f is not (AnimationFormat.Gif or AnimationFormat.Apng);
 
     /// <summary>Number of frames of the animation.</summary>
     [JsonIgnore]

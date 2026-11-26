@@ -19,6 +19,8 @@ public partial class SettingsViewModel : ObservableObject
     public static Choice[] OverwriteModes { get; } = Choice.ForEnum<OverwriteMode>("Overwrite");
     public static Choice[] ScreenFits { get; } = Choice.ForEnum<ScreenFit>("Fit");
     public static Choice[] BackgroundModes { get; } = Choice.ForEnum<BackgroundImageMode>("BgMode");
+    public static Choice[] CornerStyles { get; } = Choice.ForEnum<TileCorners>("Corners");
+    public static Choice[] WatermarkPositions { get; } = Choice.ForEnum<WatermarkPosition>("WmPos");
     public static Choice[] SheetLanguages { get; } = [new("auto", "SheetLang.auto"), new("en", "SheetLang.en"), new("de", "SheetLang.de")];
 
     public SettingsViewModel() => Loc.Instance.LanguageChanged += () =>
@@ -67,6 +69,36 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private string _backgroundColor = "";
     [ObservableProperty] private string? _fontFamily;
 
+    // Tile effects (#27)
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasTileBorder))] private decimal _tileBorderWidth;
+    [ObservableProperty] private string _tileBorderColor = "";
+    [ObservableProperty] private bool _tileShadow;
+    [ObservableProperty] private string _tileShadowColor = "";
+    [ObservableProperty] private bool _tileGrayscale;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasCornerSize))] private TileCorners _tileCorners;
+    [ObservableProperty] private decimal _tileCornerRadius;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasSheetBorder))] private decimal _sheetBorderWidth;
+    [ObservableProperty] private string _sheetBorderColor = "";
+    /// <summary>The corner size only applies to rounded or cut corners.</summary>
+    public bool HasCornerSize => TileCorners != TileCorners.Square;
+    public bool HasTileBorder => TileBorderWidth > 0;
+    public bool HasSheetBorder => SheetBorderWidth > 0;
+
+    // Watermark (#29)
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasWatermark), nameof(HasWatermarkText))] private string? _watermarkText;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasWatermark), nameof(HasWatermarkImage), nameof(IsWatermarkText), nameof(HasWatermarkText))] private string? _watermarkImagePath;
+    [ObservableProperty] private WatermarkPosition _watermarkPosition;
+    [ObservableProperty] private decimal _watermarkSize;
+    [ObservableProperty] private decimal _watermarkOpacity;
+    [ObservableProperty] private string _watermarkColor = "";
+    [ObservableProperty] private bool _watermarkPerTile;
+    public bool HasWatermarkImage => !string.IsNullOrWhiteSpace(WatermarkImagePath);
+    public bool HasWatermark => HasWatermarkImage || !string.IsNullOrWhiteSpace(WatermarkText);
+    /// <summary>A picture wins over the text, so text and text color are only editable without a picture.</summary>
+    public bool IsWatermarkText => !HasWatermarkImage;
+    /// <summary>The text color applies to a text watermark only.</summary>
+    public bool HasWatermarkText => IsWatermarkText && !string.IsNullOrWhiteSpace(WatermarkText);
+
     // Timestamps
     [ObservableProperty] private bool _timestampEnabled;
     [ObservableProperty] private OverlayPosition _timestampPosition;
@@ -87,6 +119,8 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private decimal _headerTitleFontSize;
     [ObservableProperty] private string _headerColor = "";
     [ObservableProperty] private string _headerTitleColor = "";
+    /// <summary>Own text in the header (#28).</summary>
+    [ObservableProperty] private string? _headerComment;
 
     // Output
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsJpeg), nameof(IsPng), nameof(IsWebp), nameof(HasQuality))] private ImageFormat _format;
@@ -101,7 +135,9 @@ public partial class SettingsViewModel : ObservableObject
 
     // Animated sheet
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsStill), nameof(HasQuality))] private bool _animated;
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsMp4), nameof(IsWebm), nameof(IsGif), nameof(HasQuality))] private AnimationFormat _animationFormat;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsMp4), nameof(IsWebm), nameof(IsGif), nameof(IsH265), nameof(IsWebpAnimation),
+                                                   nameof(IsApng), nameof(IsOgv), nameof(HasQuality), nameof(CanHaveAudio))] private AnimationFormat _animationFormat;
+    [ObservableProperty] private bool _animationAudio;
     [ObservableProperty] private decimal _clipSeconds;
     [ObservableProperty] private decimal _animationFps;
 
@@ -109,13 +145,19 @@ public partial class SettingsViewModel : ObservableObject
     public bool IsMp4 { get => AnimationFormat == AnimationFormat.Mp4; set { if (value) AnimationFormat = AnimationFormat.Mp4; } }
     public bool IsWebm { get => AnimationFormat == AnimationFormat.Webm; set { if (value) AnimationFormat = AnimationFormat.Webm; } }
     public bool IsGif { get => AnimationFormat == AnimationFormat.Gif; set { if (value) AnimationFormat = AnimationFormat.Gif; } }
+    public bool IsH265 { get => AnimationFormat == AnimationFormat.H265; set { if (value) AnimationFormat = AnimationFormat.H265; } }
+    public bool IsWebpAnimation { get => AnimationFormat == AnimationFormat.Webp; set { if (value) AnimationFormat = AnimationFormat.Webp; } }
+    public bool IsApng { get => AnimationFormat == AnimationFormat.Apng; set { if (value) AnimationFormat = AnimationFormat.Apng; } }
+    public bool IsOgv { get => AnimationFormat == AnimationFormat.Ogv; set { if (value) AnimationFormat = AnimationFormat.Ogv; } }
+    /// <summary>GIF, WebP and APNG cannot hold sound.</summary>
+    public bool CanHaveAudio => AnimationSettings.SupportsAudio(AnimationFormat);
 
     // Format buttons and quality slider in the output section.
     public bool IsJpeg { get => Format == ImageFormat.Jpeg; set { if (value) Format = ImageFormat.Jpeg; } }
     public bool IsPng { get => Format == ImageFormat.Png; set { if (value) Format = ImageFormat.Png; } }
     public bool IsWebp { get => Format == ImageFormat.Webp; set { if (value) Format = ImageFormat.Webp; } }
-    /// <summary>PNG is lossless and GIF has a fixed palette, so the quality slider applies to JPG, WebP, MP4 and WebM.</summary>
-    public bool HasQuality => Animated ? AnimationFormat != AnimationFormat.Gif : Format != ImageFormat.Png;
+    /// <summary>PNG/APNG are lossless and GIF has a fixed palette; the quality slider applies to all other formats.</summary>
+    public bool HasQuality => Animated ? AnimationSettings.HasQuality(AnimationFormat) : Format != ImageFormat.Png;
     public double QualityValue { get => (double)Quality; set => Quality = Math.Clamp((decimal)Math.Round(value), 1, 100); }
 
     public bool IsOutputFolder => Location == OutputLocation.OutputFolder;
@@ -137,6 +179,15 @@ public partial class SettingsViewModel : ObservableObject
         BackgroundColor = s.BackgroundColor; FontFamily = s.FontFamily;
         SheetLanguage = Core.Localization.Lang.Normalize(s.TextLanguage) ?? "auto";
 
+        var ts = s.TileStyle ?? new TileStyleSettings();
+        TileBorderWidth = (decimal)ts.BorderWidth; TileBorderColor = ts.BorderColor;
+        TileShadow = ts.Shadow; TileShadowColor = ts.ShadowColor; TileGrayscale = ts.Grayscale;
+        TileCorners = ts.Corners; TileCornerRadius = (decimal)ts.CornerRadius;
+        SheetBorderWidth = (decimal)s.SheetBorderWidth; SheetBorderColor = s.SheetBorderColor;
+        var wm = s.Watermark ?? new WatermarkSettings();
+        WatermarkText = wm.Text; WatermarkImagePath = wm.ImagePath; WatermarkPosition = wm.Position;
+        WatermarkSize = (decimal)wm.Size; WatermarkOpacity = (decimal)wm.Opacity; WatermarkColor = wm.Color; WatermarkPerTile = wm.PerTile;
+
         TimestampEnabled = s.Timestamp.Enabled; TimestampPosition = s.Timestamp.Position;
         TimestampFontSize = (decimal)s.Timestamp.FontSize; TimestampColor = s.Timestamp.Color;
         TimestampOpacity = (decimal)s.Timestamp.Opacity; TimestampOutline = (decimal)s.Timestamp.OutlineWidth;
@@ -146,14 +197,14 @@ public partial class SettingsViewModel : ObservableObject
 
         HeaderEnabled = s.Header.Enabled; HeaderPosition = s.Header.Position; HeaderTemplate = s.Header.EffectiveTemplate(EffectiveSheetLanguage);
         HeaderFontSize = (decimal)s.Header.FontSize; HeaderTitleFontSize = (decimal)s.Header.TitleFontSize;
-        HeaderColor = s.Header.Color; HeaderTitleColor = s.Header.TitleColor;
+        HeaderColor = s.Header.Color; HeaderTitleColor = s.Header.TitleColor; HeaderComment = s.Header.Comment;
 
         Format = s.Output.Format; Quality = s.Output.Quality; Location = s.Output.Location;
         OutputFolder = s.Output.Folder; KeepFolderStructure = s.Output.KeepFolderStructure;
         SubfolderName = s.Output.SubfolderName; FileNamePattern = s.Output.FileNamePattern;
         Overwrite = s.Output.Overwrite; SaveFrames = s.Output.SaveFrames;
 
-        Animated = s.Animation.Enabled; AnimationFormat = s.Animation.Format;
+        Animated = s.Animation.Enabled; AnimationFormat = s.Animation.Format; AnimationAudio = s.Animation.Audio;
         ClipSeconds = (decimal)s.Animation.ClipSeconds; AnimationFps = s.Animation.FramesPerSecond;
     }
 
@@ -191,6 +242,16 @@ public partial class SettingsViewModel : ObservableObject
         s.BackgroundColor = BackgroundColor; s.FontFamily = string.IsNullOrWhiteSpace(FontFamily) ? null : FontFamily;
         s.TextLanguage = Core.Localization.Lang.Normalize(SheetLanguage);
 
+        // Shadow offset and blur are not shown and stay as in the preset.
+        s.TileStyle.BorderWidth = (float)TileBorderWidth; s.TileStyle.BorderColor = TileBorderColor;
+        s.TileStyle.Shadow = TileShadow; s.TileStyle.ShadowColor = TileShadowColor; s.TileStyle.Grayscale = TileGrayscale;
+        s.TileStyle.Corners = TileCorners; s.TileStyle.CornerRadius = (float)TileCornerRadius;
+        s.SheetBorderWidth = (float)SheetBorderWidth; s.SheetBorderColor = SheetBorderColor;
+        s.Watermark.Text = string.IsNullOrWhiteSpace(WatermarkText) ? null : WatermarkText;
+        s.Watermark.ImagePath = string.IsNullOrWhiteSpace(WatermarkImagePath) ? null : WatermarkImagePath.Trim();
+        s.Watermark.Position = WatermarkPosition; s.Watermark.Size = (double)WatermarkSize; s.Watermark.Opacity = (double)WatermarkOpacity;
+        s.Watermark.Color = WatermarkColor; s.Watermark.PerTile = WatermarkPerTile;
+
         s.Timestamp.Enabled = TimestampEnabled; s.Timestamp.Position = TimestampPosition;
         s.Timestamp.FontSize = (float)TimestampFontSize; s.Timestamp.Color = TimestampColor;
         s.Timestamp.Opacity = (double)TimestampOpacity; s.Timestamp.OutlineWidth = (float)TimestampOutline;
@@ -201,13 +262,14 @@ public partial class SettingsViewModel : ObservableObject
         s.Header.Enabled = HeaderEnabled; s.Header.Position = HeaderPosition; s.Header.Template = Core.Localization.CoreText.IsDefaultHeaderTemplate(HeaderTemplate) ? null : HeaderTemplate;
         s.Header.FontSize = (float)HeaderFontSize; s.Header.TitleFontSize = (float)HeaderTitleFontSize;
         s.Header.Color = HeaderColor; s.Header.TitleColor = HeaderTitleColor;
+        s.Header.Comment = string.IsNullOrWhiteSpace(HeaderComment) ? null : HeaderComment.Replace("\r\n", "\n");
 
         s.Output.Format = Format; s.Output.Quality = (int)Quality; s.Output.Location = Location;
         s.Output.Folder = OutputFolder; s.Output.KeepFolderStructure = KeepFolderStructure;
         s.Output.SubfolderName = SubfolderName; s.Output.FileNamePattern = FileNamePattern;
         s.Output.Overwrite = Overwrite; s.Output.SaveFrames = SaveFrames;
 
-        s.Animation.Enabled = Animated; s.Animation.Format = AnimationFormat;
+        s.Animation.Enabled = Animated; s.Animation.Format = AnimationFormat; s.Animation.Audio = AnimationAudio;
         s.Animation.ClipSeconds = (double)ClipSeconds; s.Animation.FramesPerSecond = (int)AnimationFps;
         return s;
     }

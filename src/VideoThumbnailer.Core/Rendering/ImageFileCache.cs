@@ -4,12 +4,12 @@ using SkiaSharp;
 namespace VideoThumbnailer.Core.Rendering;
 
 /// <summary>
-/// Decoded background pictures, so animated sheets and the live preview do not read the file for every frame.
+/// Decoded pictures (background, watermark), so animated sheets and the live preview do not read the file for every frame.
 /// A changed file (time or size) is read again.
 /// </summary>
-public static class BackgroundImageCache
+public static class ImageFileCache
 {
-    private const int MaxEntries = 4;
+    private const int MaxEntries = 8;
     private static readonly ConcurrentDictionary<(string Path, long Stamp, long Length), SKImage?> Images = new();
 
     /// <summary>The picture, or null when the path is empty, the file is missing or not an image.</summary>
