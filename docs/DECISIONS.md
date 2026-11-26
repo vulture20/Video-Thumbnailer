@@ -15,6 +15,7 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Animierte Sheets (MP4/WebM/GIF …) erst nach v1 | MVP klein halten |
 | 26.11.2026 | Kommandozeile ist Teil von v1 | |
 | 26.11.2026 | Arbeit über Pull Requests | |
+| 26.11.2026 | MVP-Umfang bestätigt: alle P1-Punkte der Spezifikation, veröffentlicht als v0.1.0 und unter Windows getestet | von Vulli bestätigt |
 | 26.11.2026 | `CHANGELOG.md` nach „Keep a Changelog“, auf Deutsch, rückwirkend ab v0.1.0. Jeder PR ergänzt seinen Eintrag unter „Unveröffentlicht“; beim Release wird daraus der Versionsabschnitt | Änderungen nachvollziehbar, Grundlage für Release-Notizen |
 
 ### Technik
@@ -38,7 +39,10 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | CLI-Name `vthumb`, eigener kleiner Argument-Parser ohne Zusatzpaket | wenige Abhängigkeiten |
 | 26.11.2026 | Speicherorte: Einstellungen/Presets unter `%APPDATA%\VideoThumbnailer`, `~/.config/video-thumbnailer`, `~/Library/Application Support/VideoThumbnailer`; ffmpeg unter `%LOCALAPPDATA%\VideoThumbnailer\ffmpeg`, `~/.local/share/video-thumbnailer/ffmpeg` bzw. macOS wie oben. Portabler Modus: Datei `portable.txt` neben der Programmdatei oder Umgebungsvariable `VIDEO_THUMBNAILER_HOME` | Standardpfade je Betriebssystem, USB-Stick-Betrieb möglich |
 | 26.11.2026 | Auslieferung als selbstständige Einzeldatei je Plattform (win-x64, win-arm64, linux-x64, linux-arm64, osx-x64, osx-arm64), ohne vorinstalliertes .NET | „direkt überall lauffähig“ |
-| 26.11.2026 | Code, Kommentare und Oberfläche auf Englisch, Projektdokumentation auf Deutsch | öffentliches Repo; Lokalisierung DE/EN ist P2 |
+| 26.11.2026 | Code und Kommentare auf Englisch, Projektdokumentation auf Deutsch | öffentliches Repo |
+| 26.11.2026 | GUI zweisprachig Deutsch/Englisch (vorgezogen aus P2). Standard ist die Systemsprache (Deutsch, wenn die Oberflächensprache des Systems Deutsch ist, sonst Englisch); in den Einstellungen umschaltbar (Systemsprache/English/Deutsch), wirkt sofort ohne Neustart und wird in `settings.json` gespeichert | Wunsch nach deutscher Oberfläche, Englisch für alle anderen |
+| 26.11.2026 | Übersetzungen als eigene Tabelle im Code (`Localization/Strings.cs`) statt `.resx`; XAML bindet über `{l:T Schlüssel}`. Ein Test prüft, dass jeder benutzte Schlüssel existiert und beide Sprachen dieselben Platzhalter haben | einfach, ohne Satelliten-Assemblies, live umschaltbar, fehlende Texte fallen im Test auf |
+| 26.11.2026 | Kommandozeile bleibt vorerst Englisch | stabile, skriptfreundliche Ausgabe; siehe offene Punkte |
 
 ### ffmpeg-Bezug
 | Datum | Entscheidung | Begründung / Anmerkung |
@@ -65,15 +69,15 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 
 | Seit | Punkt | Stand |
 |---|---|---|
-| 26.11.2026 | MVP-Umfang final bestätigen (aktuell alle P1-Punkte der Spezifikation) | v1-Umfang siehe unten |
 | 26.11.2026 | macOS-Quelle (martin-riedl.de): URL-Schema und `.sha256`-Dateien konnten in der Entwicklungsumgebung nicht live geprüft werden | auf einem Mac mit `vthumb ffmpeg install` testen; Fallback: Homebrew-ffmpeg wird automatisch gefunden |
 | 26.11.2026 | Prüfsumme kommt vom selben Server wie der Download; schützt nicht gegen einen kompromittierten Anbieter. Stärker wären Signaturen (GPG) oder fest hinterlegte Hashes | bewusst akzeptiert für v1 |
 | 26.11.2026 | Downloadgröße: Linux-Build von BtbN ca. 150 MB (tar.xz), Windows ähnlich. Kleinere Varianten (z. B. „gpl-shared“ oder LGPL) prüfen? | |
 | 26.11.2026 | Code-Signierung (Windows) und Notarisierung/App-Bundle (macOS) fehlen; macOS zeigt beim ersten Start eine Gatekeeper-Warnung | Installer/Pakete (MSI, .app/.dmg, AppImage/Flatpak) später |
 | 26.11.2026 | HDR-Tonemapping mit echten HDR10/HLG-Videos prüfen (Testvideos ohne korrekte Farbmetadaten) | |
-| 26.11.2026 | Oberfläche aktuell nur Englisch; Deutsch/Englisch-Umschaltung ist P2 | |
 | 26.11.2026 | GUI-Einstellungen für Kontur-/Schattenfarbe, Kopf-Farben und Millisekunden im Zeitstempel fehlen (im Preset-JSON und teils per CLI möglich) | Optionsdialog ist P2 |
 | 26.11.2026 | Live-Vorschau der Einstellungen (P2) | |
+| 26.11.2026 | Kommandozeile (Hilfe und Meldungen) ebenfalls übersetzen? | aktuell Englisch |
+| 26.11.2026 | Texte im Sheet selbst (z. B. „Size:“, „Duration:“ im Info-Kopf, „no frame“) kommen aus der Preset-Vorlage bzw. sind Englisch. Deutsche Vorlage oder sprachabhängige Basis-Presets anbieten? | eigene Vorlage ist schon heute möglich |
 | 26.11.2026 | Social-Preview muss von Hand hochgeladen werden: GitHub → Settings → General → Social preview → `docs/images/social-preview.png` (geht nicht per API/PR) | |
 | 26.11.2026 | Icon-Einbindung (ApplicationIcon, Fenstericon) konnte lokal nicht gebaut werden (kein .NET in der Entwicklungsumgebung); Prüfung über CI und ein Blick auf Windows/Linux/macOS | |
 | 26.11.2026 | macOS-Dock-Icon ohne `.app`-Bundle evtl. generisch; Bundle mit `app.icns` gehört zu „Installer/Pakete später“ | |

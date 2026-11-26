@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using VideoThumbnailer.Core.Batch;
+using VideoThumbnailer.Gui.Localization;
 
 namespace VideoThumbnailer.Gui.ViewModels;
 
@@ -27,12 +28,12 @@ public partial class JobViewModel : ObservableObject
 
     public string StatusText => Status switch
     {
-        JobStatus.Pending => "Waiting",
+        JobStatus.Pending => Loc.T("JobWaiting"),
         JobStatus.Running => $"{Progress:P0}",
-        JobStatus.Done => "Done",
-        JobStatus.Skipped => "Skipped",
-        JobStatus.Failed => "Failed",
-        JobStatus.Cancelled => "Cancelled",
+        JobStatus.Done => Loc.T("JobDone"),
+        JobStatus.Skipped => Loc.T("JobSkipped"),
+        JobStatus.Failed => Loc.T("JobFailed"),
+        JobStatus.Cancelled => Loc.T("JobCancelled"),
         _ => "",
     };
 

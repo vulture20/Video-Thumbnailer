@@ -18,6 +18,8 @@ public sealed class AppSettings
     public bool CheckFfmpegUpdates { get; set; } = true;
     public DateTimeOffset? LastFfmpegUpdateCheck { get; set; }
     public string? LastInputFolder { get; set; }
+    /// <summary>GUI language ("English", "German"); null = follow the system language.</summary>
+    public string? Language { get; set; }
 
     public static AppSettings Load(string? path = null)
     {

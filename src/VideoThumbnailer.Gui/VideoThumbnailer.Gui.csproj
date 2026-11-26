@@ -18,6 +18,9 @@
     <AvaloniaResource Include="Assets\app.ico" />
   </ItemGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="VideoThumbnailer.Tests" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\VideoThumbnailer.Core\VideoThumbnailer.Core.csproj" />
   </ItemGroup>
 </Project>

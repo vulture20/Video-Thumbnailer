@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using VideoThumbnailer.Core.Ffmpeg;
 using VideoThumbnailer.Core.Settings;
 using VideoThumbnailer.Core.Util;
+using VideoThumbnailer.Gui.Localization;
 
 namespace VideoThumbnailer.Gui.ViewModels;
 
@@ -16,7 +17,7 @@ public partial class FfmpegViewModel : ObservableObject
     private readonly FfmpegInstaller? _installer = FfmpegInstaller.ForCurrentPlatform();
     private FfmpegRelease? _latest;
 
-    [ObservableProperty] private string _statusLine = "Checking ffmpeg…";
+    [ObservableProperty] private string _statusLine = Loc.T("FfmpegChecking");
     [ObservableProperty] private string? _detailLine;
     [ObservableProperty] [NotifyCanExecuteChangedFor(nameof(InstallOrUpdateCommand), nameof(CheckForUpdateCommand))] private bool _isBusy;
     [ObservableProperty] private double _downloadPercent;
@@ -26,8 +27,9 @@ public partial class FfmpegViewModel : ObservableObject
 
     public FfmpegTools? Tools { get; private set; }
     public bool CanDownload => _installer is not null;
-    public string SourceName => _installer?.Source.Name ?? "no automatic download for this platform";
-    public string InstallButtonText => UpdateAvailable ? "Install update" : Tools?.Origin == FfmpegOrigin.Managed ? "Reinstall" : "Download ffmpeg";
+    public string SourceName => _installer?.Source.Name ?? Loc.T("FfmpegNoSource");
+    public string SourceLine => Loc.T("FfmpegSource", SourceName);
+    public string InstallButtonText => Loc.T(UpdateAvailable ? "FfmpegInstallUpdate" : Tools?.Origin == FfmpegOrigin.Managed ? "FfmpegReinstall" : "FfmpegDownload");
 
     public FfmpegViewModel(IUiServices ui, AppSettings app)
     {
@@ -36,6 +38,13 @@ public partial class FfmpegViewModel : ObservableObject
         CustomDirectory = app.FfmpegDirectory;
         CheckUpdatesAutomatically = app.CheckFfmpegUpdates;
         Refresh();
+        Loc.Instance.LanguageChanged += () =>
+        {
+            if (IsBusy) return;
+            Refresh();
+            OnPropertyChanged(nameof(SourceName));
+            OnPropertyChanged(nameof(SourceLine));
+        };
     }
 
     partial void OnCustomDirectoryChanged(string? value)
@@ -52,20 +61,20 @@ public partial class FfmpegViewModel : ObservableObject
         Tools = FfmpegLocator.Locate(_app.FfmpegDirectory);
         if (Tools is null)
         {
-            StatusLine = "ffmpeg not found";
-            DetailLine = CanDownload ? "It is downloaded automatically when needed (you will be asked first)." : "Please install ffmpeg and ffprobe or choose their folder.";
+            StatusLine = Loc.T("FfmpegNotFound");
+            DetailLine = Loc.T(CanDownload ? "FfmpegNotFoundAuto" : "FfmpegNotFoundManual");
         }
         else
         {
             StatusLine = Tools.Origin switch
             {
-                FfmpegOrigin.Managed => "ffmpeg: downloaded by Video-Thumbnailer",
-                FfmpegOrigin.Custom => "ffmpeg: custom folder",
-                _ => "ffmpeg: system installation (PATH)",
+                FfmpegOrigin.Managed => Loc.T("FfmpegManaged"),
+                FfmpegOrigin.Custom => Loc.T("FfmpegCustom"),
+                _ => Loc.T("FfmpegSystem"),
             };
             var manifest = _installer?.ReadManifest();
             DetailLine = Tools.Origin == FfmpegOrigin.Managed && manifest is not null
-                ? $"Build {manifest.Version} from {manifest.Source}, installed {manifest.InstalledAt.LocalDateTime:d}"
+                ? Loc.T("FfmpegBuildInfo", manifest.Version, manifest.Source, manifest.InstalledAt.LocalDateTime.ToString("d"))
                 : Tools.FfmpegPath;
         }
         OnPropertyChanged(nameof(InstallButtonText));
@@ -95,15 +104,12 @@ public partial class FfmpegViewModel : ObservableObject
         if (Tools is not null) return Tools;
         if (!CanDownload)
         {
-            await _ui.ShowMessageAsync("ffmpeg missing",
-                "Video-Thumbnailer needs ffmpeg and ffprobe. Please install them (e.g. with your package manager) or choose their folder in the settings.");
+            await _ui.ShowMessageAsync(Loc.T("DlgFfmpegMissingTitle"), Loc.T("DlgFfmpegMissingManual"));
             return null;
         }
-        var ok = await _ui.ConfirmAsync("ffmpeg needed",
-            "Video-Thumbnailer uses ffmpeg to read videos. ffmpeg is not installed yet.\n\n" +
-            $"Download it now from {_installer!.Source.Homepage}?\n" +
-            $"Size about 100–150 MB. It is stored in:\n{_installer.InstallRoot}\n\nThe download is verified with SHA-256.",
-            "Download", "Not now");
+        var ok = await _ui.ConfirmAsync(Loc.T("DlgFfmpegNeededTitle"),
+            Loc.T("DlgFfmpegNeeded", _installer!.Source.Homepage, _installer.InstallRoot),
+            Loc.T("DlgDownload"), Loc.T("DlgNotNow"));
         if (!ok) return null;
         await InstallAsync(null);
         return Tools;
@@ -120,11 +126,11 @@ public partial class FfmpegViewModel : ObservableObject
     [RelayCommand]
     private async Task BrowseCustomDirectoryAsync()
     {
-        var dir = await _ui.PickFolderAsync("Folder containing ffmpeg and ffprobe");
+        var dir = await _ui.PickFolderAsync(Loc.T("DlgFfmpegFolderTitle"));
         if (dir is null) return;
         if (FfmpegLocator.FromDirectory(dir, FfmpegOrigin.Custom) is null)
         {
-            await _ui.ShowMessageAsync("ffmpeg folder", $"{FfmpegLocator.ExeName("ffmpeg")} and {FfmpegLocator.ExeName("ffprobe")} were not found in this folder.");
+            await _ui.ShowMessageAsync(Loc.T("DlgFfmpegFolder"), Loc.T("DlgFfmpegFolderMissing", FfmpegLocator.ExeName("ffmpeg"), FfmpegLocator.ExeName("ffprobe")));
             return;
         }
         CustomDirectory = dir;
@@ -144,14 +150,14 @@ public partial class FfmpegViewModel : ObservableObject
             _app.LastFfmpegUpdateCheck = DateTimeOffset.UtcNow;
             SaveQuietly();
             UpdateAvailable = info.UpdateAvailable && Tools?.Origin == FfmpegOrigin.Managed;
-            if (UpdateAvailable) DetailLine = $"Update available: build {info.Latest.Version} (installed: {info.Installed?.Version ?? "unknown"})";
+            if (UpdateAvailable) DetailLine = Loc.T("FfmpegUpdateAvailable", info.Latest.Version, info.Installed?.Version ?? Loc.T("Unknown"));
             else if (!silent) await _ui.ShowMessageAsync("ffmpeg", Tools?.Origin == FfmpegOrigin.Managed
-                ? $"ffmpeg is up to date (build {info.Latest.Version})."
-                : $"Latest available build: {info.Latest.Version}. Your current ffmpeg is not managed by Video-Thumbnailer.");
+                ? Loc.T("DlgFfmpegUpToDate", info.Latest.Version)
+                : Loc.T("DlgFfmpegNotManaged", info.Latest.Version));
         }
         catch (Exception ex)
         {
-            if (!silent) await _ui.ShowMessageAsync("ffmpeg", "Could not check for updates: " + ex.Message);
+            if (!silent) await _ui.ShowMessageAsync("ffmpeg", Loc.T("DlgFfmpegCheckFailed", ex.Message));
         }
         finally { IsBusy = false; }
     }
@@ -166,7 +172,9 @@ public partial class FfmpegViewModel : ObservableObject
             var progress = new Progress<DownloadProgress>(p =>
             {
                 if (p.TotalBytes is > 0) DownloadPercent = 100.0 * p.BytesReceived / p.TotalBytes.Value;
-                StatusLine = $"Downloading {p.File}: {Formatting.Size(p.BytesReceived)}" + (p.TotalBytes is > 0 ? $" of {Formatting.Size(p.TotalBytes.Value)}" : "");
+                StatusLine = p.TotalBytes is > 0
+                    ? Loc.T("FfmpegDownloadingOf", p.File, Formatting.Size(p.BytesReceived), Formatting.Size(p.TotalBytes.Value))
+                    : Loc.T("FfmpegDownloading", p.File, Formatting.Size(p.BytesReceived));
             });
             await Task.Run(() => _installer.InstallAsync(release, progress));
             UpdateAvailable = false;
@@ -175,7 +183,7 @@ public partial class FfmpegViewModel : ObservableObject
         catch (Exception ex)
         {
             Refresh();
-            await _ui.ShowMessageAsync("ffmpeg download failed", ex.Message);
+            await _ui.ShowMessageAsync(Loc.T("DlgFfmpegDownloadFailed"), ex.Message);
         }
         finally
         {
