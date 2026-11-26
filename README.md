@@ -107,7 +107,7 @@ Aufbau:
 - `assets/branding` – Icon und Banner (SVG-Quellen, Build-Skript `build.py`)
 - `packaging/linux` – `.desktop`-Datei und Icons im hicolor-Schema
 
-Entscheidungen und offene Punkte: [docs/DECISIONS.md](docs/DECISIONS.md)
+Entscheidungen und offene Punkte: [docs/DECISIONS.md](docs/DECISIONS.md) · Änderungen: [CHANGELOG.md](CHANGELOG.md)
 
 ## Lizenz
 
