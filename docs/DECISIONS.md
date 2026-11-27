@@ -25,6 +25,7 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Release v0.4.0 mit #12–#15; Tag wird erst nach dem Merge dieses Release-PRs auf `main` gesetzt | v0.3.0 wurde versehentlich vor den letzten PRs getaggt |
 | 26.11.2026 | Release v0.5.0 mit #17–#19 (Copyright, Feinoptionen unter „Erweitert“, Installer/Pakete, fest hinterlegte ffmpeg-Builds); Tag nach dem Merge dieses Release-PRs auf `main` | erstes Release mit Installer, AppImage und DMG |
 | 26.11.2026 | Release v0.6.0 mit #40–#47 (u. a. Issues #21–#30); Release-Notizen kommen automatisch aus dem CHANGELOG-Abschnitt der Version (`tools/release-notes.py` im Release-Workflow), auch wenn das Release im Browser angelegt wird | Wunsch von Vulli; Notizen und CHANGELOG bleiben gleich |
+| 27.11.2026 | Release **v1.0.0** mit #49 und #50 (Issues #31–#39): alle Punkte aus der Spezifikation sind umgesetzt. Ab 1.0.0 gilt Semantic Versioning streng: Kommandozeilen-Optionen, Preset-Format (`schemaVersion` 1), `.vtsheet`/`.vtgrid` und Platzhalter ändern sich nur abwärtskompatibel; ein Bruch bekäme Version 2.0.0 | Wunsch von Vulli: „praktisch alles implementiert“ |
 | 26.11.2026 | Kein Mac für Tests vorhanden: macOS wird nur über CI geprüft. Zusätzlich zu Build und Tests lädt die CI auf macOS ffmpeg über die eingebaute Download-Funktion (martin-riedl.de, mit Prüfsumme) und erstellt damit ein echtes Sheet (als Artefakt abrufbar). Die GUI auf macOS bleibt ungetestet | Vulli hat keinen Mac |
 | 26.11.2026 | Von Vulli unter Windows geprüft: v0.1.0 (Programm), die Oberfläche „Leuchttisch“ und v0.5.0 (Installer, Startmenü-Eintrag, Oberfläche, Icon, ffmpeg-Download von gyan.dev) | erledigt die offenen Windows-Tests |
 | 26.11.2026 | HDR mit echtem Material von Vulli geprüft: Ergebnis passt, Tonemapping bleibt wie es ist | erledigt den offenen HDR-Punkt |
@@ -370,13 +371,15 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Pakete für Windows arm64, Linux arm64 und Intel-Mac werden nur gebaut, nie gestartet (die Runner können sie nicht ausführen) | Rückmeldung von Nutzern mit solchen Geräten |
 | 26.11.2026 | Windows arm64 hat keinen fest hinterlegten ffmpeg-Build (BtbN hebt Builds nur 14 Tage auf, gyan.dev baut kein arm64) | bei einer dauerhaften arm64-Quelle nachziehen |
 | 26.11.2026 | Workflow „ffmpeg pins“ hat seit #19 noch keinen neuen Build eingetragen. Seine Commits mit `GITHUB_TOKEN` starten keine CI; wird `main` geschützt, schlägt sein direkter Push fehl. Die Adresse der Liste (`FfmpegPins.RemoteUrl`) enthält den Repo-Namen | ersten echten Lauf beobachten |
-| 26.11.2026 | Release-Notizen auf GitHub sind die automatisch erzeugte PR-Liste, nicht der CHANGELOG-Abschnitt. Das Release v0.3.0 heißt „v.0.3.0“ (Tippfehler im Titel) | Notizen beim nächsten Release aus dem CHANGELOG übernehmen; Titel von Hand korrigieren |
+| 26.11.2026 | Das Release v0.3.0 heißt „v.0.3.0“ (Tippfehler im Titel). Die Release-Notizen kommen seit v0.6.0 automatisch aus dem CHANGELOG (#48) | Titel von Hand im Browser korrigieren |
 
 ## Spätere Ideen (P2/P3)
 
 Aus der Spezifikation, je ein Issue; inzwischen alle umgesetzt: Kommandozeile, Live-Vorschau, Deutsch/Englisch, Preset-Import/-Export, „Einfach“/„Erweitert“ statt Optionsdialog, Hintergrundfarbe, animierte Sheets (MP4/WebM/GIF), Videos per URL (#21), schwarze Bilder überspringen (#22), Aufnahmezeitpunkte von Hand (#23), Spezial-Raster (#24), „An Bildschirm anpassen“ (#25), Hintergrundbild (#26), Kachel-Effekte (#27), Kommentartext (#28), Wasserzeichen (#29), weitere Animationsformate mit Ton (#30), Vorschau-Clip (#31), Export als CSV/XML/WebVTT (#32), Preset per Doppelklick (#33), Tastenkürzel (#34), Untertitel-Infos (#35), Raster-Editor (#36), Pack-Bild (#37), JSON-Begleitdatei (#38) und Viewer (#39). Die Wahl der Render-Engine (P3) entfällt: ffmpeg ist das einzige Backend. Neue Ideen kommen als eigene Issues.
 
 ## Umfang v0.1.0
+
+Historischer Stand des ersten Releases. Den heutigen Funktionsumfang beschreibt die [README](../README.md#funktionen).
 
 Umgesetzt (P1):
 - Dateien und Ordner hinzufügen (Dialog, Drag & Drop, Kommandozeile), rekursiv umschaltbar
@@ -392,4 +395,4 @@ Umgesetzt (P1):
 - Ausgabeordner / neben dem Video / Unterordner neben dem Video; Ordnerstruktur beibehalten; Dateinamen-Muster; Verhalten bei vorhandenen Dateien (überspringen, überschreiben, umbenennen)
 - Presets speichern, laden, löschen, importieren, exportieren; 4 Basis-Presets; Preset-Datei als Programmargument öffnet sie
 - ffmpeg-Download mit Nachfrage, SHA-256-Prüfung und Update-Mechanismus
-- CLI `vthumb` mit den wichtigsten Einstellungen als Optionen, alle übrigen über Presets (siehe offene Punkte)
+- CLI `vthumb` mit den wichtigsten Einstellungen als Optionen, alle übrigen über Presets (seit #40 hat jede Einstellung eine Option)

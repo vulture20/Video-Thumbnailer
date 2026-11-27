@@ -6,6 +6,10 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 
 ## [Unveröffentlicht]
 
+## [1.0.0] – 2026-11-27
+
+Erste stabile Version: alle Punkte der Spezifikation sind umgesetzt. Neu: Viewer mit Sprung ins Video, Begleitdatei `.vtsheet`, Raster-Editor, Pack-Bild für viele Videos, Vorschau-Clip, Export der Video-Infos als CSV/XML, WebVTT-Vorschaubilder, Untertitel-Infos, Dateizuordnungen und Tastenkürzel. Ab jetzt ändern sich Kommandozeile, Preset- und Begleitdatei-Format nur abwärtskompatibel.
+
 ### Hinzugefügt
 - Untertitel-Infos: Untertitelspuren im Video und Untertiteldateien daneben (`Film.srt`, `Film.de.srt`, `Film.en.forced.ass`, `.vtt`, `.sup`, `.idx/.sub`) werden erkannt, mit Sprache, Format, „erzwungen“, „SDH“ und „extern“. Neue Platzhalter `{subtitles}` (Zusammenfassung), `{slang}` (Sprachen) und `{subtracks}` (Anzahl), auch als Spalten im CSV/XML-Export ([#50], #35)
 - Raster-Editor („Raster bearbeiten…“ unter dem Layout): große, kleine und leere Kacheln per Ziehen auf einem Feldraster anordnen, freie Felder bleiben Hintergrund. Übernehmen oder als eigenes Raster `<Name>.vtgrid` im Einstellungsordner speichern; eigene Raster stehen neben den eingebauten in der Layout-Auswahl, auf der Kommandozeile per `--layout <Name>` und öffnen sich per Doppelklick ([#50], #36)
@@ -146,7 +150,8 @@ Erste Version.
 ### Geändert
 - Release-Workflow hängt die Dateien auch an ein im Browser angelegtes Release an ([#2])
 
-[Unveröffentlicht]: https://github.com/vulture20/Video-Thumbnailer/compare/v0.6.0...HEAD
+[Unveröffentlicht]: https://github.com/vulture20/Video-Thumbnailer/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/vulture20/Video-Thumbnailer/compare/v0.6.0...v1.0.0
 [0.6.0]: https://github.com/vulture20/Video-Thumbnailer/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/vulture20/Video-Thumbnailer/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/vulture20/Video-Thumbnailer/compare/v0.3.0...v0.4.0
