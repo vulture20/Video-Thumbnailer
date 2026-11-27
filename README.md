@@ -11,11 +11,13 @@
 
 **Kontaktbögen (Thumbnail-Sheets) aus Videos – schnell, schön und frei.** Ein Ordner voller Filme, Serien oder Aufnahmen rein, ein Übersichtsbild pro Video raus: mit Videodaten im Kopf, Zeitstempel in jeder Kachel und auf Wunsch animiert, als Trailer-Clip oder als Übersicht einer ganzen Staffel. Mit grafischer Oberfläche und vollwertiger Kommandozeile für **Windows, Linux und macOS**.
 
-*Free, cross-platform video contact sheet generator with GUI and command line. The program speaks English and German; this page is in German.*
+🇬🇧 *Free, cross-platform video contact sheet generator with GUI and command line – [README in English](README.en.md).*
 
-<p align="center"><img src="docs/images/example-sheet.jpg" alt="Beispiel-Sheet: 4 × 5 Kacheln mit Info-Kopf und Zeitstempeln" width="100%"></p>
+<p align="center"><img src="docs/images/workflow.gif" alt="Ablauf: Videos hinzufügen, Preset und Raster wählen, Vorschau prüfen, starten" width="100%"></p>
 
-**Inhalt:** [Highlights](#highlights) · [Beispiele](#beispiele) · [Oberfläche](#oberfläche) · [Installation](#installation) · [Schnellstart](#schnellstart) · [Kommandozeile](#kommandozeile) · [Tastenkürzel](#tastenkürzel) · [Weitere Details](#weitere-details) · [ffmpeg](#ffmpeg) · [Selbst bauen](#selbst-bauen) · [Lizenz](#lizenz)
+**Inhalt:** [Highlights](#highlights) · [Beispiele](#beispiele) · [Oberfläche](#oberfläche) · [Installation](#installation) · [Schnellstart](#schnellstart) · [Kommandozeile](#kommandozeile) · [Tastenkürzel](#tastenkürzel) · [Häufige Fragen](#häufige-fragen) · [Weitere Details](#weitere-details) · [ffmpeg](#ffmpeg) · [Selbst bauen](#selbst-bauen) · [Lizenz](#lizenz)
+
+**Mehr Doku:** [Rezepte für häufige Aufgaben](docs/rezepte.md) · [Preset-Format](docs/presets.md) · [Begleitdatei `.vtsheet`](docs/vtsheet.md) · [Änderungen](CHANGELOG.md)
 
 ## Highlights
 
@@ -32,6 +34,8 @@
 ## Beispiele
 
 Alle Bilder auf dieser Seite sind mit dem Programm selbst entstanden (aus einem Demo-Video aus ffmpeg-Testmustern, siehe [Selbst bauen](#selbst-bauen)).
+
+<p align="center"><img src="docs/images/example-sheet.jpg" alt="Beispiel-Sheet: 4 × 5 Kacheln mit Info-Kopf und Zeitstempeln" width="100%"><br><b>Standard-Sheet</b> – <code>vthumb film.mkv</code></p>
 
 <table>
 <tr>
@@ -307,9 +311,9 @@ vthumb presets export "5x6 ohne Kopf" 5x6.vtpreset
 
 | Option | Wert | Bedeutung | Beispiel |
 |---|---|---|---|
-| `--header`<br>`--no-header` |  | Info-Kopf mit Videodaten über (oder unter) den Kacheln anzeigen bzw. weglassen. | `vthumb --no-header film.mkv` |
+| `--header`<br>`--no-header` |  | Info-Kopf mit Videodaten anzeigen bzw. weglassen. | `vthumb --no-header film.mkv` |
 | `--header-pos` | `top-left\|top-right\|bottom-left\|bottom-right` | Lage des Info-Kopfs. | `vthumb --header-pos bottom-left film.mkv` |
-| `--header-template` | `<Vorlage>` | Zeilen des Info-Kopfs mit Platzhaltern (siehe unten), `\n` für eine neue Zeile. | `vthumb --header-template "{filename}\n{size:GB} · {duration} · {resolution}" film.mkv` |
+| `--header-template` | `<Vorlage>` | Zeilen des Info-Kopfs mit Platzhaltern wie `{filename}`, `{size:GB}`, `{duration}`; `\n` für eine neue Zeile. | `vthumb --header-template "{filename}\n{size:GB} · {duration} · {resolution}" film.mkv` |
 | `--title-size` | `<pt>` | Schriftgröße der Titelzeile. | `vthumb --title-size 28 film.mkv` |
 | `--header-size` | `<pt>` | Schriftgröße der übrigen Zeilen. | `vthumb --header-size 16 film.mkv` |
 | `--title-color` | `<Farbe>` | Farbe der Titelzeile. | `vthumb --title-color "#00FF00" film.mkv` |
@@ -422,6 +426,56 @@ Die Kürzel stehen auch in den Tooltips der Knöpfe. Unter macOS gilt <kbd>⌘</
 
 Außerdem: Doppelklick auf einen erledigten Eintrag öffnet das Sheet im Viewer, Rechtsklick auf einen Eintrag zeigt seine Aktionen, und Videos, Ordner und Webadressen lassen sich ins Fenster ziehen.
 
+## Häufige Fragen
+
+<details>
+<summary><b>Windows warnt beim Start („Der Computer wurde durch Windows geschützt“)</b></summary>
+
+Installer und Programm sind nicht signiert, deshalb warnt SmartScreen bei neuen Versionen. „Weitere Informationen“ → „Trotzdem ausführen“. Wer sichergehen will, vergleicht die Datei mit `checksums.sha256` aus dem Release (`certutil -hashfile <Datei> SHA256`).
+</details>
+
+<details>
+<summary><b>macOS: „kann nicht geöffnet werden, da der Entwickler nicht verifiziert werden kann“</b></summary>
+
+Die App ist nicht notarisiert. Beim ersten Start im Finder Rechtsklick auf die App → „Öffnen“ → „Öffnen“. Alternativ unter Systemeinstellungen → Datenschutz & Sicherheit → „Dennoch öffnen“.
+</details>
+
+<details>
+<summary><b>„ffmpeg nicht gefunden“ oder der Download klappt nicht</b></summary>
+
+Das Programm sucht in dieser Reihenfolge: eigener Ordner (Einstellungen bzw. `--ffmpeg`), heruntergeladenes ffmpeg, `PATH`. Ohne Internet oder hinter einer Firewall ffmpeg selbst installieren (Linux: Paketverwaltung, macOS: `brew install ffmpeg`, Windows: z. B. `winget install Gyan.FFmpeg`) oder den Ordner mit `ffmpeg` und `ffprobe` in den Einstellungen bzw. per `--ffmpeg <Ordner>` angeben. `vthumb ffmpeg status` zeigt, was gefunden wurde.
+</details>
+
+<details>
+<summary><b>Manche Kacheln sind schwarz oder zeigen Abspann/Vorspann</b></summary>
+
+Schwarze und einfarbige Bilder werden normalerweise ersetzt; bei langen Abblenden den Suchbereich vergrößern (`--black-search 5` bzw. „Suchen ± (s)“ unter „Erweitert“). Vor- und Abspann lassen sich mit `--skip-start`/`--skip-end` (Prozent) auslassen. Einzelne Kacheln kann man in der Vorschau anklicken und den Zeitpunkt von Hand wählen.
+</details>
+
+<details>
+<summary><b>Ein Video von einer Webadresse lädt sehr langsam oder gar nicht</b></summary>
+
+Schnell geht es nur, wenn der Server Range-Anfragen unterstützt; sonst muss ffmpeg bis zur jeweiligen Stelle lesen. MP4-Dateien mit dem Index am Dateiende lassen sich ohne Range-Anfragen gar nicht öffnen. Dann das Video herunterladen und lokal verarbeiten. Nach 30 s ohne Daten bricht das Programm ab.
+</details>
+
+<details>
+<summary><b>Auf einem Netzlaufwerk ist alles langsam</b></summary>
+
+Jede Kachel ist ein eigener Lesezugriff an einer anderen Stelle im Video. Über das Netz hilft es, weniger parallel zu lesen (`-j 2 --videos 1` bzw. unter „Erweitert“ → Verarbeitung) und die Live-Vorschau auszuschalten (<kbd>Strg</kbd>+<kbd>L</kbd>), damit beim Einstellen nicht ständig Bilder geladen werden.
+</details>
+
+<details>
+<summary><b>Mein Medienserver zeigt das Sheet als Cover an</b></summary>
+
+Ein Bild mit demselben Namen wie das Video (`Film.jpg` neben `Film.mkv`) halten manche Medienserver und Player für ein Cover. Dann die Sheets in einen Unterordner schreiben (`--subfolder thumbnails`) oder den Namen ändern (`--pattern "{name}.sheet"`).
+</details>
+
+<details>
+<summary><b>Wo liegen Einstellungen und Presets? Wie nehme ich sie mit?</b></summary>
+
+Windows `%APPDATA%\VideoThumbnailer`, Linux `~/.config/video-thumbnailer`, macOS `~/Library/Application Support/VideoThumbnailer`. Einzelne Presets gibt man als `.vtpreset` weiter ([Format](docs/presets.md)); für ein komplett mitnehmbares Programm den [portablen Modus](#installation) verwenden.
+</details>
+
 ## Weitere Details
 
 <details>
@@ -509,7 +563,7 @@ Mitgeliefert sind die Basis-Presets „Compact“, „Detailed“, „Standard�
 <details>
 <summary><b>Warteschlange: erneut einreihen</b></summary>
 
-Fertige Einträge der Warteschlange (erstellt, übersprungen, fehlgeschlagen oder abgebrochen) kommen per Rechtsklick → „Erneut einreihen“ oder <kbd>Strg</kbd>+<kbd>R</kbd> (für alle ausgewählten), über ↻ am Eintrag (erscheint beim Überfahren) oder über „⋯“ → „Alle erledigten erneut einreihen“ bzw. „Fehlgeschlagene erneut versuchen“ zurück auf „Wartet“. Sie bleiben an ihrer Stelle und laufen beim nächsten Start mit den aktuellen Einstellungen; von Hand gewählte Zeitpunkte bleiben. Das vorhandene Sheet wird ersetzt, auch wenn vorhandene Dateien sonst übersprungen werden; bei „Umbenennen“ entsteht eine neue Datei. Während eines Laufs geht das nicht.
+Fertige Einträge der Warteschlange (erstellt, übersprungen, fehlgeschlagen oder abgebrochen) kommen per Rechtsklick → „Erneut einreihen“ oder <kbd>Strg</kbd>+<kbd>R</kbd> (für alle ausgewählten), über ↻ am Eintrag (erscheint beim Überfahren) oder über „⋯“ → „Alle erledigten erneut einreihen“ bzw. „Fehlgeschlagene erneut versuchen“ zurück auf „Wartet“. Sie bleiben an ihrer Stelle und laufen beim nächsten Start mit den aktuellen Einstellungen; von Hand gewählte Zeitpunkte bleiben. Das vorhandene Sheet wird ersetzt, auch wenn vorhandene Dateien sonst übersprungen werden; bei „Beide behalten (umbenennen)“ entsteht eine neue Datei. Während eines Laufs geht das nicht.
 </details>
 
 ## ffmpeg
@@ -541,7 +595,7 @@ dotnet publish src/VideoThumbnailer.Gui -c Release -r linux-x64 --self-contained
   -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true
 ```
 
-**README pflegen:** Die Tabellen der Optionen und Tastenkürzel erzeugt ein Test aus dem Code (`src/VideoThumbnailer.Cli/CliOptions.cs` und `Shortcuts.cs`); er schlägt fehl, sobald eine Option fehlt oder die README veraltet ist. Neu schreiben mit `VTHUMB_UPDATE_README=1 dotnet test --filter ReadmeTests`. Alle Bilder in `docs/images` (Beispiel-Sheets und Screenshots) erzeugt `tools/readme-images.sh` neu (braucht ffmpeg).
+**README pflegen:** Die Optionen stehen an einer Stelle, in `src/VideoThumbnailer.Cli/CliOptions.cs` (deutsch und englisch, mit Beispiel). Daraus entstehen `vthumb --help` und die Tabellen in `README.md` und `README.en.md`; die Tastenkürzel-Tabellen kommen aus `Shortcuts.cs`. Ein Test schlägt fehl, sobald eine Option fehlt oder eine README veraltet ist. Neu schreiben mit `VTHUMB_UPDATE_README=1 dotnet test --filter ReadmeTests`. Alle Bilder in `docs/images` (Beispiel-Sheets, Screenshots, `workflow.gif`) erzeugt `tools/readme-images.sh` neu (braucht ffmpeg).
 
 Aufbau:
 

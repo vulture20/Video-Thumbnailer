@@ -41,8 +41,15 @@ vthumb -y -p Compact -w 900 -a webp --clip-seconds 2 --fps 8 -q 60 -o "$img" --o
 mv -f "$img/example-animated.sheet.webp" "$img/example-animated.webp"
 vthumb pack -y -p Standard --tiles 6 -w 1600 -q 85 -o "$img/example-pack.jpg" "$work"/episode-0*.mp4
 
-# --- GUI screenshots ----------------------------------------------------------------------------------------------
+# --- GUI screenshots and the workflow GIF --------------------------------------------------------------------------
 unset VIDEO_THUMBNAILER_HOME VTHUMB_LANG
-VTHUMB_README_SHOTS="$img" VTHUMB_README_VIDEO="$demo" \
-  dotnet test "$root/tests/VideoThumbnailer.Tests" --filter "FullyQualifiedName~Readme_screenshots"
+mkdir -p "$work/frames"
+VTHUMB_README_SHOTS="$img" VTHUMB_README_VIDEO="$demo" VTHUMB_README_FRAMES="$work/frames" \
+  dotnet test "$root/tests/VideoThumbnailer.Tests" --filter "FullyQualifiedName~Readme_screenshots|FullyQualifiedName~Readme_workflow_frames"
+# each frame 1.6 s, the last one 3 s; one palette for all frames keeps the colours steady
+{ for f in "$work"/frames/frame-*.png; do echo "file '$f'"; echo "duration 1.6"; done
+  last=$(ls "$work"/frames/frame-*.png | tail -1); echo "duration 1.4"; echo "file '$last'"; } > "$work/frames.txt"
+ffmpeg -hide_banner -loglevel error -y -f concat -safe 0 -i "$work/frames.txt" \
+  -vf "fps=10,scale=880:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128:stats_mode=full[p];[b][p]paletteuse=dither=sierra2_4a" \
+  -loop 0 "$img/workflow.gif"
 ls -l "$img"

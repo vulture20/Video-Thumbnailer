@@ -268,6 +268,59 @@ public class GuiPreviewTests
         }
     }
 
+    /// <summary>
+    /// Frames for the animated workflow picture at the top of the README (tools/readme-images.sh turns them into a GIF):
+    /// empty window, videos added, preset and grid chosen, run finished. Only runs when VTHUMB_README_FRAMES names a
+    /// folder (and VTHUMB_README_VIDEO the demo video).
+    /// </summary>
+    [AvaloniaFact]
+    public async Task Readme_workflow_frames()
+    {
+        var outDir = Environment.GetEnvironmentVariable("VTHUMB_README_FRAMES");
+        var demo = Environment.GetEnvironmentVariable("VTHUMB_README_VIDEO");
+        if (string.IsNullOrEmpty(outDir) || string.IsNullOrEmpty(demo)) Assert.Skip("VTHUMB_README_FRAMES/VTHUMB_README_VIDEO not set");
+        var home = TestUtil.TempDir();
+        AppPaths.SetRootOverride(home);
+        try
+        {
+            new AppSettings { FfmpegDownloadAsked = true, CheckFfmpegUpdates = false, Language = "English" }.Save();
+            var dir = Directory.CreateDirectory(Path.Combine(home, "Videos")).FullName;
+            string[] names = ["demo-reel.mp4", "holiday-2026.mp4", "interview.mkv"];
+            foreach (var n in names) File.Copy(demo, Path.Combine(dir, n));
+            var frame = 0;
+            void Shot(Window w)
+            {
+                Avalonia.Threading.Dispatcher.UIThread.RunJobs();
+#pragma warning disable CS0618
+                w.CaptureRenderedFrame()?.Save(Path.Combine(outDir, $"frame-{++frame:00}.png"));
+#pragma warning restore CS0618
+            }
+
+            var window = new MainWindow();
+            var vm = new MainViewModel(window);
+            window.DataContext = vm;
+            window.Show();
+            Shot(window);                                                     // 1 empty
+            vm.AddPaths(names.Select(n => Path.Combine(dir, n)).ToList());
+            await vm.UpdatePreviewAsync();
+            Shot(window);                                                     // 2 videos added, live preview
+            vm.SelectedPreset = vm.Presets.First(p => p.Name == "Compact");
+            await vm.UpdatePreviewAsync();
+            Shot(window);                                                     // 3 other preset
+            vm.Settings.SelectedLayout = vm.Settings.Layouts.First(l => l.Template?.Name == "BigCenter");
+            await vm.UpdatePreviewAsync();
+            Shot(window);                                                     // 4 special grid
+            await vm.StartCommand.ExecuteAsync(null);
+            Assert.All(vm.Jobs, j => Assert.Equal(Core.Batch.JobStatus.Done, j.Job.Status));
+            Shot(window);                                                     // 5 done
+            window.Close();
+        }
+        finally
+        {
+            AppPaths.SetRootOverride(null);
+        }
+    }
+
     [AvaloniaFact]
     public async Task Preview_shows_real_frames_and_video_data_of_the_selected_video()
     {
