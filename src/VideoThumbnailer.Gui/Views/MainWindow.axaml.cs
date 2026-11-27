@@ -59,6 +59,7 @@ public partial class MainWindow : Window, IUiServices
         Add(KeyBindings, "ToggleMode", vm.ToggleAdvancedCommand);
         Add(KeyBindings, "ToggleLivePreview", vm.ToggleLivePreviewCommand);
         Add(KeyBindings, "ToggleQueue", vm.ToggleQueueCommand);
+        Add(KeyBindings, "RequeueSelected", vm.RequeueSelectedCommand);
         Add(QueueList.KeyBindings, "RemoveSelected", vm.RemoveSelectedCommand);
         Add(QueueList.KeyBindings, "SelectAll", new SelectAllCommand(QueueList));
     }
@@ -128,6 +129,17 @@ public partial class MainWindow : Window, IUiServices
         var p = e.GetPosition(img);
         e.Handled = true;
         await vm.EditTileAtAsync(p.X / img.Bounds.Width, p.Y / img.Bounds.Height);
+    }
+
+    /// <summary>
+    /// Right-click on an entry that is not selected: the menu acts on that entry alone (as in file managers);
+    /// on a selected one it acts on the whole selection.
+    /// </summary>
+    private void OnQueueContextRequested(object? sender, ContextRequestedEventArgs e)
+    {
+        if ((e.Source as Control)?.DataContext is not JobViewModel job || QueueList.SelectedItems is not { } selected || selected.Contains(job)) return;
+        selected.Clear();
+        selected.Add(job);
     }
 
     private void OnQueueDoubleTapped(object? sender, TappedEventArgs e)

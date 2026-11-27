@@ -58,7 +58,8 @@
                   <MenuItem Header="{l:T RemoveSelected}" Command="{Binding RemoveSelectedCommand}" ToolTip.Tip="{l:T RemoveSelectedTip, Shortcut=RemoveSelected}" />
                   <MenuItem Header="{l:T ClearFinished}" Command="{Binding ClearFinishedCommand}" />
                   <MenuItem Header="{l:T ClearAll}" Command="{Binding ClearAllCommand}" />
-                  <MenuItem Header="{l:T RetryFailed}" Command="{Binding RetryFailedCommand}" />
+                  <MenuItem x:Name="RequeueAllFinishedItem" Header="{l:T RequeueAllFinished}" Command="{Binding RequeueAllFinishedCommand}" ToolTip.Tip="{l:T RequeueAllFinishedTip}" />
+                  <MenuItem x:Name="RetryFailedItem" Header="{l:T RetryFailed}" Command="{Binding RetryFailedCommand}" ToolTip.Tip="{l:T RetryFailedTip}" />
                   <Separator />
                   <MenuItem x:Name="CreatePackItem" Header="{l:T CreatePack}" Command="{Binding CreatePackCommand}" ToolTip.Tip="{l:T CreatePackTip}" />
                   <MenuItem x:Name="OpenSheetItem" Header="{l:T OpenSheet}" Command="{Binding OpenSheetCommand}" ToolTip.Tip="{l:T OpenSheetTip}" />
@@ -93,11 +94,20 @@
 
           <Grid>
             <ListBox x:Name="QueueList" Classes="queue" ToolTip.Tip="{l:T QueueListTip}" ToolTip.ShowDelay="1500" ItemsSource="{Binding Jobs}" SelectionMode="Multiple,Toggle"
-                     Background="Transparent" SelectionChanged="OnQueueSelectionChanged" DoubleTapped="OnQueueDoubleTapped">
+                     Background="Transparent" SelectionChanged="OnQueueSelectionChanged" DoubleTapped="OnQueueDoubleTapped" ContextRequested="OnQueueContextRequested">
+              <ListBox.ContextMenu>
+                <ContextMenu x:Name="QueueContextMenu">
+                  <MenuItem x:Name="RequeueSelectedItem" Header="{l:T RequeueSelected}" Command="{Binding RequeueSelectedCommand}" ToolTip.Tip="{l:T RequeueSelectedTip, Shortcut=RequeueSelected}" />
+                  <MenuItem x:Name="RemoveSelectedItem" Header="{l:T RemoveSelected}" Command="{Binding RemoveSelectedCommand}" ToolTip.Tip="{l:T RemoveSelectedTip, Shortcut=RemoveSelected}" />
+                </ContextMenu>
+              </ListBox.ContextMenu>
               <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="vm:JobViewModel">
                   <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="Auto,Auto,*" Background="Transparent" ToolTip.Tip="{Binding ShownPath}">
                     <DockPanel Grid.ColumnSpan="3">
+                      <Button DockPanel.Dock="Right" Classes="icon requeue" Content="↻" Margin="4,-3,0,-3" Padding="5,0"
+                              IsVisible="{Binding IsFinished}" ToolTip.Tip="{l:T RequeueJobTip}"
+                              Command="{Binding $parent[ListBox].((vm:MainViewModel)DataContext).RequeueJobCommand}" CommandParameter="{Binding}" />
                       <TextBlock DockPanel.Dock="Right" Text="✎" Classes="caption" Margin="6,0,0,0" IsVisible="{Binding HasManualTimes}" ToolTip.Tip="{Binding ManualTimesText}" />
                       <TextBlock Text="{Binding FileName}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
                     </DockPanel>

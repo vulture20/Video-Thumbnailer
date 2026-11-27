@@ -234,5 +234,16 @@
     <Style Selector="ListBox.queue ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
       <Setter Property="Background" Value="{DynamicResource SelectionBrush}" />
     </Style>
+    <!-- ↻ on finished entries: shown while the pointer is over the entry or it is selected -->
+    <Style Selector="ListBox.queue Button.requeue">
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="Opacity" Value="0" />
+    </Style>
+    <Style Selector="ListBox.queue ListBoxItem:pointerover Button.requeue, ListBox.queue ListBoxItem:selected Button.requeue, ListBox.queue Button.requeue:focus-visible">
+      <Setter Property="Opacity" Value="1" />
+    </Style>
+    <Style Selector="ListBox.queue Button.requeue:pointerover">
+      <Setter Property="Foreground" Value="{DynamicResource BrandBlueBrush}" />
+    </Style>
   </Application.Styles>
 </Application>

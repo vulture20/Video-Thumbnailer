@@ -354,6 +354,13 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 27.11.2026 | Player-Einstellung im Viewer (gespeichert in `settings.json`): „Automatisch“ sucht in dieser Reihenfolge **mpv** (`--start=`), **VLC** (`--start-time=`), **MPC-HC/MPC-BE** (`/start <ms>`), **PotPlayer** (`/seek=hh:mm:ss.fff`) im PATH und in den üblichen Installationsordnern; „Eigener Befehl“ mit `{file}`, `{seconds}`, `{ms}`, `{time}` (ohne `{file}` wird das Video angehängt); „Systemstandard“ öffnet ohne Zeitpunkt, die Statuszeile sagt das | der Systemstandard kennt keinen Zeitpunkt; mpv und VLC gibt es auf allen Systemen |
 | 27.11.2026 | **Löschen nur in den Papierkorb**, nach Rückfrage, mit Haken „Auch das Sheet und seine Dateien“ (Sheet, `.vtsheet`, WebVTT, Vorschau-Clip; Standard aus). Windows `SHFileOperation` mit `FOF_ALLOWUNDO` (kann eine Datei nicht in den Papierkorb, fragt Windows vor dem endgültigen Löschen), macOS über den Finder, Linux `gio trash`, sonst eigener Papierkorb nach freedesktop.org-Spezifikation in `~/.local/share/Trash`. Schlägt es fehl, bleibt die Datei. Das Video verschwindet danach aus der Warteschlange | wie im Issue; nie endgültig löschen |
 
+### Erneut einreihen
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 27.11.2026 | Fertige Einträge (erstellt, übersprungen, fehlgeschlagen, abgebrochen) lassen sich wieder auf „Wartet“ setzen: Rechtsklick → „Erneut einreihen“ bzw. **Strg/Cmd+R** für die Auswahl, ↻ am Eintrag (beim Überfahren oder ausgewählt), „⋯“ → „Alle erledigten erneut einreihen“ und „Fehlgeschlagene erneut versuchen“. Rechtsklick auf einen nicht ausgewählten Eintrag wählt nur diesen aus | Wunsch von Vulli; Strg+R war frei |
+| 27.11.2026 | Der Eintrag **bleibt an seiner Stelle**, läuft beim nächsten Start mit den **aktuellen Einstellungen** und behält **Zeitpunkte von Hand**. Ein vorhandenes Sheet wird **ersetzt**, auch wenn „Vorhandene Dateien“ auf „Überspringen“ steht (sonst würde der Eintrag sofort wieder übersprungen); „Umbenennen“ bleibt und schreibt eine neue Datei | erneut einreihen heißt „noch einmal machen“; „Umbenennen“ ist der ausdrückliche Wunsch, nichts zu ersetzen |
+| 27.11.2026 | Nur **ohne laufenden Lauf**, wie „Auswahl entfernen“: ein Lauf arbeitet die Liste ab, mit der er gestartet wurde | sonst stimmten Zähler und Statuszeile nicht |
+
 ### Kleinigkeiten
 | Datum | Entscheidung | Begründung / Anmerkung |
 |---|---|---|
@@ -389,7 +396,7 @@ Umgesetzt (P1):
 - Zeitstempel: 5 Positionen, Schriftgröße, Farbe, Deckkraft, Kontur, Schatten
 - Info-Kopf: 4 Positionen, frei konfigurierbare Felder über Platzhalter
 - Ausgabe JPG/PNG/WebP mit Qualität; jede Aufnahme zusätzlich als Einzelbild
-- Warteschlange: sortieren, Auswahl entfernen, Erledigte/alle leeren, Fehlgeschlagene wiederholen
+- Warteschlange: sortieren, Auswahl entfernen, Erledigte/alle leeren, Fehlgeschlagene wiederholen (nach 1.0.0 ergänzt: fertige Einträge erneut einreihen)
 - Start, Pause/Fortsetzen, Abbrechen, Fortschritt und Statistik
 - Parallelverarbeitung über alle CPU-Kerne
 - Ausgabeordner / neben dem Video / Unterordner neben dem Video; Ordnerstruktur beibehalten; Dateinamen-Muster; Verhalten bei vorhandenen Dateien (überspringen, überschreiben, umbenennen)

@@ -19,6 +19,11 @@ public sealed class ThumbnailJob(string inputPath, string? inputRoot = null)
     /// </summary>
     public IReadOnlyList<Layout.ManualTime?>? ManualTimes { get; set; }
     public bool HasManualTimes => ManualTimes?.Any(t => t is not null) == true;
+    /// <summary>
+    /// Put back into the queue by hand after it had finished: an existing sheet (or clip) is replaced even when the
+    /// settings say "skip existing", since the user asked for this video to be made again.
+    /// </summary>
+    public bool ReplaceExisting { get; private set; }
 
     public event Action<ThumbnailJob>? Changed;
 
@@ -39,5 +44,17 @@ public sealed class ThumbnailJob(string inputPath, string? inputRoot = null)
     {
         Status = JobStatus.Pending; Progress = 0; Message = null; OutputPath = null; Elapsed = TimeSpan.Zero;
         Changed?.Invoke(this);
+    }
+
+    /// <summary>
+    /// Queues a finished job again ("re-queue"): back to pending with <see cref="ReplaceExisting"/> set. Manual
+    /// capture times stay. Returns false (and changes nothing) for a job that is waiting or running.
+    /// </summary>
+    public bool Requeue()
+    {
+        if (!IsFinished) return false;
+        ReplaceExisting = true;
+        Reset();
+        return true;
     }
 }
