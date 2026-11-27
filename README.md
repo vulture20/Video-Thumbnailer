@@ -25,9 +25,12 @@ Free, cross-platform video contact sheet generator with GUI and command line.
 - Info-Kopf mit frei konfigurierbaren Video-Infos (Name, Größe, Dauer, Auflösung, Codecs, Bitrate, FPS, Audio …), eigene Titel- und Textfarbe, dazu ein eigener Kommentartext
 - Ausgabe als JPG, PNG oder WebP; optional jede Aufnahme als Einzelbild
 - Animierte Sheets als MP4 (H.264 oder H.265), WebM, OGV, GIF, animiertes WebP oder APNG: jede Kachel spielt einen kurzen Ausschnitt ab ihrem Zeitpunkt ab, mit mitlaufendem Zeitstempel; Videoformate optional mit dem Ton einer Kachel
+- Vorschau-Clip („Trailer“): kurze Ausschnitte aus mehreren Stellen des Videos nacheinander, mit Überblendung und Zeit in der Ecke, als MP4, WebM, GIF usw. (höchstens 2 Minuten), zusätzlich zum Sheet oder allein
+- Technische Daten vieler Videos als CSV- oder XML-Tabelle (eine Zeile je Video) und WebVTT-Vorschaubilder mit Sprite für die Zeitleiste von Web-Playern
+- Tastenkürzel für die wichtigsten Aktionen (Strg bzw. Cmd+O, Strg+Eingabe, Entf …), in den Tooltips angezeigt
 - Warteschlange mit Pause, Abbruch, Fortschritt und paralleler Verarbeitung über alle CPU-Kerne; klappt in schmalen Fenstern zu einer Leiste ein
 - Ausgabe in einen Ordner (optional mit Ordnerstruktur), neben das Video oder in einen Unterordner; Dateinamen-Muster
-- Presets als offene JSON-Dateien, 4 mitgelieferte Basis-Presets
+- Presets als offene JSON-Dateien, 4 mitgelieferte Basis-Presets; exportierte Presets (`.vtpreset`) öffnen sich per Doppelklick, auch im schon laufenden Programm
 - Oberfläche, Kommandozeile und Texte im Sheet auf Deutsch und Englisch (folgt der Systemsprache, umschaltbar)
 - Live-Vorschau des Kontaktbogens beim Einstellen, mit echten Bildern und Videodaten des gewählten Videos: Raster, Info-Kopf, Zeitstempel, Farben und Bildgröße wie im Ergebnis (abschaltbar)
 - Einstellungen im Modus „Einfach“ (nur das Wichtigste) oder „Erweitert“ (alles); Darstellung hell, dunkel oder wie das System
@@ -108,6 +111,18 @@ vthumb --gap 12 --corners rounded --tile-border 2 --tile-border-color "#E6E6E6" 
 # Logo als Wasserzeichen in jeder Kachel, oben links, ein Zehntel der Kachelbreite
 vthumb --watermark-image logo.png --watermark-per-tile --watermark-pos top-left --watermark-size 0.1 film.mkv
 
+# Vorschau-Clip: 12 Ausschnitte à 2,5 s mit Überblendung als „film.preview.mp4“ neben dem Sheet
+vthumb --trailer mp4 film.mkv
+
+# Nur einen GIF-Clip ohne Sheet: 8 Ausschnitte à 1,5 s, 480 px, harter Schnitt
+vthumb --trailer gif --trailer-only --trailer-clips 8 --trailer-seconds 1.5 --trailer-size 480 --trailer-fade 0 film.mkv
+
+# Daten aller Videos eines Ordners als Tabelle, ohne Sheets
+vthumb -r --export-info videos.csv --info-only ~/Videos
+
+# Sheet plus WebVTT-Vorschaubilder für einen Web-Player (film.thumbnails.vtt und film.thumbnails.jpg)
+vthumb --webvtt --columns 10 --rows 10 film.mp4
+
 # Eigene Einstellungen als Preset speichern
 vthumb --columns 5 --rows 6 --no-header --save-preset "5x6 ohne Kopf"
 ```
@@ -135,6 +150,27 @@ Ohne `--preset` werden die zuletzt in der Oberfläche benutzten Einstellungen ve
 **Wasserzeichen:** Ein Bild hat Vorrang vor dem Text. Die Größe ist die Breite des Wasserzeichens im Verhältnis zur Sheet-Breite (mit `--watermark-per-tile` zur Kachelbreite), höchstens so hoch wie die Fläche. Es liegt über dem Info-Kopf, in Kacheln unter dem Zeitstempel. Einzelbilder bekommen kein Wasserzeichen.
 
 **Animierte Formate:** MP4 (H.264) läuft überall; H.265 ist kleiner, spielt aber nicht jeder Browser ab. WebP und GIF eignen sich für Webseiten und Foren, APNG ist verlustfrei und entsprechend groß, OGV (Theora) gibt es für ältere freie Umgebungen. Mit `--audio` (bzw. „Mit Ton“) läuft der Ton der größten Kachel während ihres Ausschnitts, bei gleich großen Kacheln der der ersten; GIF, WebP und APNG können keinen Ton enthalten.
+
+**Vorschau-Clip:** Die Ausschnitte sind gleichmäßig über das Video verteilt (Anfang/Ende überspringen und schwarze Bilder wie beim Sheet). Standard sind 12 Ausschnitte à 2,5 s mit 0,5 s Überblendung, 640 px an der längeren Seite und 24 Bilder/s, der Zeitstempel im Stil des Sheets. Wird der Clip länger als 2 Minuten, werden die Ausschnitte kürzer; ein kurzes Video bekommt nur so viele Ausschnitte, wie hineinpassen. Mit `--trailer-audio` läuft der Ton der Ausschnitte mit (überblendet wie das Bild). Der Clip heißt `<Name>.preview.<Endung>` und liegt neben dem Sheet; beim Ordner-Scan wird er wie `*.sheet.*` übersprungen.
+
+**Video-Infos als CSV/XML:** Eine Datei je Lauf mit einer Zeile (CSV) bzw. einem `<video>`-Element (XML) je Video. Die Spalten heißen wie die Platzhalter des Info-Kopfs (`filename`, `size`, `duration`, `vcodec` …); Zahlen stehen ohne Einheit und mit Punkt (Größe in Bytes, Dauer in Sekunden, Bitraten in bit/s), damit Tabellenkalkulationen und Skripte sie in jeder Sprache lesen. Nicht lesbare Dateien stehen mit Grund in der Spalte `error`. CSV mit Komma (RFC 4180), UTF-8 mit BOM. In der Oberfläche: „⋯“ über der Warteschlange → „Video-Infos exportieren…“.
+
+**WebVTT:** `<Name>.thumbnails.jpg` enthält die aufgenommenen Bilder (160 px breit, `--webvtt-width`) in einem Raster ohne Kopf, Zeitstempel und Effekte; `<Name>.thumbnails.vtt` ordnet jedem Zeitbereich ein Bild zu (`#xywh=`). Jedes Bild gilt bis zur Mitte zwischen ihm und dem nächsten. Für eine feine Zeitleiste ein Preset mit vielen Kacheln verwenden (z. B. 10 × 10).
+
+**Preset-Dateien:** Exportierte Presets heißen `<Name>.vtpreset` (Inhalt JSON) und öffnen sich per Doppelklick: das Preset wird übernommen und gewählt. Läuft das Programm schon, bekommt das offene Fenster die Datei (ebenso Videos über „Öffnen mit“). Der Installer für Windows trägt die Endung ein (abwählbar), das DMG für macOS ebenso; unter Linux siehe [packaging/linux/README.md](packaging/linux/README.md). Ältere `*.vtpreset.json`-Dateien lassen sich weiter importieren und öffnen.
+
+**Tastenkürzel** (unter macOS Cmd statt Strg):
+
+| Taste | Aktion |
+|---|---|
+| Strg+O / Strg+Umschalt+O / Strg+U | Dateien / Ordner / Webadresse hinzufügen |
+| Strg+Eingabe oder F5 | Starten |
+| Strg+P | Pause / Fortsetzen |
+| Esc | Abbrechen (während eines Laufs) |
+| Entf / Strg+A | Auswahl entfernen / alles auswählen (in der Warteschlange) |
+| Strg+E | „Einfach“/„Erweitert“ umschalten |
+| Strg+L | Live-Vorschau an/aus |
+| Strg+B | Warteschlange ein-/ausklappen |
 
 Sprache: `--lang de|en|auto` (oder Umgebungsvariable `VTHUMB_LANG`) für Hilfe und Meldungen; ohne Angabe gilt die in der Oberfläche gewählte Sprache, sonst die Systemsprache. `--sheet-lang de|en|auto` legt die Sprache der Texte im Sheet fest (z. B. „Größe:“/„Size:“, Dezimalkomma).
 Exit-Codes: 0 ok, 1 einzelne Videos fehlgeschlagen, 2 Aufruffehler, 3 ffmpeg fehlt, 130 abgebrochen.

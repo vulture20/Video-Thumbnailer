@@ -20,6 +20,7 @@ public class GuiEffectsTests
         public Task<IReadOnlyList<string>> PickVideoFilesAsync() => window.PickVideoFilesAsync();
         public Task<string?> PickFolderAsync(string title) => window.PickFolderAsync(title);
         public Task<string?> PickPresetFileAsync(bool save, string? suggestedName = null) => window.PickPresetFileAsync(save, suggestedName);
+        public Task<string?> PickInfoExportFileAsync(string suggestedName) => Task.FromResult<string?>(null);
         public Task<string?> PickImageFileAsync(string? current, string titleKey) => Task.FromResult(ImageAnswer);
         public Task<string?> PromptTextAsync(string title, string message, string initial) => Task.FromResult<string?>(null);
         public Task<bool> ConfirmAsync(string title, string message, string? yes = null, string? no = null) => Task.FromResult(true);

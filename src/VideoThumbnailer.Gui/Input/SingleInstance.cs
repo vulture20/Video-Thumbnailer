@@ -54,7 +54,7 @@ public sealed class SingleInstance : IDisposable
     public static SingleInstance? Listen(string name, Action<string[]> received)
     {
         // Do not take the pipe away from an instance that is still running (Unix replaces the socket file).
-        if (UnixSocketFile(name) is { } file && File.Exists(file) && TrySend(name, [])) return null;
+        if (UnixSocketFile(name) is { } file && File.Exists(file) && TrySend(name, [], 1000)) return null;
         NamedPipeServerStream server;
         try { server = Create(name); }
         catch (IOException) { return null; }
@@ -63,30 +63,37 @@ public sealed class SingleInstance : IDisposable
         return instance;
     }
 
+    /// <summary>
+    /// Windows: one instance, a second program cannot open another one. Unix: the instances of this process share one
+    /// socket, so the next one is opened before the last is closed and the socket never disappears in between.
+    /// </summary>
     private static NamedPipeServerStream Create(string name) =>
-        new(name, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
+        new(name, PipeDirection.In, OperatingSystem.IsWindows() ? 1 : NamedPipeServerStream.MaxAllowedServerInstances,
+            PipeTransmissionMode.Byte, PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
 
     private async Task LoopAsync(NamedPipeServerStream server, Action<string[]> received)
     {
         var ct = _cts.Token;
         while (!ct.IsCancellationRequested)
         {
+            NamedPipeServerStream? next = null;
             try
             {
                 await server.WaitForConnectionAsync(ct).ConfigureAwait(false);
+                if (!OperatingSystem.IsWindows()) next = Create(_name);
                 using var ms = new MemoryStream();
                 await server.CopyToAsync(ms, ct).ConfigureAwait(false);
                 var args = ms.Length == 0 ? [] : JsonSerializer.Deserialize<string[]>(ms.ToArray()) ?? [];
                 if (args.Length > 0) received(args);
             }
-            catch (OperationCanceledException) { break; }
+            catch (OperationCanceledException) { next?.Dispose(); break; }
             catch (Exception ex) when (ex is IOException or JsonException) { /* broken message: wait for the next one */ }
             finally
             {
                 await server.DisposeAsync().ConfigureAwait(false);
             }
-            if (ct.IsCancellationRequested) break;
-            try { server = Create(_name); }
+            if (ct.IsCancellationRequested) { next?.Dispose(); break; }
+            try { server = next ?? Create(_name); }
             catch (IOException) { return; }
         }
     }

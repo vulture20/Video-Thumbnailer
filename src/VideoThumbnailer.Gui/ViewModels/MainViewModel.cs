@@ -196,6 +196,8 @@ public partial class MainViewModel : ObservableObject
                     var p = PresetStore.LoadFile(a);
                     _presets.Save(p);
                     ReloadPresets(p.Name);
+                    // Apply it too: the preset list alone does not load the settings.
+                    if (SelectedPreset is { } sel) Settings.Load(sel);
                 }
                 catch (Exception ex) { StatusText = Loc.T("StatusPresetLoadFailed", ex.Message); }
             }

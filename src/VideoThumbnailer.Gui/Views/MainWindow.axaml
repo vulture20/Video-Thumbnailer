@@ -21,13 +21,13 @@
               IsVisible="{Binding IsQueueCollapsed}">
         <DockPanel Margin="0,8">
           <StackPanel DockPanel.Dock="Top" Spacing="4" HorizontalAlignment="Center">
-            <Button x:Name="ExpandQueueButton" Classes="icon" Content="»" Command="{Binding ToggleQueueCommand}" ToolTip.Tip="{l:T QueueExpand}" HorizontalAlignment="Center" />
+            <Button x:Name="ExpandQueueButton" Classes="icon" Content="»" Command="{Binding ToggleQueueCommand}" ToolTip.Tip="{l:T QueueExpand, Shortcut=ToggleQueue}" HorizontalAlignment="Center" />
             <TextBlock Text="{Binding Jobs.Count}" Classes="caption" FontWeight="SemiBold" HorizontalAlignment="Center" ToolTip.Tip="{Binding QueueTitle}" />
-            <Button Content="+" Command="{Binding AddFilesCommand}" Classes="accent" Width="36" HorizontalContentAlignment="Center" ToolTip.Tip="{l:T AddFiles}" />
-            <Button Width="36" Command="{Binding AddFolderCommand}" ToolTip.Tip="{l:T AddFolder}" HorizontalContentAlignment="Center">
+            <Button Content="+" Command="{Binding AddFilesCommand}" Classes="accent" Width="36" HorizontalContentAlignment="Center" ToolTip.Tip="{l:T AddFiles, Shortcut=AddFiles}" />
+            <Button Width="36" Command="{Binding AddFolderCommand}" ToolTip.Tip="{l:T AddFolder, Shortcut=AddFolder}" HorizontalContentAlignment="Center">
               <PathIcon Width="14" Height="14" Data="M2,5 C2,3.9 2.9,3 4,3 L9,3 L11,5 L20,5 C21.1,5 22,5.9 22,7 L22,18 C22,19.1 21.1,20 20,20 L4,20 C2.9,20 2,19.1 2,18 Z" />
             </Button>
-            <Button Width="36" Command="{Binding AddUrlCommand}" ToolTip.Tip="{l:T AddUrl}" HorizontalContentAlignment="Center">
+            <Button Width="36" Command="{Binding AddUrlCommand}" ToolTip.Tip="{l:T AddUrl, Shortcut=AddUrl}" HorizontalContentAlignment="Center">
               <Path Width="16" Height="16" Stretch="Uniform" StrokeThickness="1.6" Stroke="{Binding $parent[Button].Foreground}"
                     Data="M12,2 A10,10 0 1,0 12,22 A10,10 0 1,0 12,2 Z M2.5,9 L21.5,9 M2.5,15 L21.5,15 M12,2 C7.5,6.5 7.5,17.5 12,22 M12,2 C16.5,6.5 16.5,17.5 12,22" />
             </Button>
@@ -51,11 +51,11 @@
         <DockPanel>
           <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,Auto" Margin="14,10,6,4">
             <TextBlock Text="{Binding QueueTitle}" Classes="caption" FontWeight="SemiBold" LetterSpacing="0.6" VerticalAlignment="Center" />
-            <Button Grid.Column="2" x:Name="CollapseQueueButton" Classes="icon" Content="«" Command="{Binding ToggleQueueCommand}" ToolTip.Tip="{l:T QueueCollapse}" />
+            <Button Grid.Column="2" x:Name="CollapseQueueButton" Classes="icon" Content="«" Command="{Binding ToggleQueueCommand}" ToolTip.Tip="{l:T QueueCollapse, Shortcut=ToggleQueue}" />
             <Button Grid.Column="1" Classes="icon" Content="⋯" ToolTip.Tip="{l:T QueueMenuTip}">
               <Button.Flyout>
                 <MenuFlyout Placement="BottomEdgeAlignedRight">
-                  <MenuItem Header="{l:T RemoveSelected}" Command="{Binding RemoveSelectedCommand}" />
+                  <MenuItem Header="{l:T RemoveSelected}" Command="{Binding RemoveSelectedCommand}" ToolTip.Tip="{l:T RemoveSelectedTip, Shortcut=RemoveSelected}" />
                   <MenuItem Header="{l:T ClearFinished}" Command="{Binding ClearFinishedCommand}" />
                   <MenuItem Header="{l:T ClearAll}" Command="{Binding ClearAllCommand}" />
                   <MenuItem Header="{l:T RetryFailed}" Command="{Binding RetryFailedCommand}" />
@@ -73,8 +73,8 @@
 
           <StackPanel DockPanel.Dock="Top" Margin="14,2,14,8" Spacing="6">
             <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="6">
-              <Button Content="{l:T AddFilesShort}" Command="{Binding AddFilesCommand}" Classes="accent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
-              <Button Grid.Column="1" Content="{l:T AddFolderShort}" Command="{Binding AddFolderCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+              <Button x:Name="AddFilesButton" Content="{l:T AddFilesShort}" Command="{Binding AddFilesCommand}" ToolTip.Tip="{l:T AddFiles, Shortcut=AddFiles}" Classes="accent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+              <Button Grid.Column="1" x:Name="AddFolderButton" Content="{l:T AddFolderShort}" Command="{Binding AddFolderCommand}" ToolTip.Tip="{l:T AddFolder, Shortcut=AddFolder}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
               <Button Grid.Column="2" x:Name="AddUrlButton" Command="{Binding AddUrlCommand}" ToolTip.Tip="{l:T AddUrl, Shortcut=AddUrl}" Width="36" Padding="0"
                       VerticalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
                 <Path Width="16" Height="16" Stretch="Uniform" StrokeThickness="1.6" Stroke="{Binding $parent[Button].Foreground}"
@@ -90,7 +90,7 @@
           </Grid>
 
           <Grid>
-            <ListBox x:Name="QueueList" Classes="queue" ItemsSource="{Binding Jobs}" SelectionMode="Multiple,Toggle"
+            <ListBox x:Name="QueueList" Classes="queue" ToolTip.Tip="{l:T QueueListTip}" ToolTip.ShowDelay="1500" ItemsSource="{Binding Jobs}" SelectionMode="Multiple,Toggle"
                      Background="Transparent" SelectionChanged="OnQueueSelectionChanged" DoubleTapped="OnQueueDoubleTapped">
               <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="vm:JobViewModel">
@@ -127,7 +127,7 @@
                   ToolTip.Tip="{l:T ManualTimesResetTip}" IsVisible="{Binding HasPreviewManualTimes}" Margin="10,0,0,0" FontSize="12" />
           <TextBlock Grid.Column="3" x:Name="PreviewNote" Text="{Binding PreviewNote}" ToolTip.Tip="{Binding PreviewNoteTip}" Classes="caption" VerticalAlignment="Center" Margin="10,0,14,0"
                      IsVisible="{Binding LivePreview}" />
-          <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="6" ToolTip.Tip="{l:T LivePreviewTip}">
+          <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="6" ToolTip.Tip="{l:T LivePreviewTip, Shortcut=ToggleLivePreview}">
             <TextBlock Text="{l:T LivePreview}" Classes="caption" VerticalAlignment="Center" />
             <ToggleSwitch x:Name="LivePreviewSwitch" IsChecked="{Binding LivePreview}" OnContent="" OffContent="" MinWidth="0" VerticalAlignment="Center" />
           </StackPanel>
@@ -154,8 +154,8 @@
             <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,4">
               <Border Classes="segment">
                 <UniformGrid Columns="2">
-                  <RadioButton x:Name="SimpleMode" Classes="seg" GroupName="SettingsMode" Content="{l:T ModeSimple}" IsChecked="{Binding IsSimple}" />
-                  <RadioButton x:Name="AdvancedMode" Classes="seg" GroupName="SettingsMode" Content="{l:T ModeAdvanced}" IsChecked="{Binding IsAdvanced}" />
+                  <RadioButton x:Name="SimpleMode" Classes="seg" GroupName="SettingsMode" Content="{l:T ModeSimple}" IsChecked="{Binding IsSimple}" ToolTip.Tip="{l:T ModeTip, Shortcut=ToggleMode}" />
+                  <RadioButton x:Name="AdvancedMode" Classes="seg" GroupName="SettingsMode" Content="{l:T ModeAdvanced}" IsChecked="{Binding IsAdvanced}" ToolTip.Tip="{l:T ModeTip, Shortcut=ToggleMode}" />
                 </UniformGrid>
               </Border>
               <Button x:Name="AppSettingsButton" Grid.Column="1" Classes="icon" Content="⚙" Margin="6,0,0,0" ToolTip.Tip="{l:T SettingsTip}">
@@ -192,11 +192,11 @@
               </ListBox.ItemTemplate>
             </ListBox>
             <WrapPanel IsVisible="{Binding IsAdvanced}">
-              <Button Content="{l:T SaveAs}" Command="{Binding SavePresetCommand}" Margin="0,4,6,0" />
-              <Button Content="{l:T Delete}" Command="{Binding DeletePresetCommand}" Margin="0,4,6,0" />
+              <Button Content="{l:T SaveAs}" Command="{Binding SavePresetCommand}" Margin="0,4,6,0" ToolTip.Tip="{l:T SavePresetTip}" />
+              <Button Content="{l:T Delete}" Command="{Binding DeletePresetCommand}" Margin="0,4,6,0" ToolTip.Tip="{l:T DeletePresetTip}" />
               <Button Content="{l:T Reset}" Command="{Binding ResetToPresetCommand}" Margin="0,4,6,0" ToolTip.Tip="{l:T ResetTip}" />
-              <Button Content="{l:T Import}" Command="{Binding ImportPresetCommand}" Margin="0,4,6,0" />
-              <Button Content="{l:T Export}" Command="{Binding ExportPresetCommand}" Margin="0,4,6,0" />
+              <Button Content="{l:T Import}" Command="{Binding ImportPresetCommand}" Margin="0,4,6,0" ToolTip.Tip="{l:T ImportPresetTip}" />
+              <Button Content="{l:T Export}" Command="{Binding ExportPresetCommand}" Margin="0,4,6,0" ToolTip.Tip="{l:T ExportPresetTip}" />
             </WrapPanel>
 
             <!-- Layout -->
@@ -427,7 +427,7 @@
               <TextBlock Grid.Row="3" Classes="label" Text="{l:T TrailerCrossfade}" ToolTip.Tip="{l:T TrailerCrossfadeTip}" />
               <NumericUpDown Grid.Row="3" Grid.Column="1" Value="{Binding Settings.TrailerCrossfade}" Minimum="0" Maximum="2" Increment="0.1" FormatString="0.0#" ToolTip.Tip="{l:T TrailerCrossfadeTip}" />
               <CheckBox x:Name="TrailerOnlyCheck" Grid.Row="4" Grid.ColumnSpan="2" Content="{l:T TrailerOnly}" IsChecked="{Binding Settings.TrailerOnly}" />
-              <TextBlock Grid.Row="5" Classes="label" Text="{l:T TrailerSize}" IsVisible="{Binding IsAdvanced}" />
+              <TextBlock Grid.Row="5" Classes="label" Text="{l:T TrailerSize}" ToolTip.Tip="{l:T TrailerSizeTip}" IsVisible="{Binding IsAdvanced}" />
               <NumericUpDown Grid.Row="5" Grid.Column="1" Value="{Binding Settings.TrailerSize}" Minimum="64" Maximum="3840" Increment="16" FormatString="0" IsVisible="{Binding IsAdvanced}" />
               <TextBlock Grid.Row="6" Classes="label" Text="{l:T AnimationFps}" IsVisible="{Binding IsAdvanced}" />
               <NumericUpDown Grid.Row="6" Grid.Column="1" Value="{Binding Settings.TrailerFps}" Minimum="1" Maximum="60" Increment="1" FormatString="0" IsVisible="{Binding IsAdvanced}" />
@@ -441,7 +441,7 @@
               <TextBlock Grid.Row="1" Classes="label" Text="{l:T OutputFolder}" IsVisible="{Binding Settings.IsOutputFolder}" />
               <Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="*,Auto" IsVisible="{Binding Settings.IsOutputFolder}">
                 <TextBox Text="{Binding Settings.OutputFolder}" />
-                <Button Grid.Column="1" Content="…" Command="{Binding BrowseOutputFolderCommand}" Margin="4,0,0,0" />
+                <Button Grid.Column="1" Content="…" Command="{Binding BrowseOutputFolderCommand}" Margin="4,0,0,0" ToolTip.Tip="{l:T DlgOutputFolder}" />
               </Grid>
               <TextBlock Grid.Row="2" Classes="label" Text="{l:T SubfolderName}" IsVisible="{Binding Settings.IsSubfolder}" />
               <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Settings.SubfolderName}" IsVisible="{Binding Settings.IsSubfolder}" />
@@ -473,14 +473,14 @@
               <TextBlock Text="{Binding Ffmpeg.StatusLine}" TextWrapping="Wrap" />
               <TextBlock Text="{Binding Ffmpeg.DetailLine}" Classes="hint" />
               <WrapPanel IsVisible="{Binding Ffmpeg.CanDownload}">
-                <Button Content="{Binding Ffmpeg.InstallButtonText}" Command="{Binding Ffmpeg.InstallOrUpdateCommand}" Margin="0,4,6,0" />
-                <Button Content="{l:T FfmpegCheckUpdate}" Command="{Binding Ffmpeg.CheckForUpdateCommand}" Margin="0,4,6,0" />
+                <Button Content="{Binding Ffmpeg.InstallButtonText}" Command="{Binding Ffmpeg.InstallOrUpdateCommand}" Margin="0,4,6,0" ToolTip.Tip="{l:T FfmpegInstallTip}" />
+                <Button Content="{l:T FfmpegCheckUpdate}" Command="{Binding Ffmpeg.CheckForUpdateCommand}" Margin="0,4,6,0" ToolTip.Tip="{l:T FfmpegCheckUpdateTip}" />
               </WrapPanel>
               <CheckBox Content="{l:T FfmpegWeekly}" IsChecked="{Binding Ffmpeg.CheckUpdatesAutomatically}" IsVisible="{Binding Ffmpeg.CanDownload}" />
               <TextBlock Classes="hint" Text="{Binding Ffmpeg.SourceLine}" />
               <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,4,0,0">
                 <TextBox Text="{Binding Ffmpeg.CustomDirectory}" PlaceholderText="{l:T FfmpegCustomPlaceholder}" />
-                <Button Grid.Column="1" Content="…" Command="{Binding Ffmpeg.BrowseCustomDirectoryCommand}" Margin="4,0,0,0" />
+                <Button Grid.Column="1" Content="…" Command="{Binding Ffmpeg.BrowseCustomDirectoryCommand}" Margin="4,0,0,0" ToolTip.Tip="{l:T FfmpegBrowseTip}" />
                 <Button Grid.Column="2" Content="✕" Command="{Binding Ffmpeg.ClearCustomDirectoryCommand}" Margin="4,0,0,0" ToolTip.Tip="{l:T FfmpegClearCustomTip}" />
               </Grid>
             </StackPanel>
@@ -501,7 +501,7 @@
           </StackPanel>
         </Border>
         <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="3">
-          <Button x:Name="FooterFfmpegDownload" Content="{Binding Ffmpeg.InstallButtonText}" Command="{Binding Ffmpeg.InstallOrUpdateCommand}"
+          <Button x:Name="FooterFfmpegDownload" Content="{Binding Ffmpeg.InstallButtonText}" Command="{Binding Ffmpeg.InstallOrUpdateCommand}" ToolTip.Tip="{l:T FfmpegInstallTip}"
                   IsVisible="{Binding Ffmpeg.ShowFooterDownload}" />
           <ProgressBar Value="{Binding Ffmpeg.DownloadPercent}" Minimum="0" Maximum="100" Height="4" MinWidth="120" IsVisible="{Binding Ffmpeg.IsBusy}" />
         </StackPanel>
@@ -509,9 +509,9 @@
           <TextBlock Text="{Binding StatusText}" Classes="caption" TextTrimming="CharacterEllipsis" />
           <ProgressBar Value="{Binding OverallProgress}" Minimum="0" Maximum="100" Height="6" />
         </StackPanel>
-        <Button Grid.Column="3" Content="{Binding PauseButtonText}" Command="{Binding PauseCommand}" MinWidth="90" HorizontalContentAlignment="Center" VerticalAlignment="Center" />
-        <Button Grid.Column="4" Content="{l:T Cancel}" Command="{Binding CancelCommand}" MinWidth="90" HorizontalContentAlignment="Center" VerticalAlignment="Center" />
-        <Button Grid.Column="5" x:Name="StartButton" Content="{l:T StartAll}" Command="{Binding StartCommand}" Classes="go" MinWidth="120" HorizontalContentAlignment="Center" VerticalAlignment="Center" />
+        <Button Grid.Column="3" x:Name="PauseButton" Content="{Binding PauseButtonText}" Command="{Binding PauseCommand}" ToolTip.Tip="{l:T PauseTip, Shortcut=Pause}" MinWidth="90" HorizontalContentAlignment="Center" VerticalAlignment="Center" />
+        <Button Grid.Column="4" x:Name="CancelButton" Content="{l:T Cancel}" Command="{Binding CancelCommand}" ToolTip.Tip="{l:T CancelTip, Shortcut=Cancel}" MinWidth="90" HorizontalContentAlignment="Center" VerticalAlignment="Center" />
+        <Button Grid.Column="5" x:Name="StartButton" Content="{l:T StartAll}" Command="{Binding StartCommand}" ToolTip.Tip="{l:T StartTip, Shortcut=Start}" Classes="go" MinWidth="120" HorizontalContentAlignment="Center" VerticalAlignment="Center" />
       </Grid>
     </Border>
   </Grid>
