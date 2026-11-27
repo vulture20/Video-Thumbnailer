@@ -13,7 +13,9 @@ public static class FfprobeReader
         var result = await ProcessRunner.RunAsync(ffprobePath, args, ct).ConfigureAwait(false);
         if (result.ExitCode != 0)
             throw new InvalidDataException(CoreText.T("FfprobeFailed", result.ExitCode, result.StdErr.Trim()));
-        return Parse(System.Text.Encoding.UTF8.GetString(result.StdOut), videoPath);
+        var info = Parse(System.Text.Encoding.UTF8.GetString(result.StdOut), videoPath);
+        var external = ExternalSubtitles.Find(videoPath);
+        return external.Count == 0 ? info : info.WithSubtitles([.. info.SubtitleStreams, .. external]);
     }
 
     internal static MediaInfo Parse(string json, string videoPath)
@@ -24,6 +26,7 @@ public static class FfprobeReader
 
         VideoStreamInfo? video = null;
         var audio = new List<AudioStreamInfo>();
+        var subtitles = new List<SubtitleStreamInfo>();
         double streamDuration = 0;
 
         if (root.TryGetProperty("streams", out var streams))
@@ -67,6 +70,22 @@ public static class FfprobeReader
                         Language = lang,
                     });
                 }
+                else if (type == "subtitle")
+                {
+                    string? lang = null, stitle = null;
+                    if (s.TryGetProperty("tags", out var tags)) { lang = Str(tags, "language"); stitle = Str(tags, "title"); }
+                    s.TryGetProperty("disposition", out var disp);
+                    var hasDisp = disp.ValueKind == JsonValueKind.Object;
+                    subtitles.Add(new SubtitleStreamInfo
+                    {
+                        Index = Int(s, "index") ?? 0,
+                        Codec = Str(s, "codec_name") ?? "",
+                        Language = lang,
+                        Title = stitle,
+                        Forced = hasDisp && Int(disp, "forced") == 1,
+                        HearingImpaired = hasDisp && Int(disp, "hearing_impaired") == 1,
+                    });
+                }
             }
         }
 
@@ -90,6 +109,7 @@ public static class FfprobeReader
             Title = title,
             Video = video,
             AudioStreams = audio,
+            SubtitleStreams = subtitles,
         };
     }
 

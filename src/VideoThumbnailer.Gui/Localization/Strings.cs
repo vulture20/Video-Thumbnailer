@@ -351,6 +351,8 @@ internal static class Strings
         // ---- video data and WebVTT (#32)
         ["WebVtt"] = new("WebVTT thumbnails for web players", "WebVTT-Vorschaubilder für Web-Player"),
         ["WebVttTip"] = new("Also writes \"<name>.thumbnails.vtt\" and a sprite \"<name>.thumbnails.jpg\" with the captured frames, for the seek bar of web players.", "Schreibt zusätzlich „<Name>.thumbnails.vtt“ und ein Sprite „<Name>.thumbnails.jpg“ mit den aufgenommenen Bildern, für die Zeitleiste von Web-Playern."),
+        ["Sidecar"] = new("Sidecar file with tile times (JSON)", "Begleitdatei mit Kachel-Zeiten (JSON)"),
+        ["SidecarTip"] = new("Also writes \"<name>.sheet.json\" with the video, the sheet size and the rectangle and time of every tile. The viewer uses it to start the video at a tile; times chosen by hand are restored from it when the video is added again.", "Schreibt zusätzlich „<Name>.sheet.json“ mit Video, Sheet-Größe sowie Rechteck und Zeitpunkt jeder Kachel. Der Viewer startet damit das Video an einer Kachel; Zeitpunkte von Hand werden daraus wiederhergestellt, wenn das Video erneut hinzugefügt wird."),
         ["WebVttWidth"] = new("Sprite picture width", "Breite im Sprite"),
         ["ExportInfo"] = new("Export video data…", "Video-Infos exportieren…"),
         ["ExportInfoTip"] = new("Writes the technical data of all videos in the queue into one CSV or XML file.", "Schreibt die technischen Daten aller Videos der Warteschlange in eine CSV- oder XML-Datei."),

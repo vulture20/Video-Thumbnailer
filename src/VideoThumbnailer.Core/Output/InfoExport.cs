@@ -22,6 +22,7 @@ public static class InfoExport
         "size", "duration", "bitrate",
         "width", "height", "resolution", "vcodec", "vprofile", "fps", "pixfmt", "hdr", "vbitrate", "rotation",
         "acodec", "samplerate", "channels", "channellayout", "abitrate", "alang", "audiotracks",
+        "subtracks", "slang", "subtitles",
         "error",
     ];
 
@@ -52,8 +53,21 @@ public static class InfoExport
             L(v?.BitRate), v is null ? "" : v.Rotation.ToString(inv),
             a?.Codec ?? "", a is { SampleRate: > 0 } ? a.SampleRate.ToString(inv) : "", a is { Channels: > 0 } ? a.Channels.ToString(inv) : "",
             a?.ChannelLayout ?? "", L(a?.BitRate), a?.Language ?? "", i is null ? "" : i.AudioStreams.Count.ToString(inv),
+            i is null ? "" : i.SubtitleStreams.Count.ToString(inv),
+            i is null ? "" : string.Join(",", i.SubtitleStreams.Select(t => t.Language).Where(l => !string.IsNullOrEmpty(l) && l != "und").Distinct(StringComparer.OrdinalIgnoreCase)),
+            i is null ? "" : string.Join(";", i.SubtitleStreams.Select(SubtitleValue)),
             row.Error ?? "",
         ];
+    }
+
+    /// <summary>One subtitle track as "lang:FORMAT" plus ":forced", ":sdh", ":external" (language independent).</summary>
+    private static string SubtitleValue(SubtitleStreamInfo t)
+    {
+        var s = (string.IsNullOrEmpty(t.Language) ? "und" : t.Language) + ":" + t.FormatName;
+        if (t.Forced) s += ":forced";
+        if (t.HearingImpaired) s += ":sdh";
+        if (t.IsExternal) s += ":external";
+        return s;
     }
 
     public static void Write(string file, IEnumerable<InfoRow> rows)

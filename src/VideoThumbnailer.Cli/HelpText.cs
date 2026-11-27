@@ -127,6 +127,7 @@ internal static class HelpText
               --info-only            with --export-info: only the data, no sheets
               --webvtt / --no-webvtt also write "<name>.thumbnails.vtt" with a sprite "<name>.thumbnails.jpg"
               --webvtt-width <px>    width of one picture in the sprite (default 160)
+              --sidecar / --no-sidecar  also write "<name>.sheet.json" with the time and rectangle of every tile
 
         Processing:
           -j, --jobs <n>             max. parallel ffmpeg processes (default: CPU cores)
@@ -260,6 +261,7 @@ internal static class HelpText
               --info-only            mit --export-info: nur die Daten, keine Sheets
               --webvtt / --no-webvtt zusätzlich „<Name>.thumbnails.vtt“ mit Sprite „<Name>.thumbnails.jpg“ schreiben
               --webvtt-width <px>    Breite eines Bildes im Sprite (Standard 160)
+              --sidecar / --no-sidecar  zusätzlich „<Name>.sheet.json“ mit Zeitpunkt und Rechteck jeder Kachel
 
         Verarbeitung:
           -j, --jobs <n>             max. parallele ffmpeg-Prozesse (Standard: CPU-Kerne)

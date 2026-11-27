@@ -77,6 +77,7 @@ public class CliTests
         ["trailer.framesPerSecond"] = ["--trailer-fps", "12"], ["trailer.timestamps"] = ["--no-trailer-timestamps"],
         ["trailer.audio"] = ["--trailer-audio"],
         ["output.webVtt"] = ["--webvtt"], ["output.webVttTileWidth"] = ["--webvtt-width", "200"],
+        ["output.sidecar"] = ["--sidecar"],
     };
 
     /// <summary>An existing file for --background-image (the option checks that it exists).</summary>

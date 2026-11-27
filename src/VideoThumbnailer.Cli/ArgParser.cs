@@ -158,6 +158,8 @@ public static class ArgParser
                 case "--no-trailer-audio": o.Overrides.Add(s => s.Trailer.Audio = false); break;
                 case "--webvtt": o.Overrides.Add(s => s.Output.WebVtt = true); break;
                 case "--no-webvtt": o.Overrides.Add(s => s.Output.WebVtt = false); break;
+                case "--sidecar": o.Overrides.Add(s => s.Output.Sidecar = true); break;
+                case "--no-sidecar": o.Overrides.Add(s => s.Output.Sidecar = false); break;
                 case "--webvtt-width": { var v = NextInt(); o.Overrides.Add(s => { s.Output.WebVtt = true; s.Output.WebVttTileWidth = v; }); break; }
                 case "--export-info": o.InfoExport = Next(); break;
                 case "--info-only": o.InfoOnly = true; break;

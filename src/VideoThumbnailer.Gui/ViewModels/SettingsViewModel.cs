@@ -158,6 +158,7 @@ public partial class SettingsViewModel : ObservableObject
     // WebVTT for web players (#32)
     [ObservableProperty] private bool _webVtt;
     [ObservableProperty] private decimal _webVttTileWidth;
+    [ObservableProperty] private bool _sidecar;
 
     public bool IsStill => !Animated;
     public bool IsMp4 { get => AnimationFormat == AnimationFormat.Mp4; set { if (value) AnimationFormat = AnimationFormat.Mp4; } }
@@ -230,6 +231,7 @@ public partial class SettingsViewModel : ObservableObject
         TrailerClipSeconds = (decimal)tr.ClipSeconds; TrailerCrossfade = (decimal)tr.CrossfadeSeconds; TrailerSize = tr.Size;
         TrailerFps = tr.FramesPerSecond; TrailerTimestamps = tr.Timestamps; TrailerAudio = tr.Audio;
         WebVtt = s.Output.WebVtt; WebVttTileWidth = s.Output.WebVttTileWidth;
+        Sidecar = s.Output.Sidecar;
     }
 
     /// <summary>Entry of the layout picker for a template; a template that is not built in gets its own entry.</summary>
@@ -303,6 +305,7 @@ public partial class SettingsViewModel : ObservableObject
             FramesPerSecond = (int)TrailerFps, Timestamps = TrailerTimestamps, Audio = TrailerAudio,
         };
         s.Output.WebVtt = WebVtt; s.Output.WebVttTileWidth = (int)WebVttTileWidth;
+        s.Output.Sidecar = Sidecar;
         return s;
     }
 }

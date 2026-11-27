@@ -156,6 +156,8 @@ public sealed class SheetGenerator(FfmpegTools tools, SemaphoreSlim processLimit
                 await SaveFramesAsync(s, videoPath, target, fullFrames, times).ConfigureAwait(false);
             if (s.Output.WebVtt)
                 WebVttWriter.Write(target, frames.Select(f => f.Bitmap).ToList(), times, info.Duration, aspect, s.Output.WebVttTileWidth, s.Output.Quality);
+            if (s.Output.Sidecar)
+                WriteSidecar(videoPath, target, info, layout, times, plan, null);
 
             progress?.Report(1);
             var missing = frames.Count(f => f.Bitmap is null);
@@ -263,10 +265,17 @@ public sealed class SheetGenerator(FfmpegTools tools, SemaphoreSlim processLimit
             try { WebVttWriter.Write(target, firsts, times, info.Duration, info.Video!.DisplayAspect, s.Output.WebVttTileWidth, s.Output.Quality); }
             finally { foreach (var b in firsts) b?.Dispose(); }
         }
+        if (s.Output.Sidecar)
+            WriteSidecar(info.Path, target, info, layout, times, plan, plan.Select(p => ClipLength(p, a)).ToList());
         progress?.Report(1);
         var missing = clips.Count(c => c.Count == 0);
         return new SheetResult(JobStatus.Done, target, Notes(s, missing));
     }
+
+    private static void WriteSidecar(string videoPath, string target, MediaInfo info, GridLayout layout, IReadOnlyList<double> times,
+                                     IReadOnlyList<PlannedTime> plan, IReadOnlyList<double>? clipSeconds) =>
+        SheetSidecar.Create(videoPath, target, info.Duration, info.Video!.DisplaySize, layout, times, plan.Select(p => p.Manual).ToList(), clipSeconds)
+            .Write(SheetSidecar.PathFor(target));
 
     /// <summary>
     /// Tile whose sound goes into the animation: the biggest one (special grids), of equal size the earliest;
