@@ -42,7 +42,8 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty] private decimal _maxParallelProcesses;
     [ObservableProperty] private decimal _maxParallelVideos;
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(StartCommand), nameof(PauseCommand), nameof(CancelCommand), nameof(ClearAllCommand), nameof(RemoveSelectedCommand))]
+    [NotifyCanExecuteChangedFor(nameof(StartCommand), nameof(PauseCommand), nameof(CancelCommand), nameof(ClearAllCommand), nameof(RemoveSelectedCommand),
+                                nameof(RequeueSelectedCommand), nameof(RequeueJobCommand), nameof(RequeueAllFinishedCommand), nameof(RetryFailedCommand))]
     [NotifyPropertyChangedFor(nameof(IsIdle))]
     private bool _isRunning;
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(PauseButtonText))] private bool _isPaused;
@@ -173,7 +174,9 @@ public partial class MainViewModel : ObservableObject
             UpdateStats();
             OnPropertyChanged(nameof(QueueTitle));
             if (PreviewJob is null || !Jobs.Contains(PreviewJob)) PreviewJob = Jobs.FirstOrDefault();
+            RefreshRequeueCommands();
         };
+        SelectedJobs.CollectionChanged += (_, _) => RequeueSelectedCommand.NotifyCanExecuteChanged();
         _clockTimer = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Background, (_, _) => UpdateStats());
         _previewTimer.Tick += (_, _) => { _previewTimer.Stop(); _ = UpdatePreviewAsync(); };
         Settings.PropertyChanged += (_, _) => SchedulePreview();
@@ -529,7 +532,7 @@ public partial class MainViewModel : ObservableObject
             current ??= Settings.ToSettings(SelectedPreset?.Name ?? "");
             var job = new ThumbnailJob(v.Path, v.Root) { ManualTimes = SheetSidecar.FindManualTimes(current, v.Path, v.Root) };
             var vm = new JobViewModel(job);
-            job.Changed += _ => Dispatcher.UIThread.Post(() => { vm.Refresh(); UpdateStats(); });
+            job.Changed += _ => Dispatcher.UIThread.Post(() => { vm.Refresh(); UpdateStats(); RefreshRequeueCommands(); });
             Jobs.Add(vm);
             added++;
         }
@@ -741,11 +744,61 @@ public partial class MainViewModel : ObservableObject
         foreach (var j in list) Jobs.Add(j);
     }
 
-    [RelayCommand]
-    private void RetryFailed()
+    // ---- re-queue finished entries: they go back to "waiting" in place and run with the settings of the next start.
+    // Times chosen by hand stay; an existing sheet is replaced even with "skip existing" (only "rename" keeps it).
+    // Only while no run is going, like removing entries: a run works on the list it started with.
+
+    private bool CanRequeueSelected() => IsIdle && SelectedJobs.Any(j => j.IsFinished);
+
+    /// <summary>Selected finished entries back into the queue (context menu, Ctrl/Cmd+R).</summary>
+    [RelayCommand(CanExecute = nameof(CanRequeueSelected))]
+    private void RequeueSelected() => Requeue(SelectedJobs.ToList());
+
+    private bool CanRequeueJob(JobViewModel? job) => IsIdle && job?.IsFinished == true;
+
+    /// <summary>One entry back into the queue (the ↻ button on a finished entry).</summary>
+    [RelayCommand(CanExecute = nameof(CanRequeueJob))]
+    private void RequeueJob(JobViewModel? job)
     {
-        foreach (var j in Jobs.Where(j => j.Status is JobStatus.Failed or JobStatus.Cancelled)) j.Job.Reset();
+        if (job is not null) Requeue([job]);
+    }
+
+    private bool CanRequeueAllFinished() => IsIdle && Jobs.Any(j => j.IsFinished);
+
+    /// <summary>Every finished entry (done, skipped, failed, cancelled) back into the queue ("⋯" menu).</summary>
+    [RelayCommand(CanExecute = nameof(CanRequeueAllFinished))]
+    private void RequeueAllFinished() => Requeue(Jobs.ToList());
+
+    private bool CanRetryFailed() => IsIdle && Jobs.Any(j => j.Status is JobStatus.Failed or JobStatus.Cancelled);
+
+    /// <summary>Failed and cancelled entries back into the queue ("⋯" menu).</summary>
+    [RelayCommand(CanExecute = nameof(CanRetryFailed))]
+    private void RetryFailed() => Requeue(Jobs.Where(j => j.Status is JobStatus.Failed or JobStatus.Cancelled).ToList());
+
+    /// <summary>Puts the finished ones of <paramref name="jobs"/> back to waiting; returns how many.</summary>
+    public int Requeue(IReadOnlyList<JobViewModel> jobs)
+    {
+        if (IsRunning) return 0;
+        var count = 0;
+        foreach (var j in jobs)
+        {
+            if (!j.Job.Requeue()) continue;
+            j.Refresh(); // at once, not only when the posted Changed handler runs
+            count++;
+        }
+        StatusText = count == 0 ? Loc.T("StatusNothingToRequeue") : Loc.T("StatusRequeued", count);
+        UpdateStats();
+        RefreshRequeueCommands();
         StartCommand.NotifyCanExecuteChanged();
+        return count;
+    }
+
+    private void RefreshRequeueCommands()
+    {
+        RequeueSelectedCommand.NotifyCanExecuteChanged();
+        RequeueJobCommand.NotifyCanExecuteChanged();
+        RequeueAllFinishedCommand.NotifyCanExecuteChanged();
+        RetryFailedCommand.NotifyCanExecuteChanged();
     }
 
     [RelayCommand]

@@ -37,7 +37,7 @@ public class GuiShortcutTests
         public void OpenPath(string path) { }
     }
 
-    private static (MainWindow, MainViewModel, TestUi) Open()
+    internal static (MainWindow, MainViewModel, TestUi) Open()
     {
         var window = new MainWindow();
         var ui = new TestUi(window);
@@ -47,7 +47,7 @@ public class GuiShortcutTests
         return (window, vm, ui);
     }
 
-    private static void Press(MainWindow w, Key key, RawInputModifiers mods = RawInputModifiers.None)
+    internal static void Press(MainWindow w, Key key, RawInputModifiers mods = RawInputModifiers.None)
     {
         w.KeyPressQwerty(PhysicalKeyFromKey(key), mods);
         w.KeyReleaseQwerty(PhysicalKeyFromKey(key), mods);
@@ -57,7 +57,7 @@ public class GuiShortcutTests
     private static PhysicalKey PhysicalKeyFromKey(Key k) => k switch
     {
         Key.E => PhysicalKey.E, Key.L => PhysicalKey.L, Key.B => PhysicalKey.B, Key.O => PhysicalKey.O,
-        Key.Delete => PhysicalKey.Delete, Key.A => PhysicalKey.A, Key.Escape => PhysicalKey.Escape,
+        Key.Delete => PhysicalKey.Delete, Key.A => PhysicalKey.A, Key.Escape => PhysicalKey.Escape, Key.R => PhysicalKey.R,
         _ => throw new ArgumentOutOfRangeException(nameof(k)),
     };
 

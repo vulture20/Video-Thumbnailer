@@ -20,14 +20,15 @@ public sealed class SheetGenerator(FfmpegTools tools, SemaphoreSlim processLimit
     private readonly ClipExtractor _clips = new(tools.FfmpegPath);
 
     /// <summary>
-    /// Target file after overwrite handling: null = it exists and is to be skipped.
+    /// Target file after overwrite handling: null = it exists and is to be skipped. <paramref name="replaceExisting"/>
+    /// (a re-queued video) turns "skip" into "overwrite"; "rename" still writes a new file.
     /// </summary>
-    private static string? Target(SheetSettings s, string path)
+    private static string? Target(SheetSettings s, string path, bool replaceExisting)
     {
         if (!File.Exists(path)) return path;
         return s.Output.Overwrite switch
         {
-            OverwriteMode.Skip => null,
+            OverwriteMode.Skip => replaceExisting ? path : null,
             OverwriteMode.Rename => OutputPathResolver.MakeUnique(path),
             _ => path,
         };
@@ -38,14 +39,15 @@ public sealed class SheetGenerator(FfmpegTools tools, SemaphoreSlim processLimit
     /// written); a clip next to a sheet is mentioned in the message.
     /// </summary>
     /// <param name="manualTimes">Capture times chosen by hand for this video, by tile in timeline order (null = automatic).</param>
+    /// <param name="replaceExisting">Replace existing files even when the settings say "skip" (re-queued video).</param>
     public async Task<SheetResult> GenerateAsync(string videoPath, string? inputRoot, SheetSettings settings, IProgress<double>? progress, CancellationToken ct,
-                                                 IReadOnlyList<ManualTime?>? manualTimes = null)
+                                                 IReadOnlyList<ManualTime?>? manualTimes = null, bool replaceExisting = false)
     {
         var s = settings;
         var wantSheet = !(s.Trailer.Enabled && s.Trailer.Only);
         var sheetPath = OutputPathResolver.ResolveSheetPath(s, videoPath, inputRoot);
-        var sheetTarget = wantSheet ? Target(s, sheetPath) : null;
-        var trailerTarget = s.Trailer.Enabled ? Target(s, OutputPathResolver.ResolveTrailerPath(s, videoPath, inputRoot)) : null;
+        var sheetTarget = wantSheet ? Target(s, sheetPath, replaceExisting) : null;
+        var trailerTarget = s.Trailer.Enabled ? Target(s, OutputPathResolver.ResolveTrailerPath(s, videoPath, inputRoot), replaceExisting) : null;
         if (sheetTarget is null && trailerTarget is null)
             return new SheetResult(JobStatus.Skipped, wantSheet ? sheetPath : OutputPathResolver.ResolveTrailerPath(s, videoPath, inputRoot), CoreText.T("SheetExists"));
 

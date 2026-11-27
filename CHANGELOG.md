@@ -6,6 +6,12 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 
 ## [Unveröffentlicht]
 
+### Hinzugefügt
+- Fertige Einträge der Warteschlange erneut einreihen: Rechtsklick → „Erneut einreihen“ oder Strg/Cmd+R für die Auswahl, ↻ am Eintrag beim Überfahren, „⋯“ → „Alle erledigten erneut einreihen“. Der Eintrag bleibt an seiner Stelle, läuft beim nächsten Start mit den aktuellen Einstellungen, behält Zeitpunkte von Hand und ersetzt sein Sheet, auch wenn vorhandene Dateien sonst übersprungen werden
+
+### Geändert
+- „Fehlgeschlagene wiederholen“ heißt jetzt „Fehlgeschlagene erneut versuchen“, hat einen Tooltip und ist nur ohne laufenden Lauf und mit fehlgeschlagenen Einträgen anwählbar
+
 ## [1.0.0] – 2026-11-27
 
 Erste stabile Version: alle Punkte der Spezifikation sind umgesetzt. Neu: Viewer mit Sprung ins Video, Begleitdatei `.vtsheet`, Raster-Editor, Pack-Bild für viele Videos, Vorschau-Clip, Export der Video-Infos als CSV/XML, WebVTT-Vorschaubilder, Untertitel-Infos, Dateizuordnungen und Tastenkürzel. Ab jetzt ändern sich Kommandozeile, Preset- und Begleitdatei-Format nur abwärtskompatibel.

@@ -20,6 +20,7 @@ public static class Shortcuts
         ["Pause"] = [new(Key.P, Command: true)],
         ["Cancel"] = [new(Key.Escape)],
         ["RemoveSelected"] = [new(Key.Delete)],
+        ["RequeueSelected"] = [new(Key.R, Command: true)],
         ["SelectAll"] = [new(Key.A, Command: true)],
         ["ToggleMode"] = [new(Key.E, Command: true)],
         ["ToggleLivePreview"] = [new(Key.L, Command: true)],

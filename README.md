@@ -30,7 +30,7 @@ Free, cross-platform video contact sheet generator with GUI and command line.
 - Begleitdatei `.vtsheet` mit Zeitpunkt und Rechteck jeder Kachel und ein Viewer, der das Video per Klick auf eine Kachel an dieser Stelle im Player startet (mpv, VLC, MPC-HC, PotPlayer oder eigener Befehl); Videos lassen sich dort in den Papierkorb verschieben
 - Technische Daten vieler Videos als CSV- oder XML-Tabelle (eine Zeile je Video) und WebVTT-Vorschaubilder mit Sprite für die Zeitleiste von Web-Playern
 - Tastenkürzel für die wichtigsten Aktionen (Strg bzw. Cmd+O, Strg+Eingabe, Entf …), in den Tooltips angezeigt
-- Warteschlange mit Pause, Abbruch, Fortschritt und paralleler Verarbeitung über alle CPU-Kerne; klappt in schmalen Fenstern zu einer Leiste ein
+- Warteschlange mit Pause, Abbruch, Fortschritt und paralleler Verarbeitung über alle CPU-Kerne; fertige Einträge lassen sich erneut einreihen; klappt in schmalen Fenstern zu einer Leiste ein
 - Ausgabe in einen Ordner (optional mit Ordnerstruktur), neben das Video oder in einen Unterordner; Dateinamen-Muster
 - Presets als offene JSON-Dateien, 4 mitgelieferte Basis-Presets; exportierte Presets (`.vtpreset`) öffnen sich per Doppelklick, auch im schon laufenden Programm
 - Oberfläche, Kommandozeile und Texte im Sheet auf Deutsch und Englisch (folgt der Systemsprache, umschaltbar)
@@ -174,6 +174,8 @@ vthumb pack ~/Serien/Staffel1 -o ~/staffel1.jpg --tiles 8 -w 2400
 
 **Preset-Dateien:** Exportierte Presets heißen `<Name>.vtpreset` (Inhalt JSON) und öffnen sich per Doppelklick: das Preset wird übernommen und gewählt. Läuft das Programm schon, bekommt das offene Fenster die Datei (ebenso Videos über „Öffnen mit“). Der Installer für Windows trägt die Endung ein (abwählbar), das DMG für macOS ebenso; unter Linux siehe [packaging/linux/README.md](packaging/linux/README.md). Ältere `*.vtpreset.json`-Dateien lassen sich weiter importieren und öffnen.
 
+**Erneut einreihen:** Fertige Einträge der Warteschlange (erstellt, übersprungen, fehlgeschlagen oder abgebrochen) kommen per Rechtsklick → „Erneut einreihen“ oder Strg+R (für alle ausgewählten), über ↻ am Eintrag (erscheint beim Überfahren) oder über „⋯“ → „Alle erledigten erneut einreihen“ bzw. „Fehlgeschlagene erneut versuchen“ zurück auf „Wartet“. Sie bleiben an ihrer Stelle und laufen beim nächsten Start mit den aktuellen Einstellungen; von Hand gewählte Zeitpunkte bleiben. Das vorhandene Sheet wird ersetzt, auch wenn vorhandene Dateien sonst übersprungen werden; bei „Umbenennen“ entsteht eine neue Datei. Während eines Laufs geht das nicht.
+
 **Tastenkürzel** (unter macOS Cmd statt Strg):
 
 | Taste | Aktion |
@@ -183,6 +185,7 @@ vthumb pack ~/Serien/Staffel1 -o ~/staffel1.jpg --tiles 8 -w 2400
 | Strg+P | Pause / Fortsetzen |
 | Esc | Abbrechen (während eines Laufs) |
 | Entf / Strg+A | Auswahl entfernen / alles auswählen (in der Warteschlange) |
+| Strg+R | Ausgewählte fertige Einträge erneut einreihen |
 | Strg+E | „Einfach“/„Erweitert“ umschalten |
 | Strg+L | Live-Vorschau an/aus |
 | Strg+B | Warteschlange ein-/ausklappen |
