@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- MIME type for preset files (#33), installed with xdg-mime (see README.md). -->
+<!-- MIME types for preset files (#33), sheet sidecars (#38) and grids (#36), installed with xdg-mime (see README.md). -->
 <mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
   <mime-type type="application/x-vtpreset+json">
     <comment>Video-Thumbnailer preset</comment>
@@ -8,5 +8,19 @@
     <icon name="video-thumbnailer"/>
     <glob pattern="*.vtpreset"/>
     <glob pattern="*.vtpreset.json" weight="60"/>
+  </mime-type>
+  <mime-type type="application/x-vtsheet+json">
+    <comment>Video-Thumbnailer sheet</comment>
+    <comment xml:lang="de">Video-Thumbnailer-Sheet</comment>
+    <sub-class-of type="application/json"/>
+    <icon name="video-thumbnailer"/>
+    <glob pattern="*.vtsheet"/>
+  </mime-type>
+  <mime-type type="application/x-vtgrid+json">
+    <comment>Video-Thumbnailer grid</comment>
+    <comment xml:lang="de">Video-Thumbnailer-Raster</comment>
+    <sub-class-of type="application/json"/>
+    <icon name="video-thumbnailer"/>
+    <glob pattern="*.vtgrid"/>
   </mime-type>
 </mime-info>

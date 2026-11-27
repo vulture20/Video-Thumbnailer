@@ -62,7 +62,8 @@ public class PackTests
         Assert.Equal((g.Width, 2 * g.Margin + 2 * g.RowHeight - g.Gap), (bmp.Width, bmp.Height));
     }
 
-    [Fact]
+    // AvaloniaFact: runs on the UI thread like the GUI tests, which also change AppPaths.SetRootOverride.
+    [Avalonia.Headless.XUnit.AvaloniaFact]
     public async Task Pack_on_the_command_line()
     {
         var t = Tools();

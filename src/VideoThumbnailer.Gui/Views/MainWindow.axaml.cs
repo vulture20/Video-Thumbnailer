@@ -266,7 +266,13 @@ public partial class MainWindow : Window, IUiServices
 
     public Task<bool> EditGridAsync(GridEditorViewModel editor) => GridEditorWindow.ShowAsync(this, editor);
 
-    public void ShowViewer(ViewerViewModel viewer) => ViewerWindow.Show(this, viewer);
+    public void ShowViewer(ViewerViewModel viewer)
+    {
+        if (IsVisible) { ViewerWindow.Show(this, viewer); return; }
+        // A .vtsheet given at start: the viewer waits until the main window is there.
+        void Once(object? sender, EventArgs e) { Opened -= Once; ViewerWindow.Show(this, viewer); }
+        Opened += Once;
+    }
 
     public void OpenPath(string path)
     {

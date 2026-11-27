@@ -49,7 +49,8 @@ public class GridEditorTests
         Assert.Empty(store.LoadAll());
     }
 
-    [Fact]
+    // AvaloniaFact: runs on the UI thread like the GUI tests, which also change AppPaths.SetRootOverride.
+    [AvaloniaFact]
     public void Own_grids_work_on_the_command_line()
     {
         var home = TestUtil.TempDir();

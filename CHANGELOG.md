@@ -7,6 +7,12 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 ## [Unveröffentlicht]
 
 ### Hinzugefügt
+- Untertitel-Infos: Untertitelspuren im Video und Untertiteldateien daneben (`Film.srt`, `Film.de.srt`, `Film.en.forced.ass`, `.vtt`, `.sup`, `.idx/.sub`) werden erkannt, mit Sprache, Format, „erzwungen“, „SDH“ und „extern“. Neue Platzhalter `{subtitles}` (Zusammenfassung), `{slang}` (Sprachen) und `{subtracks}` (Anzahl), auch als Spalten im CSV/XML-Export ([#50], #35)
+- Raster-Editor („Raster bearbeiten…“ unter dem Layout): große, kleine und leere Kacheln per Ziehen auf einem Feldraster anordnen, freie Felder bleiben Hintergrund. Übernehmen oder als eigenes Raster `<Name>.vtgrid` im Einstellungsordner speichern; eigene Raster stehen neben den eingebauten in der Layout-Auswahl, auf der Kommandozeile per `--layout <Name>` und öffnen sich per Doppelklick ([#50], #36)
+- Pack-Bild: ein Übersichtsbild aus vielen Videos (z. B. einer Staffel), je Video eine Zeile mit Name, Dauer, Auflösung, Größe und so vielen Bildern, wie das Raster Spalten hat. Zu hohe Bilder werden auf `pack-1`, `pack-2` … aufgeteilt (WebP höchstens 16383 px). Oberfläche „⋯“ → „Pack-Bild erstellen…“, Kommandozeile `vthumb pack <Videos/Ordner> -o pack.jpg` ([#50], #37)
+- Begleitdatei `<Name>.vtsheet` (offenes JSON, beschrieben in `docs/vtsheet.md`) mit Video-Pfad (relativ und absolut), Sheet-Größe und je Kachel Rechteck und Zeitpunkt. Standard aus, unter „Erweitert“ → „Ausgabe“ bzw. `--sidecar`. Zeitpunkte von Hand werden daraus wiederhergestellt, wenn das Video erneut in die Warteschlange kommt (Kommandozeile: ohne `--times`) ([#50], #38)
+- Viewer: zeigt ein Sheet mit Begleitdatei, markiert die Kachel unter der Maus und startet das Video per Klick an dieser Stelle in mpv, VLC, MPC-HC/MPC-BE, PotPlayer oder einem eigenen Befehl (`{file}`, `{seconds}`, `{ms}`, `{time}`); ohne passenden Player öffnet der Systemstandard das Video am Anfang. „In den Papierkorb…“ verschiebt das Video nach Rückfrage, optional mit Sheet und Begleitdateien, und löscht nie endgültig. Öffnen per Doppelklick auf einen erledigten Eintrag der Warteschlange, „⋯“ → „Sheet öffnen…“ oder Doppelklick auf eine `.vtsheet` ([#50], #39)
+- Dateizuordnung für `.vtsheet` und `.vtgrid` im Windows-Installer (abwählbar), in der macOS-App und als MIME-Typen für Linux ([#50], #36, #39)
 - Vorschau-Clip („Trailer“): kurze Ausschnitte aus gleichmäßig verteilten Stellen des Videos nacheinander, mit Überblendung (Standard 0,5 s, 0 = harter Schnitt), Zeit jedes Ausschnitts in der Ecke und optional mit Ton, als MP4, H.265, WebM, OGV, GIF, WebP oder APNG. Standard 12 × 2,5 s, 640 px, höchstens 2 Minuten. Zusätzlich zum Sheet oder allein; Dateiname `<Name>.preview.<Endung>`, beim Ordner-Scan übersprungen. Oberfläche unter „Ausgabe“, Kommandozeile `--trailer <Format>`, `--trailer-only`, `--trailer-clips`, `--trailer-seconds`, `--trailer-fade`, `--trailer-size`, `--trailer-fps`, `--trailer-timestamps`, `--trailer-audio` ([#49], #31)
 - Technische Daten aller Videos als eine CSV- oder XML-Datei je Lauf (Spalten wie die Platzhalter, Zahlen ohne Einheit): Oberfläche „⋯“ → „Video-Infos exportieren…“, Kommandozeile `--export-info <Datei>` und `--info-only` ([#49], #32)
 - WebVTT-Vorschaubilder für Web-Player: `<Name>.thumbnails.vtt` mit Sprite `<Name>.thumbnails.jpg` aus den aufgenommenen Bildern (Breite einstellbar). Oberfläche unter „Erweitert“ → „Ausgabe“, Kommandozeile `--webvtt`, `--webvtt-width` ([#49], #32)
@@ -14,6 +20,7 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 - Tastenkürzel: Strg/Cmd+O, Strg/Cmd+Umschalt+O, Strg/Cmd+U, Strg/Cmd+Eingabe oder F5, Strg/Cmd+P, Esc, Entf und Strg/Cmd+A in der Warteschlange, Strg/Cmd+E (Einfach/Erweitert), Strg/Cmd+L (Live-Vorschau), Strg/Cmd+B (Warteschlange). Die Kürzel stehen in den Tooltips; fehlende Tooltips ergänzt ([#49], #34)
 
 ### Geändert
+- Doppelklick auf einen erledigten Eintrag der Warteschlange öffnet das Sheet im Viewer, wenn es eine Begleitdatei hat; sonst wie bisher im Systemprogramm ([#50], #39)
 - Exportierte Presets heißen jetzt `<Name>.vtpreset` statt `<Name>.vtpreset.json` (gleicher Inhalt), weil Windows und macOS nur die letzte Endung kennen. Alte Dateien lassen sich weiter importieren ([#49], #33)
 
 ### Behoben
@@ -171,4 +178,5 @@ Erste Version.
 [#41]: https://github.com/vulture20/Video-Thumbnailer/pull/41
 [#40]: https://github.com/vulture20/Video-Thumbnailer/pull/40
 [#49]: https://github.com/vulture20/Video-Thumbnailer/pull/49
+[#50]: https://github.com/vulture20/Video-Thumbnailer/pull/50
 [#48]: https://github.com/vulture20/Video-Thumbnailer/pull/48

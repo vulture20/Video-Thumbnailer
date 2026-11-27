@@ -15,7 +15,7 @@ namespace VideoThumbnailer.Tests;
 /// <summary>Shortcuts (#34), preview clip and WebVTT in the GUI (#31, #32), handing files to a running window (#33), queue buttons.</summary>
 public class GuiShortcutTests
 {
-    private sealed class TestUi(MainWindow window) : IUiServices
+    internal sealed class TestUi(MainWindow window) : IUiServices
     {
         public int FilePicks;
         public string? InfoFile { get; set; }
@@ -30,7 +30,8 @@ public class GuiShortcutTests
         public Task<string?> PickFontAsync(string? current) => Task.FromResult<string?>(null);
         public Task<TileTimeResult> EditTileTimeAsync(TileTimeViewModel editor) => Task.FromResult(TileTimeResult.Cancel);
         public Task<string?> PickSheetFileAsync() => Task.FromResult<string?>(null);
-        public void ShowViewer(ViewerViewModel viewer) { }
+        public List<ViewerViewModel> Viewers { get; } = [];
+        public void ShowViewer(ViewerViewModel viewer) => Viewers.Add(viewer);
         public Task<bool> EditGridAsync(GridEditorViewModel editor) => Task.FromResult(false);
         public Task<string?> PickPackFileAsync(string suggestedName) => Task.FromResult<string?>(null);
         public void OpenPath(string path) { }
@@ -218,6 +219,50 @@ public class GuiShortcutTests
             Assert.Equal("Shared", vm.SelectedPreset?.Name);
             Assert.Equal(7, vm.Settings.Columns);
             Assert.Equal(Loc.T("StatusPresetOpened", "Shared"), vm.StatusText);
+            window.Close();
+        }
+        finally { AppPaths.SetRootOverride(null); }
+    }
+}
+
+public class GuiFileArgumentTests
+{
+    [AvaloniaFact]
+    public async Task Grid_and_sheet_files_from_a_later_start()
+    {
+        var home = TestUtil.TempDir();
+        AppPaths.SetRootOverride(home);
+        try
+        {
+            new AppSettings { FfmpegDownloadAsked = true, CheckFfmpegUpdates = false, Language = "English" }.Save();
+            var window = new MainWindow();
+            var ui = new GuiShortcutTests.TestUi(window);
+            var vm = new MainViewModel(ui);
+            window.DataContext = vm;
+            window.Show();
+
+            // a .vtgrid becomes an own grid and is selected (#36)
+            var grid = Path.Combine(TestUtil.TempDir(), "Strip.vtgrid");
+            Core.Layout.TemplateStore.SaveFile(new Core.Layout.GridTemplate { Name = "Strip", Columns = 3, Rows = 1, Tiles = [new(0, 0), new(1, 0), new(2, 0)] }, grid);
+            window.ReceiveArguments([grid]);
+            Assert.True(vm.Settings.SelectedLayout!.IsOwn);
+            Assert.Equal("Strip", vm.Settings.SelectedLayout.Label);
+            Assert.True(File.Exists(new Core.Layout.TemplateStore().PathFor("Strip")));
+
+            // a .vtsheet opens the viewer (#39); without sidecar the double-click falls back to opening the file
+            var dir = TestUtil.TempDir();
+            var video = Path.Combine(dir, "v.mp4");
+            File.WriteAllText(video, "");
+            var sheet = Path.Combine(dir, "v.jpg");
+            using (var bmp = new SkiaSharp.SKBitmap(64, 36))
+            using (var fs = File.Create(sheet)) Core.Rendering.SheetRenderer.Encode(bmp, fs, ImageFormat.Jpeg, 80);
+            var layout = Core.Layout.GridLayout.Create(new SheetSettings { Columns = 2, Rows = 1, SheetWidth = 64 }, 16.0 / 9, 0, new Random(1));
+            var sidecar = Core.Output.SheetSidecar.PathFor(sheet);
+            Core.Output.SheetSidecar.Create(video, sheet, 10, (320, 180), layout, [2, 7], [false, false]).Write(sidecar);
+            window.ReceiveArguments([sidecar]);
+            for (var i = 0; i < 50 && ui.Viewers.Count == 0; i++) { await Task.Delay(20, TestContext.Current.CancellationToken); Avalonia.Threading.Dispatcher.UIThread.RunJobs(); }
+            Assert.Single(ui.Viewers);
+            Assert.Equal(Path.GetFullPath(video), ui.Viewers[0].VideoPath);
             window.Close();
         }
         finally { AppPaths.SetRootOverride(null); }

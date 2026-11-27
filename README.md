@@ -13,7 +13,7 @@ Free, cross-platform video contact sheet generator with GUI and command line.
 - Videos auf einem Webserver per HTTP(S)-Adresse, ohne sie vorher herunterzuladen: ffmpeg lädt nur die Stellen um die Aufnahmezeitpunkte (Knopf mit Weltkugel, Adresse aus dem Browser hineinziehen oder als Argument in der Kommandozeile)
 - Alle Formate, die ffmpeg lesen kann (MP4, MKV, AVI, MOV, WebM, WMV, TS …), inkl. 10-Bit/HDR, AV1, gedrehte und anamorphe Videos
 - Raster aus Spalten × Zeilen, Breite, Abstand, Rand; automatische Kachelhöhe, Anpassung für Hochkant-Videos
-- Spezial-Raster mit großen und kleinen Kacheln (z. B. ein großes Bild oben oder in der Mitte), eigene Vorlagen als JSON
+- Spezial-Raster mit großen und kleinen Kacheln (z. B. ein großes Bild oben oder in der Mitte); eigene Raster im Raster-Editor zusammenklicken und als `.vtgrid` speichern
 - Bildgröße fest, so breit wie der Bildschirm oder so groß, dass das Sheet ohne Scrollen ganz auf den Bildschirm passt
 - Reihenfolge zeilenweise, spaltenweise oder zufällig
 - Schwarze oder einfarbige Bilder (Abblende, Schnitt) werden automatisch durch ein gutes Bild kurz davor oder danach ersetzt (abschaltbar, Suchbereich einstellbar)
@@ -22,10 +22,12 @@ Free, cross-platform video contact sheet generator with GUI and command line.
 - Hintergrundfarbe oder Hintergrundbild (füllen, strecken, kacheln, zentriert, mit Deckkraft)
 - Kachel-Effekte: Rahmen, Schlagschatten, Graustufen, abgerundete oder abgeschnittene Ecken, Rahmen um das ganze Sheet
 - Wasserzeichen als Text oder Bild (Ecke, Mitte oder wiederholt, mit Deckkraft), über dem Sheet oder in jeder Kachel
-- Info-Kopf mit frei konfigurierbaren Video-Infos (Name, Größe, Dauer, Auflösung, Codecs, Bitrate, FPS, Audio …), eigene Titel- und Textfarbe, dazu ein eigener Kommentartext
+- Info-Kopf mit frei konfigurierbaren Video-Infos (Name, Größe, Dauer, Auflösung, Codecs, Bitrate, FPS, Audio, Untertitel auch aus Dateien neben dem Video …), eigene Titel- und Textfarbe, dazu ein eigener Kommentartext
 - Ausgabe als JPG, PNG oder WebP; optional jede Aufnahme als Einzelbild
 - Animierte Sheets als MP4 (H.264 oder H.265), WebM, OGV, GIF, animiertes WebP oder APNG: jede Kachel spielt einen kurzen Ausschnitt ab ihrem Zeitpunkt ab, mit mitlaufendem Zeitstempel; Videoformate optional mit dem Ton einer Kachel
 - Vorschau-Clip („Trailer“): kurze Ausschnitte aus mehreren Stellen des Videos nacheinander, mit Überblendung und Zeit in der Ecke, als MP4, WebM, GIF usw. (höchstens 2 Minuten), zusätzlich zum Sheet oder allein
+- Pack-Bild: ein Übersichtsbild vieler Videos (z. B. einer Staffel), eine Zeile je Video
+- Begleitdatei `.vtsheet` mit Zeitpunkt und Rechteck jeder Kachel und ein Viewer, der das Video per Klick auf eine Kachel an dieser Stelle im Player startet (mpv, VLC, MPC-HC, PotPlayer oder eigener Befehl); Videos lassen sich dort in den Papierkorb verschieben
 - Technische Daten vieler Videos als CSV- oder XML-Tabelle (eine Zeile je Video) und WebVTT-Vorschaubilder mit Sprite für die Zeitleiste von Web-Playern
 - Tastenkürzel für die wichtigsten Aktionen (Strg bzw. Cmd+O, Strg+Eingabe, Entf …), in den Tooltips angezeigt
 - Warteschlange mit Pause, Abbruch, Fortschritt und paralleler Verarbeitung über alle CPU-Kerne; klappt in schmalen Fenstern zu einer Leiste ein
@@ -63,6 +65,7 @@ Die Prüfsummen aller Dateien stehen in `checksums.sha256`.
 ```text
 vthumb [Optionen] <Datei|Ordner|URL>...
 vthumb presets list|show|import|export|delete
+vthumb pack [Optionen] <Datei|Ordner>... -o <pack.jpg|png|webp>
 vthumb ffmpeg status|check|install|update|uninstall
 ```
 
@@ -157,6 +160,18 @@ Ohne `--preset` werden die zuletzt in der Oberfläche benutzten Einstellungen ve
 
 **WebVTT:** `<Name>.thumbnails.jpg` enthält die aufgenommenen Bilder (160 px breit, `--webvtt-width`) in einem Raster ohne Kopf, Zeitstempel und Effekte; `<Name>.thumbnails.vtt` ordnet jedem Zeitbereich ein Bild zu (`#xywh=`). Jedes Bild gilt bis zur Mitte zwischen ihm und dem nächsten. Für eine feine Zeitleiste ein Preset mit vielen Kacheln verwenden (z. B. 10 × 10).
 
+**Untertitel:** Gezählt werden Untertitelspuren im Video und Dateien neben dem Video mit gleichem Namen: `Film.srt`, `Film.de.srt`, `Film.en.forced.ass`, `Film.eng.sdh.vtt`, `Film.sup`, `Film.idx` (mit `.sub`). Zwischen Name und Endung dürfen nur ein Sprachcode und `forced`, `sdh`, `hi`, `cc` stehen, sonst gehört die Datei zu einem anderen Video. `{subtitles}` ergibt z. B. „3: ger SRT, eng PGS erzwungen, de SRT extern“. Untertitel werden nicht ins Bild eingebrannt.
+
+**Raster-Editor:** „Raster bearbeiten…“ unter der Layout-Auswahl öffnet das aktuelle Raster (oder das einfache Raster) auf einem Feldraster im Seitenverhältnis des Videos. Ziehen über Felder legt eine quadratische Kachel an, Rechtsklick oder Entf entfernt eine, „Lücken füllen“ setzt kleine Kacheln in freie Felder; leere Felder bleiben Hintergrund, etwa für ein Logo. „Übernehmen“ verwendet das Raster nur in den aktuellen Einstellungen (und im Preset), „Als Raster speichern“ legt zusätzlich `<Name>.vtgrid` im Einstellungsordner (`grids`) ab. Gespeicherte Raster erscheinen neben den eingebauten, gelten auf der Kommandozeile mit `--layout <Name>` und lassen sich als Datei weitergeben (Doppelklick nimmt sie auf).
+
+**Pack-Bild:** Je Video eine Zeile mit Name (bzw. Titel), Dauer, Auflösung und Größe, darunter so viele Bilder, wie das Raster Spalten hat (`-c`/`--tiles`), so breit wie das Sheet (`-w`). Farben, Schrift, Zeitstempel, Abstände und übersprungener Anfang/Ende kommen aus den Einstellungen bzw. dem Preset. Hochkant-Videos stehen eingepasst in der 16:9-Fläche. Ist das Bild für das Format zu hoch (WebP 16383 px, JPEG 65000 px, PNG 32000 px), entstehen `pack-1`, `pack-2` …
+
+```bash
+vthumb pack ~/Serien/Staffel1 -o ~/staffel1.jpg --tiles 8 -w 2400
+```
+
+**Begleitdatei und Viewer:** Mit `--sidecar` bzw. „Begleitdatei mit Kachel-Zeiten“ entsteht neben dem Sheet `<Name>.vtsheet`, ein offenes JSON mit Video, Sheet-Größe sowie Rechteck und Zeitpunkt jeder Kachel ([Format](docs/vtsheet.md)). Der Viewer öffnet sie per Doppelklick (Datei oder erledigter Eintrag der Warteschlange) oder über „⋯“ → „Sheet öffnen…“. Ein Klick auf eine Kachel startet das Video dort; der Player ist im Viewer wählbar: „Automatisch“ sucht mpv, VLC, MPC-HC/MPC-BE und PotPlayer, „Eigener Befehl“ nimmt eine Befehlszeile mit `{file}`, `{seconds}`, `{ms}` und `{time}`. Der Systemstandard kennt keinen Startzeitpunkt und öffnet das Video am Anfang. „In den Papierkorb…“ (Entf) verschiebt das Video nach Rückfrage in den Papierkorb, auf Wunsch mit Sheet und Begleitdateien; geht das nicht, bleibt alles, wo es ist. Zeitpunkte von Hand stehen ebenfalls in der Begleitdatei und kommen zurück, wenn das Video wieder in die Warteschlange kommt.
+
 **Preset-Dateien:** Exportierte Presets heißen `<Name>.vtpreset` (Inhalt JSON) und öffnen sich per Doppelklick: das Preset wird übernommen und gewählt. Läuft das Programm schon, bekommt das offene Fenster die Datei (ebenso Videos über „Öffnen mit“). Der Installer für Windows trägt die Endung ein (abwählbar), das DMG für macOS ebenso; unter Linux siehe [packaging/linux/README.md](packaging/linux/README.md). Ältere `*.vtpreset.json`-Dateien lassen sich weiter importieren und öffnen.
 
 **Tastenkürzel** (unter macOS Cmd statt Strg):
@@ -179,7 +194,8 @@ Exit-Codes: 0 ok, 1 einzelne Videos fehlgeschlagen, 2 Aufruffehler, 3 ffmpeg feh
 
 `{filename}` `{name}` `{ext}` `{folder}` `{path}` `{title}` `{container}` `{size}` `{size:B|KB|MB|GB|TB}` `{duration}` `{bitrate}`
 `{width}` `{height}` `{resolution}` `{vcodec}` `{vprofile}` `{fps}` `{pixfmt}` `{hdr}` `{vbitrate}` `{rotation}`
-`{audio}` `{acodec}` `{samplerate}` `{channels}` `{channellayout}` `{abitrate}` `{alang}` `{audiotracks}` `{comment}`
+`{audio}` `{acodec}` `{samplerate}` `{channels}` `{channellayout}` `{abitrate}` `{alang}` `{audiotracks}`
+`{subtitles}` `{slang}` `{subtracks}` `{comment}`
 
 Die erste Zeile wird fett und größer dargestellt. `{comment}` ist der eigene Kommentartext; steht er nicht in der Vorlage, kommt der Kommentar als letzte Zeile(n) dazu.
 
