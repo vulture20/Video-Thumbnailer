@@ -9,6 +9,14 @@ namespace VideoThumbnailer.Core.Rendering;
 /// <summary>Sound for an animated sheet: a part of the video (#30).</summary>
 public sealed record AudioClip(string Path, double Start, double Seconds);
 
+/// <summary>What the encoder writes: format, frame rate, quality (1..100) and the color for padding to even sizes.</summary>
+public sealed record EncodeOptions(AnimationFormat Format, int FramesPerSecond, int Quality, SKColor PadColor)
+{
+    /// <summary>Options of an animated sheet.</summary>
+    public static EncodeOptions ForSheet(SheetSettings s) =>
+        new(s.Animation.Format, s.Animation.FramesPerSecond, s.Output.Quality, SheetRenderer.ParseColor(s.BackgroundColor, new SKColor(30, 30, 30)));
+}
+
 /// <summary>Feeds rendered sheet frames (raw RGBA) to an ffmpeg process that encodes the animation (MP4, WebM, GIF, …).</summary>
 public sealed class AnimationEncoder : IAsyncDisposable
 {
@@ -28,7 +36,13 @@ public sealed class AnimationEncoder : IAsyncDisposable
 
     /// <param name="encoders">Encoders of this ffmpeg (<see cref="GetEncodersAsync"/>); null = assume the preferred ones.</param>
     public static AnimationEncoder Start(string ffmpegPath, string outputPath, SheetSettings s, int width, int height,
-                                         AudioClip? audio = null, IReadOnlySet<string>? encoders = null)
+                                         AudioClip? audio = null, IReadOnlySet<string>? encoders = null) =>
+        Start(ffmpegPath, outputPath, EncodeOptions.ForSheet(s), width, height, audio is null ? null : [audio], null, encoders);
+
+    /// <param name="audio">Parts of the sound, played one after the other (null/empty = silent).</param>
+    /// <param name="crossfades">Cross-fade in seconds between part i and i+1 (null = hard cuts).</param>
+    public static AnimationEncoder Start(string ffmpegPath, string outputPath, EncodeOptions o, int width, int height,
+                                         IReadOnlyList<AudioClip>? audio, IReadOnlyList<double>? crossfades, IReadOnlySet<string>? encoders)
     {
         var psi = new ProcessStartInfo(ffmpegPath)
         {
@@ -38,7 +52,7 @@ public sealed class AnimationEncoder : IAsyncDisposable
             UseShellExecute = false,
             CreateNoWindow = true,
         };
-        foreach (var a in BuildArguments(outputPath, s, width, height, audio, encoders)) psi.ArgumentList.Add(a);
+        foreach (var a in BuildArguments(outputPath, o, width, height, audio, crossfades, encoders)) psi.ArgumentList.Add(a);
         var process = Process.Start(psi) ?? throw new InvalidOperationException("ffmpeg could not be started.");
         return new AnimationEncoder(process, width, height);
     }
@@ -93,39 +107,52 @@ public sealed class AnimationEncoder : IAsyncDisposable
     };
 
     /// <summary>The encoder this ffmpeg lacks for the settings (video first, then sound), or null when all are there.</summary>
-    public static string? MissingEncoder(SheetSettings s, bool withAudio, IReadOnlySet<string> have)
+    public static string? MissingEncoder(SheetSettings s, bool withAudio, IReadOnlySet<string> have) =>
+        MissingEncoder(s.Animation.Format, withAudio, have);
+
+    public static string? MissingEncoder(AnimationFormat format, bool withAudio, IReadOnlySet<string> have)
     {
         if (have.Count == 0) return null; // listing failed: let ffmpeg report the problem itself
-        var video = VideoEncoder(s.Animation.Format, have);
+        var video = VideoEncoder(format, have);
         if (!have.Contains(video)) return video;
-        if (withAudio && AudioEncoder(s.Animation.Format, have) is { } audio && !have.Contains(audio)) return audio;
+        if (withAudio && AudioEncoder(format, have) is { } audio && !have.Contains(audio)) return audio;
         return null;
     }
 
     internal static List<string> BuildArguments(string outputPath, SheetSettings s, int width, int height,
-                                                AudioClip? audio = null, IReadOnlySet<string>? encoders = null)
+                                                AudioClip? audio = null, IReadOnlySet<string>? encoders = null) =>
+        BuildArguments(outputPath, EncodeOptions.ForSheet(s), width, height, audio is null ? null : [audio], null, encoders);
+
+    internal static List<string> BuildArguments(string outputPath, EncodeOptions o, int width, int height,
+                                                IReadOnlyList<AudioClip>? audio, IReadOnlyList<double>? crossfades, IReadOnlySet<string>? encoders)
     {
-        var a = s.Animation;
         var inv = CultureInfo.InvariantCulture;
         var args = new List<string>
         {
             "-hide_banner", "-loglevel", "error", "-y",
             "-f", "rawvideo", "-pix_fmt", "rgba",
-            "-s", $"{width}x{height}", "-r", a.FramesPerSecond.ToString(inv),
+            "-s", $"{width}x{height}", "-r", o.FramesPerSecond.ToString(inv),
             "-i", "-",
         };
-        var audioCodec = audio is not null ? AudioEncoder(a.Format, encoders) : null;
+        var audioCodec = audio is { Count: > 0 } ? AudioEncoder(o.Format, encoders) : null;
         if (audioCodec is not null)
         {
-            args.AddRange(["-ss", audio!.Start.ToString("0.###", inv), "-t", audio.Seconds.ToString("0.###", inv)]);
-            args.AddRange(Input.VideoSource.InputOptions(audio.Path));
-            args.AddRange(["-i", audio.Path, "-map", "0:v:0", "-map", "1:a:0?"]);
+            foreach (var part in audio!)
+            {
+                args.AddRange(["-ss", part.Start.ToString("0.###", inv), "-t", part.Seconds.ToString("0.###", inv)]);
+                args.AddRange(Input.VideoSource.InputOptions(part.Path));
+                args.AddRange(["-i", part.Path]);
+            }
+            if (audio.Count == 1)
+                args.AddRange(["-map", "0:v:0", "-map", "1:a:0?"]);
+            else
+                args.AddRange(["-filter_complex", AudioJoinFilter(audio.Count, crossfades), "-map", "0:v:0", "-map", "[aout]"]);
         }
-        var q = Math.Clamp(s.Output.Quality, 1, 100);
-        var bg = SheetRenderer.ParseColor(s.BackgroundColor, new SKColor(30, 30, 30));
+        var q = Math.Clamp(o.Quality, 1, 100);
+        var bg = o.PadColor;
         // yuv420p needs even dimensions: pad by one pixel in the background colour if necessary.
         var pad = $"pad=ceil(iw/2)*2:ceil(ih/2)*2:color=0x{bg.Red:X2}{bg.Green:X2}{bg.Blue:X2}";
-        switch (a.Format)
+        switch (o.Format)
         {
             case AnimationFormat.Gif:
                 args.AddRange(["-vf", "split[a][b];[a]palettegen=stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=3:diff_mode=rectangle",
@@ -141,7 +168,7 @@ public sealed class AnimationEncoder : IAsyncDisposable
                                "-x265-params", "log-level=error", "-tag:v", "hvc1", "-pix_fmt", "yuv420p", "-movflags", "+faststart"]);
                 break;
             case AnimationFormat.Webp:
-                args.AddRange(["-c:v", VideoEncoder(a.Format, encoders), "-lossless", "0", "-quality", q.ToString(inv),
+                args.AddRange(["-c:v", VideoEncoder(o.Format, encoders), "-lossless", "0", "-quality", q.ToString(inv),
                                "-compression_level", "4", "-loop", "0", "-pix_fmt", "yuv420p", "-f", "webp"]);
                 break;
             case AnimationFormat.Apng:
@@ -167,7 +194,7 @@ public sealed class AnimationEncoder : IAsyncDisposable
             });
         }
         // Container last (the .part file has no telling extension).
-        switch (a.Format)
+        switch (o.Format)
         {
             case AnimationFormat.Webm: args.AddRange(["-f", "webm"]); break;
             case AnimationFormat.Ogv: args.AddRange(["-f", "ogg"]); break;
@@ -175,6 +202,34 @@ public sealed class AnimationEncoder : IAsyncDisposable
         }
         args.Add(outputPath);
         return args;
+    }
+
+    /// <summary>
+    /// Joins the sound of inputs 1..count (input 0 is the picture): one after the other, with a cross-fade where
+    /// <paramref name="crossfades"/> has a length above 0. Every part is resampled to the same format first.
+    /// </summary>
+    internal static string AudioJoinFilter(int count, IReadOnlyList<double>? crossfades)
+    {
+        var inv = CultureInfo.InvariantCulture;
+        var parts = new List<string>();
+        for (var i = 1; i <= count; i++)
+            parts.Add($"[{i}:a:0]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo[s{i}]");
+        if (crossfades is null || crossfades.All(c => c <= 0))
+        {
+            parts.Add(string.Concat(Enumerable.Range(1, count).Select(i => $"[s{i}]")) + $"concat=n={count}:v=0:a=1[aout]");
+            return string.Join(";", parts);
+        }
+        var current = "[s1]";
+        for (var i = 2; i <= count; i++)
+        {
+            var label = i == count ? "[aout]" : $"[x{i}]";
+            var d = i - 2 < crossfades.Count ? crossfades[i - 2] : 0;
+            parts.Add(d > 0
+                ? $"{current}[s{i}]acrossfade=d={d.ToString("0.###", inv)}:c1=tri:c2=tri{label}"
+                : $"{current}[s{i}]concat=n=2:v=0:a=1{label}");
+            current = label;
+        }
+        return string.Join(";", parts);
     }
 
     public async Task WriteFrameAsync(SKBitmap frame, CancellationToken ct)

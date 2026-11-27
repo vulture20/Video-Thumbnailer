@@ -71,6 +71,12 @@ public class CliTests
         ["watermark.opacity"] = ["--watermark-opacity", "90"], ["watermark.color"] = ["--watermark-color", "#FF00FF00"],
         ["watermark.perTile"] = ["--watermark-per-tile"],
         ["animation.audio"] = ["--audio"],
+        ["trailer.enabled"] = ["--trailer", "gif"], ["trailer.only"] = ["--trailer-only"], ["trailer.format"] = ["--trailer", "webm"],
+        ["trailer.clips"] = ["--trailer-clips", "5"], ["trailer.clipSeconds"] = ["--trailer-seconds", "4"],
+        ["trailer.crossfadeSeconds"] = ["--trailer-fade", "0"], ["trailer.size"] = ["--trailer-size", "320"],
+        ["trailer.framesPerSecond"] = ["--trailer-fps", "12"], ["trailer.timestamps"] = ["--no-trailer-timestamps"],
+        ["trailer.audio"] = ["--trailer-audio"],
+        ["output.webVtt"] = ["--webvtt"], ["output.webVttTileWidth"] = ["--webvtt-width", "200"],
     };
 
     /// <summary>An existing file for --background-image (the option checks that it exists).</summary>

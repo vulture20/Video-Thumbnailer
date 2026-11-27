@@ -6,6 +6,8 @@ public interface IUiServices
     Task<IReadOnlyList<string>> PickVideoFilesAsync();
     Task<string?> PickFolderAsync(string title);
     Task<string?> PickPresetFileAsync(bool save, string? suggestedName = null);
+    /// <summary>Target of the video data export (#32): a .csv or .xml file. Null when cancelled.</summary>
+    Task<string?> PickInfoExportFileAsync(string suggestedName);
     /// <summary>Picture for the sheet (background, watermark); the dialog title is a translation key. Null when cancelled.</summary>
     Task<string?> PickImageFileAsync(string? current, string titleKey);
     Task<string?> PromptTextAsync(string title, string message, string initial);

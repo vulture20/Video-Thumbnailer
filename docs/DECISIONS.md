@@ -279,11 +279,55 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Ton nur bei MP4/H.265 (AAC 128 kbit/s), WebM (Opus, sonst Vorbis) und OGV (Vorbis, sonst Opus). Bei GIF, WebP und APNG wird der Schalter ignoriert (Oberfläche: ausgegraut). Videos ohne Ton ergeben ein stummes Sheet ohne Fehler | diese Formate können keinen Ton enthalten |
 | 26.11.2026 | Oberfläche: sieben Formatknöpfe in zwei Reihen (Videos MP4, H.265, WebM, OGV; Bilder GIF, WebP, APNG), darunter „Mit Ton“. Kommandozeile `-a mp4\|h265\|webm\|ogv\|gif\|webp\|apng`, `--audio`/`--no-audio` | alles in „Einfach“ wie bisher die drei Formate |
 
+### Vorschau-Clip / „Trailer“ (#31)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 27.11.2026 | Vorschau-Clip als **eigene Ausgabe** (`trailer` im Preset, Standard **aus**), zusätzlich zum Sheet oder mit „Nur den Clip“ allein. Er liegt neben dem Sheet und heißt `<Muster>.preview.<Endung>`; „Datei existiert“ (überspringen/überschreiben/umbenennen) gilt für Sheet und Clip getrennt | Issue sagt „statt eines Rasters“; viele wollen aber beides aus einem Lauf. Mit „Nur den Clip“ geht beides. `.preview` wie `.sheet` macht die Datei eindeutig und hält sie aus Ordner-Scans heraus (ein eigenes Video namens `x.preview.mp4` würde dort ebenfalls übersprungen, wie schon bei `.sheet`) |
+| 27.11.2026 | Standard: **12 Ausschnitte à 2,5 s**, **0,5 s Überblendung** (0 = harter Schnitt), **640 px** an der längeren Seite, **24 Bilder/s**, Zeitstempel an, Ton aus, Format MP4. Höchstens **2 Minuten**: sonst werden die Ausschnitte kürzer (60 × 2 s); ein kurzes Video bekommt nur so viele Ausschnitte, wie nebeneinander hineinpassen | ergibt rund 25 s, genug für einen Eindruck und klein genug zum Teilen. 640 px reichen für eine Vorschau und halten GIFs klein. Überblendung wirkt ruhiger als harte Schnitte bei Testbildern und Filmen gleichermaßen |
+| 27.11.2026 | Ausschnitte gleichmäßig verteilt wie die Kacheln (Anfang/Ende überspringen, Platz für den letzten Ausschnitt, schwarze Bilder überspringen). Aufnahmezeitpunkte von Hand gelten nur für Kacheln, nicht für den Clip | gleiche Regeln wie beim animierten Sheet; die Zeitpunkte von Hand gehören zu bestimmten Kacheln |
+| 27.11.2026 | Eingeblendet wird nur die **Zeit** jedes Ausschnitts (im Stil der Zeitstempel des Sheets, abschaltbar), **kein Info-Kopf** | der Clip ist eine Vorschau; die technischen Daten stehen im Sheet bzw. im Export (#32). Ein Info-Text würde kleine Clips verdecken |
+| 27.11.2026 | Umsetzung wie bei den animierten Sheets: jeder Ausschnitt wird von ffmpeg in Clipgröße gelesen, die Bilder werden in SkiaSharp mit Zeitstempel versehen und überblendet und an einen ffmpeg-Encoder gegeben. Ton optional (alle Ausschnitte nacheinander, mit `acrossfade` überblendet wie das Bild), nur bei MP4, H.265, WebM, OGV | ein Weg für alle sieben Formate, gleiche Encoder-Prüfung, gleiche Zeitstempel-Darstellung |
+| 27.11.2026 | Oberfläche unter „Ausgabe“: Schalter „Vorschau-Clip“, darunter Format, Anzahl, Länge, Überblendung, „Nur den Clip“; Größe, Bilder/s, Zeit einblenden und Ton unter „Erweitert“. Kommandozeile `--trailer <Format>`, `--no-trailer`, `--trailer-only`/`--with-sheet`, `--trailer-clips`, `--trailer-seconds`, `--trailer-fade`, `--trailer-size`, `--trailer-fps`, `--trailer-timestamps`, `--trailer-audio` | |
+
+### Video-Infos als CSV/XML und WebVTT (#32)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 27.11.2026 | **Eine Sammeldatei je Lauf** (eine Zeile bzw. ein `<video>` je Video), keine Datei je Video. Format nach Endung: `.xml` = XML, sonst CSV | so wie im Issue gewünscht („eine Zeile pro Video für einen ganzen Ordner“); einzelne Dateien je Video bringen in Tabellen nichts |
+| 27.11.2026 | Felder heißen wie die Platzhalter (`filename`, `name`, `ext`, `folder`, `path`, `title`, `container`, `size`, `duration`, `bitrate`, `width`, `height`, `resolution`, `vcodec`, `vprofile`, `fps`, `pixfmt`, `hdr`, `vbitrate`, `rotation`, `acodec`, `samplerate`, `channels`, `channellayout`, `abitrate`, `alang`, `audiotracks`) plus `error`. Werte **ohne Einheit und sprachunabhängig**: Bytes, Sekunden, bit/s, Punkt als Dezimaltrenner, `true`/`false` | Daten sollen sortier- und rechenbar sein. `{audio}` (Zusammenfassung) und `{comment}` entfallen, die Einzelwerte sind da |
+| 27.11.2026 | CSV nach RFC 4180 (Komma, Anführungszeichen bei Bedarf, CRLF), **UTF-8 mit BOM**. XML mit leeren Feldern weggelassen | BOM, damit Excel Umlaute richtig liest. Deutsches Excel trennt bei Doppelklick an Semikolons; über „Daten → Aus Text/CSV“ geht Komma. Komma bleibt, weil es der Standard ist und andere Programme ein Semikolon nicht erwarten |
+| 27.11.2026 | Oberfläche: Eintrag „Video-Infos exportieren…“ im Menü „⋯“ der Warteschlange (Speichern-Dialog, alle Videos der Warteschlange, unabhängig von einem Lauf). Kommandozeile `--export-info <Datei>` zusätzlich zu den Sheets, `--info-only` ohne Sheets | in der Oberfläche gibt es keinen sinnvollen festen Speicherort für eine Sammeldatei; der Export ist eine Aktion, keine Preset-Einstellung |
+| 27.11.2026 | **WebVTT**: Einstellung `output.webVtt` (Standard aus) schreibt zum Sheet `<Name>.thumbnails.vtt` und das Sprite `<Name>.thumbnails.jpg`. Das Sprite enthält **dieselben Bilder wie das Sheet**, in Zeitfolge in einem fast quadratischen Raster (höchstens 10 Spalten), **ohne Kopf, Zeitstempel und Effekte**, 160 px breit (`webVttTileWidth`). Jedes Bild gilt bis zur Mitte zum nächsten; das erste ab 0, das letzte bis zum Ende. Bei animierten Sheets das erste Bild jedes Ausschnitts | kein eigenes Preset nötig: wer eine feinere Zeitleiste will, nimmt ein Preset mit mehr Kacheln. Der Name `.thumbnails.vtt` statt `<Name>.vtt`, weil Player eine gleichnamige `.vtt` als Untertitel laden würden |
+| 27.11.2026 | Kommandozeile `--webvtt`/`--no-webvtt`, `--webvtt-width`; Oberfläche unter „Erweitert“ → „Ausgabe“ | |
+
+### Preset per Doppelklick (#33)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 27.11.2026 | **Neue Endung `.vtpreset`** für exportierte Presets (Inhalt unverändert JSON). Der Preset-Ordner behält `*.vtpreset.json`; Import, Programmargument und `--preset` nehmen beide | **ändert den Standard**: Windows und macOS kennen nur die Endung nach dem letzten Punkt, `.vtpreset.json` ließe sich nur zuordnen, indem man alle `.json` übernimmt. Bestehende Dateien bleiben nutzbar |
+| 27.11.2026 | Windows: Installer trägt `.vtpreset` → `VideoThumbnailer.Preset` unter `HKA` ein (pro Benutzer ohne Adminrechte, bei „für alle“ unter HKLM), als abwählbare Aufgabe (Standard an), `ChangesAssociations=yes`. Für `.json` steht das Programm nur unter „Öffnen mit“ (`OpenWithProgids`), ohne Standard zu werden | ältere `.vtpreset.json` lassen sich so per Rechtsklick öffnen, ohne fremde JSON-Dateien zu übernehmen |
+| 27.11.2026 | macOS: `UTExportedTypeDeclarations` (`io.github.vulture20.videothumbnailer.preset`, konform zu `public.json`, Endung `vtpreset`) und `CFBundleDocumentTypes` (Rolle Viewer, Owner). Die App wertet das Avalonia-Ereignis „Datei öffnen“ (`IActivatableLifetime`, `FileActivatedEventArgs`) aus | dort kommen Dateien nicht als Argument an. Wie alles auf macOS nur über CI gebaut, nicht von Hand getestet |
+| 27.11.2026 | Linux: MIME-Typ `application/x-vtpreset+json` (`packaging/linux/video-thumbnailer-preset.xml`, Muster `*.vtpreset` und `*.vtpreset.json`) und Eintrag im `.desktop`. Im AppImage liegt die XML unter `usr/share/mime/packages`; wirksam erst nach Einbindung (AppImageLauncher, appimaged) oder von Hand (README im Ordner) | ein AppImage kann sich nicht selbst im System anmelden |
+| 27.11.2026 | **Läuft das Programm schon**, übergibt ein zweiter Start mit Dateien (Preset, Videos, „Öffnen mit“) sie an das offene Fenster und beendet sich; das Fenster kommt nach vorn. Ein Start **ohne** Dateien öffnet weiterhin ein eigenes Fenster. Übertragung über eine lokale Named Pipe je Benutzer und Einstellungsordner (portable Kopien getrennt), nur für den eigenen Benutzer | zwei Fenster mit verschiedenen Warteschlangen sind verwirrend, wenn man nur ein Preset öffnen will. Wer bewusst ein zweites Fenster will, startet ohne Datei. Unter Unix würde ein zweiter Server die Pipe des ersten übernehmen, darum horcht ein Fenster nur, wenn noch keines horcht |
+| 27.11.2026 | Ein geöffnetes Preset wird wie beim Import gespeichert, gewählt **und geladen**; Status „Preset „…“ geöffnet“ | bisher wurde es beim Start nur ausgewählt, die Einstellungen blieben die alten (Fehler behoben) |
+
+### Tastenkürzel (#34)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 27.11.2026 | Kürzel wie im Issue vorgeschlagen, ergänzt: Strg+O Dateien, Strg+Umschalt+O Ordner, **Strg+U** Webadresse, Strg+Eingabe oder F5 Start, **Strg+P** Pause/Fortsetzen, Esc Abbrechen, Entf und Strg+A in der Warteschlange, **Strg+E** Einfach/Erweitert, **Strg+L** Live-Vorschau, **Strg+B** Warteschlange ein-/ausklappen | U für URL, P für Pause, E für Erweitert, L für Live, B wie die Seitenleiste in vielen Programmen. Keines davon braucht ein Textfeld selbst |
+| 27.11.2026 | Auf macOS **Cmd** statt Strg (`KeyModifiers.Meta`), Anzeige dort mit Symbolen (⌘, ⇧, ↩) | übliche Mac-Bedienung |
+| 27.11.2026 | Entf und Strg+A wirken **nur in der Warteschlange**, nicht im ganzen Fenster | sonst würde Entf in einem Textfeld Videos löschen und Strg+A dort nicht mehr den Text markieren |
+| 27.11.2026 | Kürzel stehen in Klammern im Tooltip des jeweiligen Knopfs (`{l:T Schlüssel, Shortcut=Aktion}`), es gibt kein Menü. Tooltips für alle Knöpfe ergänzt (Preset-Knöpfe, Start/Pause/Abbrechen, ffmpeg, Ordnerwahl) | die Oberfläche hat bewusst keine Menüleiste; der Tooltip ist der Ort, an dem man nachsieht |
+
+### Kleinigkeiten
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 27.11.2026 | Knopf mit der Weltkugel in der Warteschlange so hoch wie „+ Dateien…“/„+ Ordner…“ (füllt die Zeilenhöhe); ein Test vergleicht die Höhen | Wunsch von Vulli |
+
 ## Offen
 
 | Seit | Punkt | Stand |
 |---|---|---|
 | 26.11.2026 | Test auf einem echten Mac: Oberfläche (Schriften, Schalter, Symbole, Titelleiste), DMG mit Dock-Icon und Gatekeeper-Dialog. Die CI prüft auf macOS nur Download, Prüfsumme, Signatur und ein erstelltes Sheet | kein Mac vorhanden |
+| 27.11.2026 | Dateizuordnung für `.vtpreset` (#33): Windows-Installer, macOS-App und Linux-MIME-Typ sind nur gebaut, nicht auf echten Systemen per Doppelklick geprüft; die Übergabe an ein laufendes Programm ist unter Linux getestet | Rückmeldung nach dem nächsten Release |
 | 26.11.2026 | Code-Signierung (Windows) und Notarisierung (macOS) fehlen; SmartScreen bzw. Gatekeeper warnen beim ersten Start | braucht Zertifikat bzw. Apple-Entwicklerkonto (kostenpflichtig) |
 | 26.11.2026 | Icon-Einbindung unter Linux (AppImage, Fenster) und macOS nur über CI geprüft; unter Windows von Vulli bestätigt | Blick auf Linux und macOS fehlt |
 | 26.11.2026 | Pakete für Windows arm64, Linux arm64 und Intel-Mac werden nur gebaut, nie gestartet (die Runner können sie nicht ausführen) | Rückmeldung von Nutzern mit solchen Geräten |
@@ -293,14 +337,10 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 
 ## Spätere Ideen (P2/P3, noch ohne Entscheidung)
 
-Aus der Spezifikation, je ein Issue. Erledigt sind aus P2 bereits: Kommandozeile, Live-Vorschau, Deutsch/Englisch, Preset-Import/-Export, „Einfach“/„Erweitert“ statt Optionsdialog, Hintergrundfarbe, animierte Sheets (MP4/WebM/GIF), Videos per URL (#21), schwarze Bilder überspringen (#22), Aufnahmezeitpunkte von Hand (#23), Spezial-Raster (#24), „An Bildschirm anpassen“ (#25), Hintergrundbild (#26), Kachel-Effekte (#27), Kommentartext (#28), Wasserzeichen (#29) und weitere Animationsformate mit Ton (#30). Die Wahl der Render-Engine (P3) entfällt: ffmpeg ist das einzige Backend.
+Aus der Spezifikation, je ein Issue. Erledigt sind aus P2 bereits: Kommandozeile, Live-Vorschau, Deutsch/Englisch, Preset-Import/-Export, „Einfach“/„Erweitert“ statt Optionsdialog, Hintergrundfarbe, animierte Sheets (MP4/WebM/GIF), Videos per URL (#21), schwarze Bilder überspringen (#22), Aufnahmezeitpunkte von Hand (#23), Spezial-Raster (#24), „An Bildschirm anpassen“ (#25), Hintergrundbild (#26), Kachel-Effekte (#27), Kommentartext (#28), Wasserzeichen (#29), weitere Animationsformate mit Ton (#30), Vorschau-Clip (#31), Export als CSV/XML/WebVTT (#32), Preset per Doppelklick (#33) und Tastenkürzel (#34). Die Wahl der Render-Engine (P3) entfällt: ffmpeg ist das einzige Backend.
 
 | Prio | Idee | Issue |
 |---|---|---|
-| P2 | Durchgehende Vorschau-Animation / GIF-Slideshow | #31 |
-| P2 | Export der Video-Infos als CSV, XML, WebVTT | #32 |
-| P2 | Preset-Datei per Doppelklick öffnen (Dateizuordnung) | #33 |
-| P2 | Tastenkürzel | #34 |
 | P3 | Untertitel-Infos auslesen | #35 |
 | P3 | Baukasten-Editor für eigene Raster | #36 |
 | P3 | Mehrere Sheets zu einem „Pack“-Bild | #37 |

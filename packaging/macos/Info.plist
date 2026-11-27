@@ -32,6 +32,50 @@
   <string>public.app-category.video</string>
   <key>NSHighResolutionCapable</key>
   <true/>
+  <!-- Preset files (*.vtpreset) open with a double-click (#33); the program gets them as "open file" event. -->
+  <key>CFBundleDocumentTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleTypeName</key>
+      <string>Video-Thumbnailer Preset</string>
+      <key>CFBundleTypeRole</key>
+      <string>Viewer</string>
+      <key>LSHandlerRank</key>
+      <string>Owner</string>
+      <key>CFBundleTypeIconFile</key>
+      <string>app.icns</string>
+      <key>LSItemContentTypes</key>
+      <array>
+        <string>io.github.vulture20.videothumbnailer.preset</string>
+      </array>
+    </dict>
+  </array>
+  <key>UTExportedTypeDeclarations</key>
+  <array>
+    <dict>
+      <key>UTTypeIdentifier</key>
+      <string>io.github.vulture20.videothumbnailer.preset</string>
+      <key>UTTypeDescription</key>
+      <string>Video-Thumbnailer Preset</string>
+      <key>UTTypeIconFile</key>
+      <string>app.icns</string>
+      <key>UTTypeConformsTo</key>
+      <array>
+        <string>public.json</string>
+      </array>
+      <key>UTTypeTagSpecification</key>
+      <dict>
+        <key>public.filename-extension</key>
+        <array>
+          <string>vtpreset</string>
+        </array>
+        <key>public.mime-type</key>
+        <array>
+          <string>application/x-vtpreset+json</string>
+        </array>
+      </dict>
+    </dict>
+  </array>
   <key>NSHumanReadableCopyright</key>
   <string>Copyright (C) 2026 Thorsten Schröpel</string>
 </dict>

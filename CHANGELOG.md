@@ -6,6 +6,20 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 
 ## [Unveröffentlicht]
 
+### Hinzugefügt
+- Vorschau-Clip („Trailer“): kurze Ausschnitte aus gleichmäßig verteilten Stellen des Videos nacheinander, mit Überblendung (Standard 0,5 s, 0 = harter Schnitt), Zeit jedes Ausschnitts in der Ecke und optional mit Ton, als MP4, H.265, WebM, OGV, GIF, WebP oder APNG. Standard 12 × 2,5 s, 640 px, höchstens 2 Minuten. Zusätzlich zum Sheet oder allein; Dateiname `<Name>.preview.<Endung>`, beim Ordner-Scan übersprungen. Oberfläche unter „Ausgabe“, Kommandozeile `--trailer <Format>`, `--trailer-only`, `--trailer-clips`, `--trailer-seconds`, `--trailer-fade`, `--trailer-size`, `--trailer-fps`, `--trailer-timestamps`, `--trailer-audio` ([#49], #31)
+- Technische Daten aller Videos als eine CSV- oder XML-Datei je Lauf (Spalten wie die Platzhalter, Zahlen ohne Einheit): Oberfläche „⋯“ → „Video-Infos exportieren…“, Kommandozeile `--export-info <Datei>` und `--info-only` ([#49], #32)
+- WebVTT-Vorschaubilder für Web-Player: `<Name>.thumbnails.vtt` mit Sprite `<Name>.thumbnails.jpg` aus den aufgenommenen Bildern (Breite einstellbar). Oberfläche unter „Erweitert“ → „Ausgabe“, Kommandozeile `--webvtt`, `--webvtt-width` ([#49], #32)
+- Preset-Dateien per Doppelklick öffnen: Dateizuordnung für `.vtpreset` im Windows-Installer (pro Benutzer, abwählbar), in der macOS-App und als MIME-Typ für Linux (im AppImage nach Einbindung). Ein schon laufendes Programm übernimmt Presets und Videos aus einem zweiten Start, statt ein zweites Fenster zu öffnen; macOS-„Datei öffnen“-Ereignisse werden ausgewertet ([#49], #33)
+- Tastenkürzel: Strg/Cmd+O, Strg/Cmd+Umschalt+O, Strg/Cmd+U, Strg/Cmd+Eingabe oder F5, Strg/Cmd+P, Esc, Entf und Strg/Cmd+A in der Warteschlange, Strg/Cmd+E (Einfach/Erweitert), Strg/Cmd+L (Live-Vorschau), Strg/Cmd+B (Warteschlange). Die Kürzel stehen in den Tooltips; fehlende Tooltips ergänzt ([#49], #34)
+
+### Geändert
+- Exportierte Presets heißen jetzt `<Name>.vtpreset` statt `<Name>.vtpreset.json` (gleicher Inhalt), weil Windows und macOS nur die letzte Endung kennen. Alte Dateien lassen sich weiter importieren ([#49], #33)
+
+### Behoben
+- Der Knopf mit der Weltkugel in der Warteschlange ist so hoch wie „+ Dateien…“ und „+ Ordner…“ ([#49])
+- Eine beim Start übergebene Preset-Datei wurde zwar ausgewählt, ihre Einstellungen aber nicht geladen ([#49], #33)
+
 ## [0.6.0] – 2026-11-26
 
 Videos per URL, Spezial-Raster mit großen Kacheln, Kachel-Effekte, Wasserzeichen, Kommentar und Hintergrundbild, Aufnahmezeitpunkte von Hand, schwarze Bilder überspringen, weitere Animationsformate mit Ton, Farb- und Schriftauswahl sowie alle Einstellungen auf der Kommandozeile.
@@ -156,4 +170,5 @@ Erste Version.
 [#19]: https://github.com/vulture20/Video-Thumbnailer/pull/19
 [#41]: https://github.com/vulture20/Video-Thumbnailer/pull/41
 [#40]: https://github.com/vulture20/Video-Thumbnailer/pull/40
+[#49]: https://github.com/vulture20/Video-Thumbnailer/pull/49
 [#48]: https://github.com/vulture20/Video-Thumbnailer/pull/48

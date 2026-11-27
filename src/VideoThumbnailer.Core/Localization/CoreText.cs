@@ -30,6 +30,8 @@ public static class CoreText
         ["TemplateIgnored"] = ("The grid template is not usable, the plain grid is used instead.", "Die Raster-Vorlage ist nicht verwendbar, es gilt das einfache Raster."),
         ["WatermarkImageMissing"] = ("Watermark picture not found or not readable: {0}", "Wasserzeichen-Bild nicht gefunden oder nicht lesbar: {0}"),
         ["EncoderMissing"] = ("This ffmpeg has no encoder '{0}' for the chosen animation format.", "Diesem ffmpeg fehlt der Encoder „{0}“ für das gewählte Animationsformat."),
+        ["TrailerWritten"] = ("preview clip: {0}", "Vorschau-Clip: {0}"),
+        ["TrailerFailed"] = ("Sheet written, preview clip failed: {0}", "Sheet erstellt, Vorschau-Clip fehlgeschlagen: {0}"),
         ["BackgroundImageMissing"] = ("Background image not found or not readable: {0}", "Hintergrundbild nicht gefunden oder nicht lesbar: {0}"),
 
         // built-in preset descriptions

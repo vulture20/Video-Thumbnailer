@@ -144,6 +144,8 @@ public sealed class SheetSettings
     public HeaderSettings Header { get; set; } = new();
     public OutputSettings Output { get; set; } = new();
     public AnimationSettings Animation { get; set; } = new();
+    /// <summary>Short clip of several parts of the video (#31), written next to the sheet or instead of it.</summary>
+    public TrailerSettings Trailer { get; set; } = new();
 
     public SheetSettings Clone()
     {
@@ -191,6 +193,9 @@ public sealed class SheetSettings
         }
         Animation.ClipSeconds = Math.Clamp(Animation.ClipSeconds, 0.5, 30);
         Animation.FramesPerSecond = Math.Clamp(Animation.FramesPerSecond, 1, 60);
+        Trailer ??= new();
+        Trailer.Normalize();
+        Output.WebVttTileWidth = Math.Clamp(Output.WebVttTileWidth, 32, 1920);
         if (string.IsNullOrWhiteSpace(Output.FileNamePattern)) Output.FileNamePattern = "{name}";
         if (Output.Location == OutputLocation.OutputFolder && string.IsNullOrWhiteSpace(Output.Folder))
             errors.Add(CoreText.T("OutputFolderMissing"));
@@ -317,6 +322,13 @@ public sealed class OutputSettings
     public bool SaveFrames { get; set; }
     /// <summary>Folder (relative to the sheet) for single frames. Same placeholders as the file name.</summary>
     public string FramesFolderPattern { get; set; } = "{name}_frames";
+    /// <summary>
+    /// Additionally write a WebVTT file with a sprite image for the seek bar of web players (#32):
+    /// "&lt;sheet name&gt;.thumbnails.vtt" and "&lt;sheet name&gt;.thumbnails.jpg", made from the same captured frames.
+    /// </summary>
+    public bool WebVtt { get; set; }
+    /// <summary>Width of one picture in the WebVTT sprite (pixels).</summary>
+    public int WebVttTileWidth { get; set; } = 160;
 }
 
 /// <summary>
@@ -344,4 +356,47 @@ public sealed class AnimationSettings
     /// <summary>Number of frames of the animation.</summary>
     [JsonIgnore]
     public int FrameCount => Math.Max(1, (int)Math.Round(ClipSeconds * FramesPerSecond));
+}
+
+/// <summary>
+/// Preview clip (#31): parts from several places of the video one after the other, like a trailer.
+/// Written as "&lt;name&gt;.preview.&lt;ext&gt;" next to the sheet.
+/// </summary>
+public sealed class TrailerSettings
+{
+    /// <summary>Longest clip in seconds; longer settings get shorter parts.</summary>
+    public const double MaxSeconds = 120;
+
+    public bool Enabled { get; set; }
+    /// <summary>Only the clip, no sheet.</summary>
+    public bool Only { get; set; }
+    public AnimationFormat Format { get; set; } = AnimationFormat.Mp4;
+    /// <summary>Number of parts.</summary>
+    public int Clips { get; set; } = 12;
+    /// <summary>Length of each part in seconds.</summary>
+    public double ClipSeconds { get; set; } = 2.5;
+    /// <summary>Cross-fade between two parts in seconds; 0 = hard cut.</summary>
+    public double CrossfadeSeconds { get; set; } = 0.5;
+    /// <summary>Longer side of the picture in pixels (width for landscape, height for portrait videos).</summary>
+    public int Size { get; set; } = 640;
+    public int FramesPerSecond { get; set; } = 24;
+    /// <summary>Time of the part in the corner, styled like the timestamps of the sheet.</summary>
+    public bool Timestamps { get; set; } = true;
+    /// <summary>Sound of the parts (MP4, H.265, WebM, OGV only).</summary>
+    public bool Audio { get; set; }
+
+    /// <summary>Clamps the values; parts get shorter so that the whole clip stays within <see cref="MaxSeconds"/>.</summary>
+    public void Normalize()
+    {
+        Clips = Math.Clamp(Clips, 1, 60);
+        ClipSeconds = Math.Clamp(ClipSeconds, 0.5, 30);
+        if (Clips * ClipSeconds > MaxSeconds) ClipSeconds = Math.Max(0.5, Math.Floor(MaxSeconds / Clips * 10) / 10);
+        CrossfadeSeconds = Math.Clamp(CrossfadeSeconds, 0, Math.Min(2, ClipSeconds / 2));
+        Size = Math.Clamp(Size, 64, 3840);
+        FramesPerSecond = Math.Clamp(FramesPerSecond, 1, 60);
+    }
+
+    /// <summary>Length of the whole clip in seconds (parts minus the cross-fades).</summary>
+    [JsonIgnore]
+    public double TotalSeconds => Clips * ClipSeconds - (Clips - 1) * CrossfadeSeconds;
 }

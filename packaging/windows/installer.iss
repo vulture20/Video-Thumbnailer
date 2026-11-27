@@ -46,6 +46,8 @@ Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
 CloseApplications=yes
+; Preset files (*.vtpreset) open with a double-click (#33); per user under HKCU, for all users under HKLM ("HKA").
+ChangesAssociations=yes
 
 [Languages]
 Name: "de"; MessagesFile: "compiler:Languages\German.isl"
@@ -54,9 +56,14 @@ Name: "en"; MessagesFile: "compiler:Default.isl"
 [CustomMessages]
 de.CliHint=Das Kommandozeilenwerkzeug vthumb.exe liegt im Programmordner.
 en.CliHint=The command line tool vthumb.exe is in the program folder.
+de.AssocPreset=Preset-Dateien (.vtpreset) mit Video-Thumbnailer öffnen
+en.AssocPreset=Open preset files (.vtpreset) with Video-Thumbnailer
+de.PresetType=Video-Thumbnailer-Preset
+en.PresetType=Video-Thumbnailer preset
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "assocpreset"; Description: "{cm:AssocPreset}"
 
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -64,6 +71,19 @@ Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs 
 [Icons]
 Name: "{autoprograms}\Video-Thumbnailer"; Filename: "{app}\VideoThumbnailer.exe"; Comment: "{cm:CliHint}"
 Name: "{autodesktop}\Video-Thumbnailer"; Filename: "{app}\VideoThumbnailer.exe"; Tasks: desktopicon
+
+[Registry]
+; ".vtpreset" belongs to the program; ".vtpreset.json" cannot (Windows only sees ".json"), so the program is only
+; offered under "Open with" for JSON files, without becoming their default.
+Root: HKA; Subkey: "Software\Classes\.vtpreset"; ValueType: string; ValueName: ""; ValueData: "VideoThumbnailer.Preset"; Flags: uninsdeletevalue; Tasks: assocpreset
+Root: HKA; Subkey: "Software\Classes\.vtpreset"; ValueType: string; ValueName: "Content Type"; ValueData: "application/x-vtpreset+json"; Flags: uninsdeletevalue; Tasks: assocpreset
+Root: HKA; Subkey: "Software\Classes\VideoThumbnailer.Preset"; ValueType: string; ValueName: ""; ValueData: "{cm:PresetType}"; Flags: uninsdeletekey; Tasks: assocpreset
+Root: HKA; Subkey: "Software\Classes\VideoThumbnailer.Preset\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\VideoThumbnailer.exe,0"; Tasks: assocpreset
+Root: HKA; Subkey: "Software\Classes\VideoThumbnailer.Preset\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\VideoThumbnailer.exe"" ""%1"""; Tasks: assocpreset
+Root: HKA; Subkey: "Software\Classes\.json\OpenWithProgids"; ValueType: string; ValueName: "VideoThumbnailer.Preset"; ValueData: ""; Flags: uninsdeletevalue; Tasks: assocpreset
+Root: HKA; Subkey: "Software\Classes\Applications\VideoThumbnailer.exe"; ValueType: string; ValueName: "FriendlyAppName"; ValueData: "Video-Thumbnailer"; Flags: uninsdeletekey
+Root: HKA; Subkey: "Software\Classes\Applications\VideoThumbnailer.exe\SupportedTypes"; ValueType: string; ValueName: ".vtpreset"; ValueData: ""
+Root: HKA; Subkey: "Software\Classes\Applications\VideoThumbnailer.exe\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\VideoThumbnailer.exe"" ""%1"""
 
 [Run]
 Filename: "{app}\VideoThumbnailer.exe"; Description: "{cm:LaunchProgram,Video-Thumbnailer}"; Flags: nowait postinstall skipifsilent

@@ -19,20 +19,35 @@ public sealed class SheetGenerator(FfmpegTools tools, SemaphoreSlim processLimit
     private readonly FrameExtractor _extractor = new(tools.FfmpegPath);
     private readonly ClipExtractor _clips = new(tools.FfmpegPath);
 
+    /// <summary>
+    /// Target file after overwrite handling: null = it exists and is to be skipped.
+    /// </summary>
+    private static string? Target(SheetSettings s, string path)
+    {
+        if (!File.Exists(path)) return path;
+        return s.Output.Overwrite switch
+        {
+            OverwriteMode.Skip => null,
+            OverwriteMode.Rename => OutputPathResolver.MakeUnique(path),
+            _ => path,
+        };
+    }
+
+    /// <summary>
+    /// Sheet and/or preview clip (#31) for one video. The result names the sheet (or the clip, when only the clip is
+    /// written); a clip next to a sheet is mentioned in the message.
+    /// </summary>
     /// <param name="manualTimes">Capture times chosen by hand for this video, by tile in timeline order (null = automatic).</param>
     public async Task<SheetResult> GenerateAsync(string videoPath, string? inputRoot, SheetSettings settings, IProgress<double>? progress, CancellationToken ct,
                                                  IReadOnlyList<ManualTime?>? manualTimes = null)
     {
         var s = settings;
-        var target = OutputPathResolver.ResolveSheetPath(s, videoPath, inputRoot);
-        if (File.Exists(target))
-        {
-            switch (s.Output.Overwrite)
-            {
-                case OverwriteMode.Skip: return new SheetResult(JobStatus.Skipped, target, CoreText.T("SheetExists"));
-                case OverwriteMode.Rename: target = OutputPathResolver.MakeUnique(target); break;
-            }
-        }
+        var wantSheet = !(s.Trailer.Enabled && s.Trailer.Only);
+        var sheetPath = OutputPathResolver.ResolveSheetPath(s, videoPath, inputRoot);
+        var sheetTarget = wantSheet ? Target(s, sheetPath) : null;
+        var trailerTarget = s.Trailer.Enabled ? Target(s, OutputPathResolver.ResolveTrailerPath(s, videoPath, inputRoot)) : null;
+        if (sheetTarget is null && trailerTarget is null)
+            return new SheetResult(JobStatus.Skipped, wantSheet ? sheetPath : OutputPathResolver.ResolveTrailerPath(s, videoPath, inputRoot), CoreText.T("SheetExists"));
 
         await WaitIfPausedAsync(ct).ConfigureAwait(false);
         MediaInfo info;
@@ -43,7 +58,43 @@ public sealed class SheetGenerator(FfmpegTools tools, SemaphoreSlim processLimit
         if (info.Video is null) return new SheetResult(JobStatus.Failed, null, CoreText.T("NoVideoStream"));
         progress?.Report(0.05);
 
-        var aspect = info.Video.DisplayAspect;
+        // Share of the progress bar for the sheet when a clip follows.
+        var sheetShare = trailerTarget is null ? 1.0 : sheetTarget is null ? 0.05 : 0.6;
+        SheetResult? sheet = null;
+        if (sheetTarget is not null)
+        {
+            sheet = await GenerateSheetAsync(videoPath, s, info, sheetTarget, Scaled(progress, 0, sheetShare), ct, manualTimes).ConfigureAwait(false);
+            if (sheet.Status != JobStatus.Done || trailerTarget is null) return sheet;
+        }
+        if (trailerTarget is null) return sheet!;
+
+        var trailer = await new TrailerGenerator(tools.FfmpegPath, processLimiter, WaitIfPausedAsync)
+            .GenerateAsync(s, info, trailerTarget, Scaled(progress, sheetShare, 1), ct).ConfigureAwait(false);
+        progress?.Report(1);
+        if (sheet is null) return trailer;
+        if (trailer.Status != JobStatus.Done)
+            return new SheetResult(JobStatus.Failed, sheet.SheetPath, CoreText.T("TrailerFailed", trailer.Message));
+        return sheet with { Message = Join(sheet.Message, CoreText.T("TrailerWritten", trailer.SheetPath), trailer.Message) };
+    }
+
+    private static string? Join(params string?[] parts)
+    {
+        var list = parts.Where(p => !string.IsNullOrEmpty(p)).ToList();
+        return list.Count > 0 ? string.Join("; ", list) : null;
+    }
+
+    private static IProgress<double>? Scaled(IProgress<double>? p, double from, double to) =>
+        p is null ? null : new Progress(v => p.Report(from + (to - from) * v));
+
+    private sealed class Progress(Action<double> report) : IProgress<double>
+    {
+        public void Report(double value) => report(value);
+    }
+
+    private async Task<SheetResult> GenerateSheetAsync(string videoPath, SheetSettings s, MediaInfo info, string target, IProgress<double>? progress,
+                                                       CancellationToken ct, IReadOnlyList<ManualTime?>? manualTimes)
+    {
+        var aspect = info.Video!.DisplayAspect;
         var seed = StringComparer.Ordinal.GetHashCode(VideoSource.FileName(videoPath));
         var layout = GridLayout.Create(s, aspect, SheetRenderer.MeasureHeader(s, info), new Random(seed));
         if (s.Animation.Enabled)
@@ -103,6 +154,8 @@ public sealed class SheetGenerator(FfmpegTools tools, SemaphoreSlim processLimit
 
             if (fullFrames is not null)
                 await SaveFramesAsync(s, videoPath, target, fullFrames, times).ConfigureAwait(false);
+            if (s.Output.WebVtt)
+                WebVttWriter.Write(target, frames.Select(f => f.Bitmap).ToList(), times, info.Duration, aspect, s.Output.WebVttTileWidth, s.Output.Quality);
 
             progress?.Report(1);
             var missing = frames.Count(f => f.Bitmap is null);
@@ -203,6 +256,13 @@ public sealed class SheetGenerator(FfmpegTools tools, SemaphoreSlim processLimit
         }
         finally { processLimiter.Release(); }
 
+        if (s.Output.WebVtt)
+        {
+            // First picture of every clip, like the still sheet would show it.
+            var firsts = clips.Select(c => c.Count > 0 ? SKBitmap.Decode(c[0]) : null).ToList();
+            try { WebVttWriter.Write(target, firsts, times, info.Duration, info.Video!.DisplayAspect, s.Output.WebVttTileWidth, s.Output.Quality); }
+            finally { foreach (var b in firsts) b?.Dispose(); }
+        }
         progress?.Report(1);
         var missing = clips.Count(c => c.Count == 0);
         return new SheetResult(JobStatus.Done, target, Notes(s, missing));

@@ -361,7 +361,7 @@ public static class SheetRenderer
         }
     }
 
-    private static void DrawTimestamp(SKCanvas canvas, SKRect tile, SheetSettings s, double time)
+    internal static void DrawTimestamp(SKCanvas canvas, SKRect tile, SheetSettings s, double time)
     {
         var ts = s.Timestamp;
         var text = Formatting.Duration(time, compact: false, millis: ts.ShowMilliseconds);

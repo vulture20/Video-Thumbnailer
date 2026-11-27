@@ -9,6 +9,6 @@ Exec=VideoThumbnailer %F
 Icon=video-thumbnailer
 Terminal=false
 Categories=AudioVideo;Video;Graphics;
-MimeType=video/mp4;video/x-matroska;video/webm;video/quicktime;video/x-msvideo;video/x-ms-wmv;video/mp2t;video/mpeg;
+MimeType=application/x-vtpreset+json;video/mp4;video/x-matroska;video/webm;video/quicktime;video/x-msvideo;video/x-ms-wmv;video/mp2t;video/mpeg;
 Keywords=video;thumbnail;contact sheet;preview;ffmpeg;
 StartupWMClass=VideoThumbnailer

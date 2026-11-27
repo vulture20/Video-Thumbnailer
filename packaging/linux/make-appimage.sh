@@ -7,10 +7,12 @@ SRC=$1 ARCH=$2 OUT=$3
 HERE=$(cd "$(dirname "$0")" && pwd)
 APPDIR=$(mktemp -d)/Video-Thumbnailer.AppDir
 
-mkdir -p "$APPDIR/usr/bin" "$APPDIR/usr/share/applications" "$APPDIR/usr/share/icons"
+mkdir -p "$APPDIR/usr/bin" "$APPDIR/usr/share/applications" "$APPDIR/usr/share/icons" "$APPDIR/usr/share/mime/packages"
 cp -R "$SRC"/. "$APPDIR/usr/bin/"
 cp -R "$HERE/icons/hicolor" "$APPDIR/usr/share/icons/"
 cp "$HERE/video-thumbnailer.desktop" "$APPDIR/usr/share/applications/"
+# MIME type of preset files; integration tools (AppImageLauncher, appimaged) pick it up from here.
+cp "$HERE/video-thumbnailer-preset.xml" "$APPDIR/usr/share/mime/packages/"
 cp "$HERE/video-thumbnailer.desktop" "$APPDIR/"
 cp "$HERE/icons/hicolor/256x256/apps/video-thumbnailer.png" "$APPDIR/video-thumbnailer.png"
 ln -s video-thumbnailer.png "$APPDIR/.DirIcon"
