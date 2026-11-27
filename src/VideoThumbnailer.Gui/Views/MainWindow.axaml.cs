@@ -20,7 +20,11 @@ public partial class MainWindow : Window, IUiServices
         {
             if (e.Property == ClientSizeProperty) (DataContext as MainViewModel)?.OnWindowWidthChanged(ClientSize.Width);
         };
-        DataContextChanged += (_, _) => (DataContext as MainViewModel)?.OnWindowWidthChanged(ClientSize.Width);
+        DataContextChanged += (_, _) =>
+        {
+            (DataContext as MainViewModel)?.OnWindowWidthChanged(ClientSize.Width);
+            BindShortcuts();
+        };
         Activated += (_, _) => (DataContext as MainViewModel)?.OnWindowActivated();
         Opened += async (_, _) =>
         {
@@ -34,6 +38,45 @@ public partial class MainWindow : Window, IUiServices
     }
 
     private MainViewModel? Vm => DataContext as MainViewModel;
+
+    /// <summary>Keyboard shortcuts (#34) of the window and of the queue list (Del, Ctrl+A only there).</summary>
+    private void BindShortcuts()
+    {
+        KeyBindings.Clear();
+        QueueList.KeyBindings.Clear();
+        if (Vm is not { } vm) return;
+        void Add(IList<KeyBinding> target, string action, System.Windows.Input.ICommand command)
+        {
+            foreach (var k in Input.Shortcuts.All[action])
+                target.Add(new KeyBinding { Gesture = Input.Shortcuts.Gesture(k), Command = command });
+        }
+        Add(KeyBindings, "AddFiles", vm.AddFilesCommand);
+        Add(KeyBindings, "AddFolder", vm.AddFolderCommand);
+        Add(KeyBindings, "AddUrl", vm.AddUrlCommand);
+        Add(KeyBindings, "Start", vm.StartCommand);
+        Add(KeyBindings, "Pause", vm.PauseCommand);
+        Add(KeyBindings, "Cancel", vm.CancelCommand);
+        Add(KeyBindings, "ToggleMode", vm.ToggleAdvancedCommand);
+        Add(KeyBindings, "ToggleLivePreview", vm.ToggleLivePreviewCommand);
+        Add(KeyBindings, "ToggleQueue", vm.ToggleQueueCommand);
+        Add(QueueList.KeyBindings, "RemoveSelected", vm.RemoveSelectedCommand);
+        Add(QueueList.KeyBindings, "SelectAll", new SelectAllCommand(QueueList));
+    }
+
+    private sealed class SelectAllCommand(ListBox list) : System.Windows.Input.ICommand
+    {
+        public event EventHandler? CanExecuteChanged { add { } remove { } }
+        public bool CanExecute(object? parameter) => true;
+        public void Execute(object? parameter) => list.SelectAll();
+    }
+
+    /// <summary>Files from a later start of the program (#33): queue them and bring the window to the front.</summary>
+    public void ReceiveArguments(string[] args)
+    {
+        Vm?.HandleStartupArguments(args);
+        if (WindowState == WindowState.Minimized) WindowState = WindowState.Normal;
+        Activate();
+    }
 
     /// <summary>Usable area (physical pixels, without task bar) of the screen the window is on, for "fit to screen".</summary>
     private void ReportScreen()
@@ -117,7 +160,7 @@ public partial class MainWindow : Window, IUiServices
 
     public async Task<string?> PickPresetFileAsync(bool save, string? suggestedName = null)
     {
-        var type = new FilePickerFileType(Loc.T("DlgPresetFileType")) { Patterns = ["*" + PresetStore.FileExtension, "*.json"] };
+        var type = new FilePickerFileType(Loc.T("DlgPresetFileType")) { Patterns = ["*" + PresetStore.ShareExtension, "*" + PresetStore.FileExtension, "*.json"] };
         if (save)
         {
             var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
@@ -134,6 +177,22 @@ public partial class MainWindow : Window, IUiServices
             FileTypeFilter = [type, FilePickerFileTypes.All],
         });
         return files.Count > 0 ? files[0].TryGetLocalPath() : null;
+    }
+
+    public async Task<string?> PickInfoExportFileAsync(string suggestedName)
+    {
+        var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = Loc.T("ExportInfo"),
+            SuggestedFileName = suggestedName,
+            DefaultExtension = "csv",
+            FileTypeChoices =
+            [
+                new FilePickerFileType("CSV") { Patterns = ["*.csv"] },
+                new FilePickerFileType("XML") { Patterns = ["*.xml"] },
+            ],
+        });
+        return file?.TryGetLocalPath();
     }
 
     public async Task<string?> PickImageFileAsync(string? current, string titleKey)

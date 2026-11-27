@@ -11,6 +11,7 @@ using VideoThumbnailer.Core.Extraction;
 using VideoThumbnailer.Core.Ffmpeg;
 using VideoThumbnailer.Core.Input;
 using VideoThumbnailer.Core.Layout;
+using VideoThumbnailer.Core.Output;
 using VideoThumbnailer.Core.Rendering;
 using VideoThumbnailer.Core.Settings;
 using VideoThumbnailer.Core.Util;
@@ -109,6 +110,14 @@ public partial class MainViewModel : ObservableObject
 
     partial void OnIsAdvancedChanged(bool value) => _app.AdvancedMode = value;
 
+    /// <summary>Switches between "Simple" and "Advanced" (shortcut, #34).</summary>
+    [RelayCommand]
+    private void ToggleAdvanced() => IsAdvanced = !IsAdvanced;
+
+    /// <summary>Live preview on/off (shortcut, #34).</summary>
+    [RelayCommand]
+    private void ToggleLivePreview() => LivePreview = !LivePreview;
+
     partial void OnThemeChanged(UiTheme value)
     {
         _app.Theme = value == UiTheme.System ? null : value.ToString();
@@ -180,7 +189,7 @@ public partial class MainViewModel : ObservableObject
         var inputs = new List<string>();
         foreach (var a in args)
         {
-            if (a.EndsWith(PresetStore.FileExtension, StringComparison.OrdinalIgnoreCase) && File.Exists(a))
+            if (PresetStore.IsPresetFile(a) && File.Exists(a))
             {
                 try
                 {
@@ -193,6 +202,7 @@ public partial class MainViewModel : ObservableObject
             else inputs.Add(a);
         }
         if (inputs.Count > 0) AddPaths(inputs);
+        else if (args.Length > 0 && SelectedPreset is { } p) StatusText = Loc.T("StatusPresetOpened", p.Name);
     }
 
     partial void OnSelectedPresetChanged(SheetSettings? value)
@@ -521,6 +531,30 @@ public partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     private async Task AddFilesAsync() => AddPaths(await _ui.PickVideoFilesAsync());
+
+    /// <summary>Writes the technical data of all queued videos into a CSV or XML file (#32).</summary>
+    [RelayCommand]
+    private async Task ExportInfoAsync()
+    {
+        if (Jobs.Count == 0) { StatusText = Loc.T("StatusNothingToExport"); return; }
+        var file = await _ui.PickInfoExportFileAsync(Loc.T("ExportInfoFileName") + ".csv");
+        if (file is null) return;
+        var tools = await Ffmpeg.EnsureAsync();
+        if (tools is null) return;
+        var paths = Jobs.Select(j => j.Job.InputPath).ToList();
+        StatusText = Loc.T("StatusExportingInfo", paths.Count);
+        try
+        {
+            var rows = await Task.Run(() => InfoExport.ProbeAllAsync(tools.FfprobePath, paths, (int)MaxParallelProcesses, CancellationToken.None));
+            await Task.Run(() => InfoExport.Write(file, rows));
+            var failed = rows.Count(r => r.Error is not null);
+            StatusText = failed > 0 ? Loc.T("StatusInfoExportedFailed", rows.Count, file, failed) : Loc.T("StatusInfoExported", rows.Count, file);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            await _ui.ShowMessageAsync(Loc.T("ExportInfo"), Loc.T("DlgInfoExportFailed", ex.Message));
+        }
+    }
 
     [RelayCommand]
     private async Task PickFontAsync()

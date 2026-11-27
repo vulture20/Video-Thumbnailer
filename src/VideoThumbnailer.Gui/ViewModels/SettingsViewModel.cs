@@ -21,6 +21,7 @@ public partial class SettingsViewModel : ObservableObject
     public static Choice[] BackgroundModes { get; } = Choice.ForEnum<BackgroundImageMode>("BgMode");
     public static Choice[] CornerStyles { get; } = Choice.ForEnum<TileCorners>("Corners");
     public static Choice[] WatermarkPositions { get; } = Choice.ForEnum<WatermarkPosition>("WmPos");
+    public static Choice[] TrailerFormats { get; } = Choice.ForEnum<AnimationFormat>("AnimFormat");
     public static Choice[] SheetLanguages { get; } = [new("auto", "SheetLang.auto"), new("en", "SheetLang.en"), new("de", "SheetLang.de")];
 
     public SettingsViewModel() => Loc.Instance.LanguageChanged += () =>
@@ -141,6 +142,23 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty] private decimal _clipSeconds;
     [ObservableProperty] private decimal _animationFps;
 
+    // Preview clip (#31)
+    [ObservableProperty] private bool _trailerEnabled;
+    [ObservableProperty] private bool _trailerOnly;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(TrailerCanHaveAudio))] private AnimationFormat _trailerFormat;
+    [ObservableProperty] private decimal _trailerClips;
+    [ObservableProperty] private decimal _trailerClipSeconds;
+    [ObservableProperty] private decimal _trailerCrossfade;
+    [ObservableProperty] private decimal _trailerSize;
+    [ObservableProperty] private decimal _trailerFps;
+    [ObservableProperty] private bool _trailerTimestamps;
+    [ObservableProperty] private bool _trailerAudio;
+    public bool TrailerCanHaveAudio => AnimationSettings.SupportsAudio(TrailerFormat);
+
+    // WebVTT for web players (#32)
+    [ObservableProperty] private bool _webVtt;
+    [ObservableProperty] private decimal _webVttTileWidth;
+
     public bool IsStill => !Animated;
     public bool IsMp4 { get => AnimationFormat == AnimationFormat.Mp4; set { if (value) AnimationFormat = AnimationFormat.Mp4; } }
     public bool IsWebm { get => AnimationFormat == AnimationFormat.Webm; set { if (value) AnimationFormat = AnimationFormat.Webm; } }
@@ -206,6 +224,12 @@ public partial class SettingsViewModel : ObservableObject
 
         Animated = s.Animation.Enabled; AnimationFormat = s.Animation.Format; AnimationAudio = s.Animation.Audio;
         ClipSeconds = (decimal)s.Animation.ClipSeconds; AnimationFps = s.Animation.FramesPerSecond;
+
+        var tr = s.Trailer ?? new TrailerSettings();
+        TrailerEnabled = tr.Enabled; TrailerOnly = tr.Only; TrailerFormat = tr.Format; TrailerClips = tr.Clips;
+        TrailerClipSeconds = (decimal)tr.ClipSeconds; TrailerCrossfade = (decimal)tr.CrossfadeSeconds; TrailerSize = tr.Size;
+        TrailerFps = tr.FramesPerSecond; TrailerTimestamps = tr.Timestamps; TrailerAudio = tr.Audio;
+        WebVtt = s.Output.WebVtt; WebVttTileWidth = s.Output.WebVttTileWidth;
     }
 
     /// <summary>Entry of the layout picker for a template; a template that is not built in gets its own entry.</summary>
@@ -271,6 +295,14 @@ public partial class SettingsViewModel : ObservableObject
 
         s.Animation.Enabled = Animated; s.Animation.Format = AnimationFormat; s.Animation.Audio = AnimationAudio;
         s.Animation.ClipSeconds = (double)ClipSeconds; s.Animation.FramesPerSecond = (int)AnimationFps;
+
+        s.Trailer = new TrailerSettings
+        {
+            Enabled = TrailerEnabled, Only = TrailerOnly, Format = TrailerFormat, Clips = (int)TrailerClips,
+            ClipSeconds = (double)TrailerClipSeconds, CrossfadeSeconds = (double)TrailerCrossfade, Size = (int)TrailerSize,
+            FramesPerSecond = (int)TrailerFps, Timestamps = TrailerTimestamps, Audio = TrailerAudio,
+        };
+        s.Output.WebVtt = WebVtt; s.Output.WebVttTileWidth = (int)WebVttTileWidth;
         return s;
     }
 }

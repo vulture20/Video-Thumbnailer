@@ -111,6 +111,23 @@ internal static class HelpText
               --fps <n>              frames per second (default 10)
               --still                still image even if the preset is animated
 
+        Preview clip (parts of the video one after the other, like a trailer; "<name>.preview.<ext>"):
+              --trailer mp4|h265|webm|ogv|gif|webp|apng  also write a preview clip (--no-trailer)
+              --trailer-only         only the preview clip, no sheet (--with-sheet)
+              --trailer-clips <n>    number of parts (default 12)
+              --trailer-seconds <s>  length of each part (default 2.5; the clip stays within 2 minutes)
+              --trailer-fade <s>     cross-fade between parts, 0 = hard cut (default 0.5)
+              --trailer-size <px>    longer side of the picture (default 640)
+              --trailer-fps <n>      frames per second (default 24)
+              --trailer-timestamps / --no-trailer-timestamps   time of each part in the corner (default on)
+              --trailer-audio / --no-trailer-audio             sound of the parts (mp4, h265, webm, ogv)
+
+        Video data and web players:
+              --export-info <file>   write the data of all videos into one CSV or XML file (by extension)
+              --info-only            with --export-info: only the data, no sheets
+              --webvtt / --no-webvtt also write "<name>.thumbnails.vtt" with a sprite "<name>.thumbnails.jpg"
+              --webvtt-width <px>    width of one picture in the sprite (default 160)
+
         Processing:
           -j, --jobs <n>             max. parallel ffmpeg processes (default: CPU cores)
               --videos <n>           max. videos in parallel
@@ -226,6 +243,23 @@ internal static class HelpText
               --clip-seconds <s>     Länge jedes Ausschnitts und der Animation (Standard 3)
               --fps <n>              Bilder pro Sekunde (Standard 10)
               --still                Standbild, auch wenn das Preset animiert ist
+
+        Vorschau-Clip (Ausschnitte nacheinander wie ein Trailer; „<Name>.preview.<Endung>“):
+              --trailer mp4|h265|webm|ogv|gif|webp|apng  zusätzlich einen Vorschau-Clip schreiben (--no-trailer)
+              --trailer-only         nur den Vorschau-Clip, kein Sheet (--with-sheet)
+              --trailer-clips <n>    Anzahl der Ausschnitte (Standard 12)
+              --trailer-seconds <s>  Länge jedes Ausschnitts (Standard 2,5; der Clip bleibt unter 2 Minuten)
+              --trailer-fade <s>     Überblendung zwischen den Ausschnitten, 0 = harter Schnitt (Standard 0,5)
+              --trailer-size <px>    längere Bildseite (Standard 640)
+              --trailer-fps <n>      Bilder pro Sekunde (Standard 24)
+              --trailer-timestamps / --no-trailer-timestamps   Zeit jedes Ausschnitts in der Ecke (Standard an)
+              --trailer-audio / --no-trailer-audio             Ton der Ausschnitte (mp4, h265, webm, ogv)
+
+        Video-Infos und Web-Player:
+              --export-info <Datei>  Daten aller Videos in eine CSV- oder XML-Datei schreiben (nach Endung)
+              --info-only            mit --export-info: nur die Daten, keine Sheets
+              --webvtt / --no-webvtt zusätzlich „<Name>.thumbnails.vtt“ mit Sprite „<Name>.thumbnails.jpg“ schreiben
+              --webvtt-width <px>    Breite eines Bildes im Sprite (Standard 160)
 
         Verarbeitung:
           -j, --jobs <n>             max. parallele ffmpeg-Prozesse (Standard: CPU-Kerne)

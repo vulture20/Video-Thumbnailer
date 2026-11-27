@@ -5,7 +5,17 @@ namespace VideoThumbnailer.Core.Settings;
 /// <summary>Loads and saves presets (JSON files) from the user's preset folder plus the built-in ones.</summary>
 public sealed class PresetStore
 {
+    /// <summary>Extension of presets in the preset folder.</summary>
     public const string FileExtension = ".vtpreset.json";
+    /// <summary>
+    /// Extension for passing presets on (#33): Windows and macOS only know the part after the last dot, so ".vtpreset.json"
+    /// could not be opened by double-click without taking over all ".json" files. Same content.
+    /// </summary>
+    public const string ShareExtension = ".vtpreset";
+
+    /// <summary>A preset file by its name: "*.vtpreset" or "*.vtpreset.json".</summary>
+    public static bool IsPresetFile(string path) =>
+        path.EndsWith(ShareExtension, StringComparison.OrdinalIgnoreCase) || path.EndsWith(FileExtension, StringComparison.OrdinalIgnoreCase);
     private readonly string _dir;
 
     public PresetStore(string? directory = null) => _dir = directory ?? AppPaths.PresetsDir;
@@ -43,10 +53,11 @@ public sealed class PresetStore
         var json = File.ReadAllText(path);
         var p = JsonSerializer.Deserialize<SheetSettings>(json, SettingsJson.Options)
                 ?? throw new InvalidDataException($"Preset file is empty: {path}");
-        if (string.IsNullOrWhiteSpace(p.Name)) p.Name = Path.GetFileName(path).Replace(FileExtension, "");
+        if (string.IsNullOrWhiteSpace(p.Name)) p.Name = NameFromFile(path);
         p.BackgroundImage ??= new BackgroundImageSettings();
         p.Watermark ??= new WatermarkSettings();
         p.TileStyle ??= new TileStyleSettings();
+        p.Trailer ??= new TrailerSettings();
         // Pictures given relative to the preset file (e.g. lying next to it) become absolute paths.
         var dir = Path.GetDirectoryName(Path.GetFullPath(path))!;
         p.BackgroundImage.Path = Absolute(p.BackgroundImage.Path, dir);
@@ -104,8 +115,16 @@ public sealed class PresetStore
     public static bool IsBuiltIn(string name) =>
         BuiltInPresets.All.Any(p => string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase));
 
-    /// <summary>Suggested file name (with extension) for exporting a preset.</summary>
-    public static string SafeFileNameForExport(string name) => SafeFileName(name) + FileExtension;
+    /// <summary>Suggested file name (with extension) for exporting a preset: "*.vtpreset", which opens by double-click.</summary>
+    public static string SafeFileNameForExport(string name) => SafeFileName(name) + ShareExtension;
+
+    private static string NameFromFile(string path)
+    {
+        var name = Path.GetFileName(path);
+        foreach (var ext in new[] { FileExtension, ShareExtension })
+            if (name.EndsWith(ext, StringComparison.OrdinalIgnoreCase)) return name[..^ext.Length];
+        return Path.GetFileNameWithoutExtension(name);
+    }
 
     internal static string SafeFileName(string name)
     {

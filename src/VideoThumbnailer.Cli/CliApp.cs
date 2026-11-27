@@ -117,10 +117,18 @@ public static class CliApp
             return ExitFailures;
         }
 
+        if (o.InfoOnly && o.InfoExport is null) throw new UsageException(CliText.T("InfoOnlyNeedsFile"));
         if (o.DryRun)
         {
             foreach (var v in inputs)
-                Console.WriteLine($"{v.Path}\n  -> {OutputPathResolver.ResolveSheetPath(settings, v.Path, v.Root)}");
+            {
+                if (o.InfoOnly) { Console.WriteLine(v.Path); continue; }
+                if (!(settings.Trailer.Enabled && settings.Trailer.Only))
+                    Console.WriteLine($"{v.Path}\n  -> {OutputPathResolver.ResolveSheetPath(settings, v.Path, v.Root)}");
+                if (settings.Trailer.Enabled)
+                    Console.WriteLine($"{v.Path}\n  -> {OutputPathResolver.ResolveTrailerPath(settings, v.Path, v.Root)}");
+            }
+            if (o.InfoExport is not null) Console.WriteLine("  => " + Path.GetFullPath(o.InfoExport));
             Console.WriteLine(CliText.T("DryRunSummary", inputs.Count, settings.Name));
             return ExitOk;
         }
@@ -132,6 +140,7 @@ public static class CliApp
         var options = new BatchOptions();
         if ((o.Jobs ?? app.MaxParallelProcesses) is { } j) options.MaxParallelProcesses = Math.Max(1, j);
         options.MaxParallelVideos = Math.Max(1, o.Videos ?? app.MaxParallelVideos ?? Math.Max(1, options.MaxParallelProcesses / 2));
+        if (o.InfoOnly) return await ExportInfoAsync(tools, inputs, o, options) ? ExitOk : ExitFailures;
 
         using var cts = new CancellationTokenSource();
         Console.CancelKeyPress += (_, e) =>
@@ -180,7 +189,24 @@ public static class CliApp
                 : CliText.T("Summary", elapsed, stats.Done, stats.Skipped, stats.Failed));
         }
         if (cts.IsCancellationRequested) return ExitCancelled;
-        return stats.Failed > 0 ? ExitFailures : ExitOk;
+        var exported = o.InfoExport is null || await ExportInfoAsync(tools, inputs, o, options);
+        return stats.Failed > 0 || !exported ? ExitFailures : ExitOk;
+    }
+
+    /// <summary>Writes the data of all inputs into the file of --export-info (#32). False if it could not be written.</summary>
+    private static async Task<bool> ExportInfoAsync(FfmpegTools tools, IReadOnlyList<VideoInput> inputs, GenerateOptions o, BatchOptions options)
+    {
+        var file = Path.GetFullPath(o.InfoExport!);
+        var rows = await InfoExport.ProbeAllAsync(tools.FfprobePath, inputs.Select(v => v.Path).ToList(), options.MaxParallelProcesses, CancellationToken.None);
+        try { InfoExport.Write(file, rows); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Console.Error.WriteLine(CliText.T("InfoExportFailed", file, ex.Message));
+            return false;
+        }
+        foreach (var r in rows.Where(r => r.Error is not null)) Console.Error.WriteLine($"FAIL {r.Path} -> {r.Error}");
+        if (!o.Quiet) Console.WriteLine(CliText.T("InfoExported", rows.Count, file));
+        return true;
     }
 
     /// <summary>Finds ffmpeg; offers the download on first use (asks unless --yes).</summary>

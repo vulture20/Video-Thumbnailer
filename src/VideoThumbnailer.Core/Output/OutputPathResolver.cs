@@ -71,6 +71,16 @@ public static partial class OutputPathResolver
     /// <summary>Marker in the name of animated sheets ("movie.sheet.mp4"), so they never replace a video and are skipped when folders are scanned.</summary>
     public const string AnimatedMarker = ".sheet";
 
+    /// <summary>Marker in the name of preview clips (#31): "movie.preview.mp4". Skipped in folder scans like animated sheets.</summary>
+    public const string TrailerMarker = ".preview";
+
+    /// <summary>Full path of the preview clip (before overwrite handling), in the same folder as the sheet.</summary>
+    public static string ResolveTrailerPath(SheetSettings s, string videoPath, string? inputRoot)
+    {
+        var name = ExpandPattern(s.Output.FileNamePattern, videoPath, s) + TrailerMarker;
+        return Path.Combine(ResolveDirectory(s.Output, videoPath, inputRoot), name + SheetRenderer.Extension(s.Trailer.Format));
+    }
+
     /// <summary>Full path of the sheet file (before overwrite handling).</summary>
     public static string ResolveSheetPath(SheetSettings s, string videoPath, string? inputRoot)
     {

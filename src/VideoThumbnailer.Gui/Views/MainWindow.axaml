@@ -60,6 +60,8 @@
                   <MenuItem Header="{l:T ClearAll}" Command="{Binding ClearAllCommand}" />
                   <MenuItem Header="{l:T RetryFailed}" Command="{Binding RetryFailedCommand}" />
                   <Separator />
+                  <MenuItem x:Name="ExportInfoItem" Header="{l:T ExportInfo}" Command="{Binding ExportInfoCommand}" ToolTip.Tip="{l:T ExportInfoTip}" />
+                  <Separator />
                   <MenuItem Header="{l:T SortByName}" Command="{Binding SortCommand}" CommandParameter="name" />
                   <MenuItem Header="{l:T SortByFolder}" Command="{Binding SortCommand}" CommandParameter="folder" />
                   <MenuItem Header="{l:T SortBySize}" Command="{Binding SortCommand}" CommandParameter="size" />
@@ -73,7 +75,8 @@
             <Grid ColumnDefinitions="*,*,Auto" ColumnSpacing="6">
               <Button Content="{l:T AddFilesShort}" Command="{Binding AddFilesCommand}" Classes="accent" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
               <Button Grid.Column="1" Content="{l:T AddFolderShort}" Command="{Binding AddFolderCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
-              <Button Grid.Column="2" x:Name="AddUrlButton" Command="{Binding AddUrlCommand}" ToolTip.Tip="{l:T AddUrl}" Width="36" HorizontalContentAlignment="Center" Padding="0">
+              <Button Grid.Column="2" x:Name="AddUrlButton" Command="{Binding AddUrlCommand}" ToolTip.Tip="{l:T AddUrl, Shortcut=AddUrl}" Width="36" Padding="0"
+                      VerticalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
                 <Path Width="16" Height="16" Stretch="Uniform" StrokeThickness="1.6" Stroke="{Binding $parent[Button].Foreground}"
                     Data="M12,2 A10,10 0 1,0 12,22 A10,10 0 1,0 12,2 Z M2.5,9 L21.5,9 M2.5,15 L21.5,15 M12,2 C7.5,6.5 7.5,17.5 12,22 M12,2 C16.5,6.5 16.5,17.5 12,22" />
               </Button>
@@ -408,6 +411,30 @@
               <TextBlock Grid.Column="2" Text="{Binding Settings.Quality, StringFormat='{}{0:0}'}" HorizontalAlignment="Right" VerticalAlignment="Center"
                          FontFamily="Cascadia Mono,Consolas,DejaVu Sans Mono,monospace" />
             </Grid>
+            <!-- Preview clip (#31): parts of the video one after the other -->
+            <Grid ColumnDefinitions="*,Auto" Margin="0,8,0,0">
+              <TextBlock Classes="label" Text="{l:T Trailer}" ToolTip.Tip="{l:T TrailerTip}" />
+              <ToggleSwitch x:Name="TrailerSwitch" Grid.Column="1" IsChecked="{Binding Settings.TrailerEnabled}" OnContent="" OffContent="" MinWidth="0" ToolTip.Tip="{l:T TrailerTip}" />
+            </Grid>
+            <Grid x:Name="TrailerOptions" ColumnDefinitions="*,190" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="6" Margin="0,4,0,0" IsVisible="{Binding Settings.TrailerEnabled}">
+              <TextBlock Classes="label" Text="{l:T TrailerFormat}" />
+              <ComboBox x:Name="TrailerFormatBox" Grid.Column="1" ItemsSource="{x:Static vm:SettingsViewModel.TrailerFormats}" DisplayMemberBinding="{ReflectionBinding Label}"
+                        SelectedValueBinding="{ReflectionBinding Value}" SelectedValue="{Binding Settings.TrailerFormat, Mode=TwoWay}" HorizontalAlignment="Stretch" />
+              <TextBlock Grid.Row="1" Classes="label" Text="{l:T TrailerClips}" />
+              <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding Settings.TrailerClips}" Minimum="1" Maximum="60" Increment="1" FormatString="0" />
+              <TextBlock Grid.Row="2" Classes="label" Text="{l:T TrailerClipSeconds}" ToolTip.Tip="{l:T TrailerClipSecondsTip}" />
+              <NumericUpDown Grid.Row="2" Grid.Column="1" Value="{Binding Settings.TrailerClipSeconds}" Minimum="0.5" Maximum="30" Increment="0.5" FormatString="0.#" ToolTip.Tip="{l:T TrailerClipSecondsTip}" />
+              <TextBlock Grid.Row="3" Classes="label" Text="{l:T TrailerCrossfade}" ToolTip.Tip="{l:T TrailerCrossfadeTip}" />
+              <NumericUpDown Grid.Row="3" Grid.Column="1" Value="{Binding Settings.TrailerCrossfade}" Minimum="0" Maximum="2" Increment="0.1" FormatString="0.0#" ToolTip.Tip="{l:T TrailerCrossfadeTip}" />
+              <CheckBox x:Name="TrailerOnlyCheck" Grid.Row="4" Grid.ColumnSpan="2" Content="{l:T TrailerOnly}" IsChecked="{Binding Settings.TrailerOnly}" />
+              <TextBlock Grid.Row="5" Classes="label" Text="{l:T TrailerSize}" IsVisible="{Binding IsAdvanced}" />
+              <NumericUpDown Grid.Row="5" Grid.Column="1" Value="{Binding Settings.TrailerSize}" Minimum="64" Maximum="3840" Increment="16" FormatString="0" IsVisible="{Binding IsAdvanced}" />
+              <TextBlock Grid.Row="6" Classes="label" Text="{l:T AnimationFps}" IsVisible="{Binding IsAdvanced}" />
+              <NumericUpDown Grid.Row="6" Grid.Column="1" Value="{Binding Settings.TrailerFps}" Minimum="1" Maximum="60" Increment="1" FormatString="0" IsVisible="{Binding IsAdvanced}" />
+              <CheckBox Grid.Row="7" Grid.ColumnSpan="2" Content="{l:T TrailerTimestamps}" IsChecked="{Binding Settings.TrailerTimestamps}" IsVisible="{Binding IsAdvanced}" />
+              <CheckBox Grid.Row="8" Grid.ColumnSpan="2" Content="{l:T AnimationAudio}" IsChecked="{Binding Settings.TrailerAudio}" IsEnabled="{Binding Settings.TrailerCanHaveAudio}"
+                        ToolTip.Tip="{l:T TrailerAudioTip}" IsVisible="{Binding IsAdvanced}" />
+            </Grid>
             <Grid ColumnDefinitions="*,190" RowDefinitions="Auto,Auto,Auto" RowSpacing="6" Margin="0,4,0,0">
               <TextBlock Classes="label" Text="{l:T SaveTo}" />
               <ComboBox Grid.Column="1" ItemsSource="{x:Static vm:SettingsViewModel.Locations}" DisplayMemberBinding="{ReflectionBinding Label}" SelectedValueBinding="{ReflectionBinding Value}" SelectedValue="{Binding Settings.Location, Mode=TwoWay}" HorizontalAlignment="Stretch" />
@@ -419,13 +446,16 @@
               <TextBlock Grid.Row="2" Classes="label" Text="{l:T SubfolderName}" IsVisible="{Binding Settings.IsSubfolder}" />
               <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding Settings.SubfolderName}" IsVisible="{Binding Settings.IsSubfolder}" />
             </Grid>
-            <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="4" Margin="0,6,0,0" IsVisible="{Binding IsAdvanced}">
+            <Grid ColumnDefinitions="140,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="4" Margin="0,6,0,0" IsVisible="{Binding IsAdvanced}">
               <CheckBox Grid.Row="0" Grid.ColumnSpan="2" Content="{l:T KeepStructure}" IsChecked="{Binding Settings.KeepFolderStructure}" IsVisible="{Binding Settings.IsOutputFolder}" />
               <TextBlock Grid.Row="1" Classes="label" Text="{l:T FileNamePattern}" />
               <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding Settings.FileNamePattern}" ToolTip.Tip="{}{name} {ext} {preset} {cols} {rows} {date} {time}" />
               <TextBlock Grid.Row="2" Classes="label" Text="{l:T IfFileExists}" />
               <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{x:Static vm:SettingsViewModel.OverwriteModes}" DisplayMemberBinding="{ReflectionBinding Label}" SelectedValueBinding="{ReflectionBinding Value}" SelectedValue="{Binding Settings.Overwrite, Mode=TwoWay}" HorizontalAlignment="Stretch" />
               <CheckBox Grid.Row="3" Grid.ColumnSpan="2" Content="{l:T SaveFrames}" IsChecked="{Binding Settings.SaveFrames}" IsEnabled="{Binding Settings.IsStill}" />
+              <CheckBox x:Name="WebVttCheck" Grid.Row="4" Grid.ColumnSpan="2" Content="{l:T WebVtt}" IsChecked="{Binding Settings.WebVtt}" ToolTip.Tip="{l:T WebVttTip}" />
+              <TextBlock Grid.Row="5" Classes="label" Text="{l:T WebVttWidth}" IsVisible="{Binding Settings.WebVtt}" />
+              <NumericUpDown Grid.Row="5" Grid.Column="1" Value="{Binding Settings.WebVttTileWidth}" Minimum="32" Maximum="1920" Increment="10" FormatString="0" IsVisible="{Binding Settings.WebVtt}" />
             </Grid>
 
             <!-- Processing (advanced) -->

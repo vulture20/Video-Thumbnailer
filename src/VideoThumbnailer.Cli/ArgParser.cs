@@ -23,6 +23,10 @@ public sealed class GenerateOptions
     public Core.Layout.ScreenSize? Screen { get; set; }
     /// <summary>Capture times by hand (--times), for every input; not part of the preset.</summary>
     public IReadOnlyList<Core.Layout.ManualTime?>? ManualTimes { get; set; }
+    /// <summary>Write the technical data of all inputs into this CSV or XML file (--export-info, #32).</summary>
+    public string? InfoExport { get; set; }
+    /// <summary>Only export the data, no sheets (--info-only).</summary>
+    public bool InfoOnly { get; set; }
     /// <summary>Changes to apply on top of the preset, in command line order.</summary>
     public List<Action<SheetSettings>> Overrides { get; } = [];
 }
@@ -134,6 +138,29 @@ public static class ArgParser
                 case "--watermark-sheet": o.Overrides.Add(s => s.Watermark.PerTile = false); break;
                 case "--audio": o.Overrides.Add(s => s.Animation.Audio = true); break;
                 case "--no-audio": o.Overrides.Add(s => s.Animation.Audio = false); break;
+                case "--trailer":
+                {
+                    var v = ParseAnimationFormat(Next());
+                    o.Overrides.Add(s => { s.Trailer.Enabled = true; s.Trailer.Format = v; });
+                    break;
+                }
+                case "--no-trailer": o.Overrides.Add(s => { s.Trailer.Enabled = false; s.Trailer.Only = false; }); break;
+                case "--trailer-only": o.Overrides.Add(s => { s.Trailer.Enabled = true; s.Trailer.Only = true; }); break;
+                case "--with-sheet": o.Overrides.Add(s => s.Trailer.Only = false); break;
+                case "--trailer-clips": { var v = NextInt(); o.Overrides.Add(s => s.Trailer.Clips = v); break; }
+                case "--trailer-seconds": { var v = NextDouble(); o.Overrides.Add(s => s.Trailer.ClipSeconds = v); break; }
+                case "--trailer-fade": { var v = NextDouble(); o.Overrides.Add(s => s.Trailer.CrossfadeSeconds = Math.Max(0, v)); break; }
+                case "--trailer-size": { var v = NextInt(); o.Overrides.Add(s => s.Trailer.Size = v); break; }
+                case "--trailer-fps": { var v = NextInt(); o.Overrides.Add(s => s.Trailer.FramesPerSecond = v); break; }
+                case "--trailer-timestamps": o.Overrides.Add(s => s.Trailer.Timestamps = true); break;
+                case "--no-trailer-timestamps": o.Overrides.Add(s => s.Trailer.Timestamps = false); break;
+                case "--trailer-audio": o.Overrides.Add(s => s.Trailer.Audio = true); break;
+                case "--no-trailer-audio": o.Overrides.Add(s => s.Trailer.Audio = false); break;
+                case "--webvtt": o.Overrides.Add(s => s.Output.WebVtt = true); break;
+                case "--no-webvtt": o.Overrides.Add(s => s.Output.WebVtt = false); break;
+                case "--webvtt-width": { var v = NextInt(); o.Overrides.Add(s => { s.Output.WebVtt = true; s.Output.WebVttTileWidth = v; }); break; }
+                case "--export-info": o.InfoExport = Next(); break;
+                case "--info-only": o.InfoOnly = true; break;
                 case "--layout": { var v = ParseLayout(Next(), a); o.Overrides.Add(s => s.Template = v?.Clone()); break; }
                 case "--fit-screen": { var v = ParseScreenFit(Next()); o.Overrides.Add(s => s.FitToScreen = v); break; }
                 case "--screen":

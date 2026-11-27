@@ -7,10 +7,10 @@ public sealed record VideoInput(string Path, string? Root);
 
 public static partial class VideoScanner
 {
-    /// <summary>Animated sheets written by this tool ("movie.sheet.mp4", "movie.sheet (2).webm").</summary>
+    /// <summary>Animated sheets and preview clips written by this tool ("movie.sheet.mp4", "movie.sheet (2).webm", "movie.preview.mp4").</summary>
     public static bool IsAnimatedSheet(string path) => AnimatedSheetName().IsMatch(System.IO.Path.GetFileNameWithoutExtension(path));
 
-    [GeneratedRegex(@"\.sheet( \(\d+\))?$", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"\.(sheet|preview)( \(\d+\))?$", RegexOptions.IgnoreCase)]
     private static partial Regex AnimatedSheetName();
 
     public static readonly IReadOnlySet<string> DefaultExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
