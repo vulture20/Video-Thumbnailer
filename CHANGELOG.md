@@ -6,14 +6,18 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 
 ## [Unveröffentlicht]
 
+## [1.1.0] – 2026-11-27
+
+Fertige Videos erneut einreihen, README auf Deutsch und Englisch mit Galerie und Rezepten, Beschreibung des Preset-Formats und eine übersichtlichere `vthumb --help`.
+
 ### Hinzugefügt
-- Fertige Einträge der Warteschlange erneut einreihen: Rechtsklick → „Erneut einreihen“ oder Strg/Cmd+R für die Auswahl, ↻ am Eintrag beim Überfahren, „⋯“ → „Alle erledigten erneut einreihen“. Der Eintrag bleibt an seiner Stelle, läuft beim nächsten Start mit den aktuellen Einstellungen, behält Zeitpunkte von Hand und ersetzt sein Sheet, auch wenn vorhandene Dateien sonst übersprungen werden
-- Dokumentation: README auf Englisch (`README.en.md`), Rezepte für häufige Aufgaben (`docs/rezepte.md`) und Beschreibung des Preset-Formats (`docs/presets.md`)
+- Fertige Einträge der Warteschlange erneut einreihen: Rechtsklick → „Erneut einreihen“ oder Strg/Cmd+R für die Auswahl, ↻ am Eintrag beim Überfahren, „⋯“ → „Alle erledigten erneut einreihen“. Der Eintrag bleibt an seiner Stelle, läuft beim nächsten Start mit den aktuellen Einstellungen, behält Zeitpunkte von Hand und ersetzt sein Sheet, auch wenn vorhandene Dateien sonst übersprungen werden ([#52])
+- Dokumentation: README auf Englisch (`README.en.md`), Rezepte für häufige Aufgaben (`docs/rezepte.md`) und Beschreibung des Preset-Formats (`docs/presets.md`) ([#53])
 
 ### Geändert
-- README überarbeitet: Highlights, Galerie mit Beispiel-Sheets (Spezial-Raster, animiert, Pack-Bild), neue Screenshots (auch Viewer und Raster-Editor), Installation je System, Schnellstart, vollständige Tabelle aller Kommandozeilen-Optionen mit Beispiel und alle Tastenkürzel für Windows/Linux und macOS, häufige Fragen und ein animiertes Bild des Ablaufs. Tabellen werden aus dem Code erzeugt und per Test aktuell gehalten; `tools/readme-images.sh` erzeugt alle Bilder neu
-- `vthumb --help` wird aus demselben Options-Katalog erzeugt wie die README-Tabellen: eine Zeile je Option mit Erklärung
-- „Fehlgeschlagene wiederholen“ heißt jetzt „Fehlgeschlagene erneut versuchen“, hat einen Tooltip und ist nur ohne laufenden Lauf und mit fehlgeschlagenen Einträgen anwählbar
+- README überarbeitet: Highlights, Galerie mit Beispiel-Sheets (Spezial-Raster, animiert, Pack-Bild), neue Screenshots (auch Viewer und Raster-Editor), Installation je System, Schnellstart, vollständige Tabelle aller Kommandozeilen-Optionen mit Beispiel und alle Tastenkürzel für Windows/Linux und macOS, häufige Fragen und ein animiertes Bild des Ablaufs. Tabellen werden aus dem Code erzeugt und per Test aktuell gehalten; `tools/readme-images.sh` erzeugt alle Bilder neu ([#53])
+- `vthumb --help` wird aus demselben Options-Katalog erzeugt wie die README-Tabellen: eine Zeile je Option mit Erklärung ([#53])
+- „Fehlgeschlagene wiederholen“ heißt jetzt „Fehlgeschlagene erneut versuchen“, hat einen Tooltip und ist nur ohne laufenden Lauf und mit fehlgeschlagenen Einträgen anwählbar ([#52])
 
 ## [1.0.0] – 2026-11-27
 
@@ -159,7 +163,8 @@ Erste Version.
 ### Geändert
 - Release-Workflow hängt die Dateien auch an ein im Browser angelegtes Release an ([#2])
 
-[Unveröffentlicht]: https://github.com/vulture20/Video-Thumbnailer/compare/v1.0.0...HEAD
+[Unveröffentlicht]: https://github.com/vulture20/Video-Thumbnailer/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/vulture20/Video-Thumbnailer/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/vulture20/Video-Thumbnailer/compare/v0.6.0...v1.0.0
 [0.6.0]: https://github.com/vulture20/Video-Thumbnailer/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/vulture20/Video-Thumbnailer/compare/v0.4.0...v0.5.0
@@ -193,4 +198,6 @@ Erste Version.
 [#40]: https://github.com/vulture20/Video-Thumbnailer/pull/40
 [#49]: https://github.com/vulture20/Video-Thumbnailer/pull/49
 [#50]: https://github.com/vulture20/Video-Thumbnailer/pull/50
+[#52]: https://github.com/vulture20/Video-Thumbnailer/pull/52
+[#53]: https://github.com/vulture20/Video-Thumbnailer/pull/53
 [#48]: https://github.com/vulture20/Video-Thumbnailer/pull/48
