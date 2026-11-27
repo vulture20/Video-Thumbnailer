@@ -41,17 +41,20 @@ public static class Shortcuts
         return string.Join(" / ", keys.Select(k => Display(k, lang)));
     }
 
-    public static string Display(ShortcutKey k, string lang)
+    public static string Display(ShortcutKey k, string lang) => Display(k, lang, IsMac);
+
+    /// <summary>Text of one key for Windows/Linux or macOS, independent of the running system (README table).</summary>
+    public static string Display(ShortcutKey k, string lang, bool mac)
     {
         var de = lang == "de";
         var key = k.Key switch
         {
-            Key.Enter => IsMac ? "↩" : de ? "Eingabe" : "Enter",
-            Key.Escape => IsMac ? "⎋" : "Esc",
-            Key.Delete => IsMac ? "⌫" : de ? "Entf" : "Del",
+            Key.Enter => mac ? "↩" : de ? "Eingabe" : "Enter",
+            Key.Escape => mac ? "⎋" : "Esc",
+            Key.Delete => mac ? "⌫" : de ? "Entf" : "Del",
             _ => k.Key.ToString(),
         };
-        if (IsMac) return (k.Shift ? "⇧" : "") + (k.Command ? "⌘" : "") + key;
+        if (mac) return (k.Shift ? "⇧" : "") + (k.Command ? "⌘" : "") + key;
         var parts = new List<string>();
         if (k.Command) parts.Add(de ? "Strg" : "Ctrl");
         if (k.Shift) parts.Add(de ? "Umschalt" : "Shift");

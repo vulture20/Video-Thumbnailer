@@ -8,8 +8,11 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 
 ### Hinzugefügt
 - Fertige Einträge der Warteschlange erneut einreihen: Rechtsklick → „Erneut einreihen“ oder Strg/Cmd+R für die Auswahl, ↻ am Eintrag beim Überfahren, „⋯“ → „Alle erledigten erneut einreihen“. Der Eintrag bleibt an seiner Stelle, läuft beim nächsten Start mit den aktuellen Einstellungen, behält Zeitpunkte von Hand und ersetzt sein Sheet, auch wenn vorhandene Dateien sonst übersprungen werden
+- Dokumentation: README auf Englisch (`README.en.md`), Rezepte für häufige Aufgaben (`docs/rezepte.md`) und Beschreibung des Preset-Formats (`docs/presets.md`)
 
 ### Geändert
+- README überarbeitet: Highlights, Galerie mit Beispiel-Sheets (Spezial-Raster, animiert, Pack-Bild), neue Screenshots (auch Viewer und Raster-Editor), Installation je System, Schnellstart, vollständige Tabelle aller Kommandozeilen-Optionen mit Beispiel und alle Tastenkürzel für Windows/Linux und macOS, häufige Fragen und ein animiertes Bild des Ablaufs. Tabellen werden aus dem Code erzeugt und per Test aktuell gehalten; `tools/readme-images.sh` erzeugt alle Bilder neu
+- `vthumb --help` wird aus demselben Options-Katalog erzeugt wie die README-Tabellen: eine Zeile je Option mit Erklärung
 - „Fehlgeschlagene wiederholen“ heißt jetzt „Fehlgeschlagene erneut versuchen“, hat einen Tooltip und ist nur ohne laufenden Lauf und mit fehlgeschlagenen Einträgen anwählbar
 
 ## [1.0.0] – 2026-11-27
