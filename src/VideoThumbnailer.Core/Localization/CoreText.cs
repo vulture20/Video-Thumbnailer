@@ -44,6 +44,8 @@ public static class CoreText
         ["Sheet.NoFrame"] = ("no frame", "kein Bild"),
         ["Sheet.NoAudio"] = ("none", "keine"),
         ["Sheet.NotAvailable"] = ("n/a", "k. A."),
+        ["Sheet.SubExternal"] = ("external", "extern"),
+        ["Sheet.SubForced"] = ("forced", "erzwungen"),
     };
 
     /// <summary>Default info header per language. The first line is the title.</summary>

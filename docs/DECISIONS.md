@@ -317,6 +317,42 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 27.11.2026 | Entf und Strg+A wirken **nur in der Warteschlange**, nicht im ganzen Fenster | sonst würde Entf in einem Textfeld Videos löschen und Strg+A dort nicht mehr den Text markieren |
 | 27.11.2026 | Kürzel stehen in Klammern im Tooltip des jeweiligen Knopfs (`{l:T Schlüssel, Shortcut=Aktion}`), es gibt kein Menü. Tooltips für alle Knöpfe ergänzt (Preset-Knöpfe, Start/Pause/Abbrechen, ffmpeg, Ordnerwahl) | die Oberfläche hat bewusst keine Menüleiste; der Tooltip ist der Ort, an dem man nachsieht |
 
+### Untertitel-Infos (#35)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 27.11.2026 | Untertitelspuren aus ffprobe **und** Dateien neben dem Video mit gleichem Namen (`.srt`, `.ass`, `.ssa`, `.vtt`, `.sup`, `.idx` mit `.sub`, `.sub` allein = MicroDVD). Zwischen Name und Endung nur Sprachcode (2–3 Buchstaben, optional `-Region`) und `forced`, `sdh`, `hi`, `cc`; sonst gehört die Datei nicht zum Video | Wunsch von Vulli („extern“ mitzählen). Die strenge Regel verhindert, dass `Film.Teil2.srt` oder der Untertitel von `Film.x.mkv` bei `Film.mkv` mitgezählt wird |
+| 27.11.2026 | Platzhalter `{subtitles}` (Zusammenfassung „3: ger SRT, eng PGS erzwungen, de SRT extern“), `{slang}` (Sprachen ohne Doppelte), `{subtracks}` (Anzahl); ohne Untertitel „keine“ bzw. 0. Im CSV/XML-Export `subtracks`, `slang`, `subtitles` (sprachunabhängig `lang:FORMAT[:forced][:sdh][:external]`, mit `;` getrennt) | analog zu `{audio}`/`{alang}`/`{audiotracks}`; Sprachcodes so, wie sie in der Datei stehen |
+| 27.11.2026 | Untertitel werden **nicht** ins Bild eingebrannt | wie im Issue vorgeschlagen; Kachelbilder sollen das Video zeigen |
+
+### Raster-Editor (#36)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 27.11.2026 | Eigenes Fenster „Raster bearbeiten…“ (Knopf unter der Layout-Auswahl): Feldraster im Seitenverhältnis des Videos der Vorschau, Spalten/Zeilen einstellbar. Ziehen über Felder legt eine **quadratische** Kachel an (so groß wie die längere Seite des Zugs, vom Startfeld Richtung Endfeld, im Raster gehalten) und ersetzt überdeckte Kacheln; Rechtsklick oder Entf entfernt eine; „Lücken füllen“ und „Alles leeren“. Zahlen zeigen die Zeitfolge | gleiches Format wie die Spezial-Raster (#24), daher quadratische Kacheln ohne Verzerren; freie Felder bleiben Hintergrund (Logo, Wasserzeichen) |
+| 27.11.2026 | Speichern **beides**: „Übernehmen“ setzt das Raster in die aktuellen Einstellungen (und damit ins Preset), „Als Raster speichern“ legt zusätzlich **`<Name>.vtgrid`** (JSON wie `template`) im Einstellungsordner unter `grids` ab. Eigene Raster stehen nach den eingebauten in der Layout-Auswahl, `--layout <Name>` findet sie, „Raster löschen“ im Editor entfernt sie | Wunsch von Vulli (`*.vtgrid` statt `*.vtgrid.json`). Das Preset enthält das Raster weiterhin selbst, damit es auf anderen Rechnern funktioniert |
+| 27.11.2026 | `.vtgrid` als Programmargument bzw. per Doppelklick: wird als eigenes Raster gespeichert und gewählt. Dateizuordnung zusammen mit `.vtsheet` (eine abwählbare Aufgabe im Windows-Installer) | Raster lassen sich so weitergeben wie Presets |
+
+### Pack-Bild (#37)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 27.11.2026 | **Direkt aus den Videos**, nicht aus fertigen Sheets: je Video eine Zeile mit Titel (bzw. Dateiname), Dauer, Auflösung, Größe und einem Streifen kleiner Bilder in einer 16:9-Fläche (Hochkant-Videos eingepasst) | einheitliche Zeilen statt zusammengeklebter Sheets unterschiedlicher Größe; schneller |
+| 27.11.2026 | Bilder je Video = **Spalten** des Presets, Breite = **Sheet-Breite**; Farben, Schrift, Zeitstempel, Abstand, Rand, Anfang/Ende überspringen und schwarze Bilder wie beim Sheet. Format nach Endung (JPG, PNG, WebP) | keine eigenen Pack-Einstellungen nötig |
+| 27.11.2026 | Zu hoch für das Format (WebP 16383 px, JPEG 65000 px, PNG 32000 px wegen Speicher): **Aufteilung** auf `pack-1`, `pack-2` …, ganze Zeilen je Datei; nicht verkleinern. Nicht lesbare Videos werden ausgelassen und gemeldet | Bilder bleiben lesbar |
+| 27.11.2026 | Oberfläche: „⋯“ der Warteschlange → „Pack-Bild erstellen…“ (Speichern-Dialog, alle Videos der Warteschlange in ihrer Reihenfolge, öffnet das Ergebnis). Kommandozeile `vthumb pack <Videos/Ordner> -o <Datei>` mit allen Sheet-Optionen, `--tiles` als anderer Name für `--columns` | wie der Info-Export eine Aktion, keine Preset-Einstellung |
+
+### JSON-Begleitdatei (#38)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 27.11.2026 | Dateiname **`<Name>.vtsheet`** (Inhalt JSON), Format `video-thumbnailer-sheet` Version 1, beschrieben in [vtsheet.md](vtsheet.md). Enthält Video (relativer **und** absoluter Pfad bzw. URL, Dauer, Größe), Sheet (Datei, Größe, animiert) und je Kachel Index, Rechteck, tatsächlichen Zeitpunkt, `manual` und bei Animationen `clipSeconds` | Wunsch von Vulli (`.vtsheet` statt `.sheet.json`), eigene Endung für den Doppelklick. Relativ zuerst, damit verschobene Ordner funktionieren |
+| 27.11.2026 | Standard **aus**: `output.sidecar` im Preset, Oberfläche „Erweitert“ → „Ausgabe“, Kommandozeile `--sidecar`/`--no-sidecar` | wie im Issue |
+| 27.11.2026 | **Zeitpunkte von Hand zurücklesen**: Kommt ein Video in die Warteschlange, wird die Begleitdatei dort gelesen, wo das Sheet mit den aktuellen Einstellungen landen würde; gehört sie zum selben Video, werden Kacheln mit `manual` übernommen (✎). Die Kommandozeile macht das ohne `--times` ebenso | erledigt den offenen Punkt aus #23 („Speichern je Video gehört zur Begleitdatei“) |
+
+### Viewer (#39)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 27.11.2026 | **Eigenes Fenster in der GUI** (mehrere gleichzeitig möglich): Sheet passend verkleinert, Rahmen um die Kachel unter der Maus, Zeit unten rechts, Klick startet das Video. Öffnen per Doppelklick auf einen erledigten Eintrag der Warteschlange (wenn eine Begleitdatei da ist, sonst wie bisher das Sheet im Systemprogramm), „⋯“ → „Sheet öffnen…“ (`.vtsheet` oder Sheet-Bild) und Programmargument/Doppelklick auf `.vtsheet`. Animierte Sheets zeigen ihr erstes Bild (per ffmpeg), ohne ffmpeg eine Zeichnung der Kacheln | kein zweites Programm nötig |
+| 27.11.2026 | Player-Einstellung im Viewer (gespeichert in `settings.json`): „Automatisch“ sucht in dieser Reihenfolge **mpv** (`--start=`), **VLC** (`--start-time=`), **MPC-HC/MPC-BE** (`/start <ms>`), **PotPlayer** (`/seek=hh:mm:ss.fff`) im PATH und in den üblichen Installationsordnern; „Eigener Befehl“ mit `{file}`, `{seconds}`, `{ms}`, `{time}` (ohne `{file}` wird das Video angehängt); „Systemstandard“ öffnet ohne Zeitpunkt, die Statuszeile sagt das | der Systemstandard kennt keinen Zeitpunkt; mpv und VLC gibt es auf allen Systemen |
+| 27.11.2026 | **Löschen nur in den Papierkorb**, nach Rückfrage, mit Haken „Auch das Sheet und seine Dateien“ (Sheet, `.vtsheet`, WebVTT, Vorschau-Clip; Standard aus). Windows `SHFileOperation` mit `FOF_ALLOWUNDO` (kann eine Datei nicht in den Papierkorb, fragt Windows vor dem endgültigen Löschen), macOS über den Finder, Linux `gio trash`, sonst eigener Papierkorb nach freedesktop.org-Spezifikation in `~/.local/share/Trash`. Schlägt es fehl, bleibt die Datei. Das Video verschwindet danach aus der Warteschlange | wie im Issue; nie endgültig löschen |
+
 ### Kleinigkeiten
 | Datum | Entscheidung | Begründung / Anmerkung |
 |---|---|---|
@@ -327,6 +363,7 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | Seit | Punkt | Stand |
 |---|---|---|
 | 26.11.2026 | Test auf einem echten Mac: Oberfläche (Schriften, Schalter, Symbole, Titelleiste), DMG mit Dock-Icon und Gatekeeper-Dialog. Die CI prüft auf macOS nur Download, Prüfsumme, Signatur und ein erstelltes Sheet | kein Mac vorhanden |
+| 27.11.2026 | Viewer (#39): Player-Start und Papierkorb sind unter Linux getestet; Windows (`SHFileOperation`, Player-Pfade) und macOS (Finder per `osascript`, braucht beim ersten Mal die Erlaubnis zur Automation) nur gebaut | Rückmeldung nach dem nächsten Release |
 | 27.11.2026 | Dateizuordnung für `.vtpreset` (#33): Windows-Installer, macOS-App und Linux-MIME-Typ sind nur gebaut, nicht auf echten Systemen per Doppelklick geprüft; die Übergabe an ein laufendes Programm ist unter Linux getestet | Rückmeldung nach dem nächsten Release |
 | 26.11.2026 | Code-Signierung (Windows) und Notarisierung (macOS) fehlen; SmartScreen bzw. Gatekeeper warnen beim ersten Start | braucht Zertifikat bzw. Apple-Entwicklerkonto (kostenpflichtig) |
 | 26.11.2026 | Icon-Einbindung unter Linux (AppImage, Fenster) und macOS nur über CI geprüft; unter Windows von Vulli bestätigt | Blick auf Linux und macOS fehlt |
@@ -335,17 +372,9 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | 26.11.2026 | Workflow „ffmpeg pins“ hat seit #19 noch keinen neuen Build eingetragen. Seine Commits mit `GITHUB_TOKEN` starten keine CI; wird `main` geschützt, schlägt sein direkter Push fehl. Die Adresse der Liste (`FfmpegPins.RemoteUrl`) enthält den Repo-Namen | ersten echten Lauf beobachten |
 | 26.11.2026 | Release-Notizen auf GitHub sind die automatisch erzeugte PR-Liste, nicht der CHANGELOG-Abschnitt. Das Release v0.3.0 heißt „v.0.3.0“ (Tippfehler im Titel) | Notizen beim nächsten Release aus dem CHANGELOG übernehmen; Titel von Hand korrigieren |
 
-## Spätere Ideen (P2/P3, noch ohne Entscheidung)
+## Spätere Ideen (P2/P3)
 
-Aus der Spezifikation, je ein Issue. Erledigt sind aus P2 bereits: Kommandozeile, Live-Vorschau, Deutsch/Englisch, Preset-Import/-Export, „Einfach“/„Erweitert“ statt Optionsdialog, Hintergrundfarbe, animierte Sheets (MP4/WebM/GIF), Videos per URL (#21), schwarze Bilder überspringen (#22), Aufnahmezeitpunkte von Hand (#23), Spezial-Raster (#24), „An Bildschirm anpassen“ (#25), Hintergrundbild (#26), Kachel-Effekte (#27), Kommentartext (#28), Wasserzeichen (#29), weitere Animationsformate mit Ton (#30), Vorschau-Clip (#31), Export als CSV/XML/WebVTT (#32), Preset per Doppelklick (#33) und Tastenkürzel (#34). Die Wahl der Render-Engine (P3) entfällt: ffmpeg ist das einzige Backend.
-
-| Prio | Idee | Issue |
-|---|---|---|
-| P3 | Untertitel-Infos auslesen | #35 |
-| P3 | Baukasten-Editor für eigene Raster | #36 |
-| P3 | Mehrere Sheets zu einem „Pack“-Bild | #37 |
-| P3 | JSON-Begleitdatei mit Kachel-Zeitpunkten | #38 |
-| P3 | Viewer: Video an der Kachel starten | #39 |
+Aus der Spezifikation, je ein Issue; inzwischen alle umgesetzt: Kommandozeile, Live-Vorschau, Deutsch/Englisch, Preset-Import/-Export, „Einfach“/„Erweitert“ statt Optionsdialog, Hintergrundfarbe, animierte Sheets (MP4/WebM/GIF), Videos per URL (#21), schwarze Bilder überspringen (#22), Aufnahmezeitpunkte von Hand (#23), Spezial-Raster (#24), „An Bildschirm anpassen“ (#25), Hintergrundbild (#26), Kachel-Effekte (#27), Kommentartext (#28), Wasserzeichen (#29), weitere Animationsformate mit Ton (#30), Vorschau-Clip (#31), Export als CSV/XML/WebVTT (#32), Preset per Doppelklick (#33), Tastenkürzel (#34), Untertitel-Infos (#35), Raster-Editor (#36), Pack-Bild (#37), JSON-Begleitdatei (#38) und Viewer (#39). Die Wahl der Render-Engine (P3) entfällt: ffmpeg ist das einzige Backend. Neue Ideen kommen als eigene Issues.
 
 ## Umfang v0.1.0
 

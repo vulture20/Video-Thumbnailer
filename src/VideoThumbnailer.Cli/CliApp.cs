@@ -34,6 +34,7 @@ public static class CliApp
             {
                 "ffmpeg" => await FfmpegCommandAsync(args.Skip(1).ToList()),
                 "presets" or "preset" => PresetsCommand(args.Skip(1).ToList()),
+                "pack" => await PackCommandAsync(args.Skip(1).ToList()),
                 _ => await GenerateAsync(ArgParser.ParseGenerate(args)),
             };
         }
@@ -136,7 +137,11 @@ public static class CliApp
         var tools = await EnsureFfmpegAsync(o.FfmpegDir ?? app.FfmpegDirectory, o.Yes, app);
         if (tools is null) return ExitNoFfmpeg;
 
-        var jobs = inputs.Select(v => new ThumbnailJob(v.Path, v.Root) { ManualTimes = o.ManualTimes }).ToList();
+        // Without --times, times chosen by hand earlier come from the sidecar of the last sheet (#38).
+        var jobs = inputs.Select(v => new ThumbnailJob(v.Path, v.Root)
+        {
+            ManualTimes = o.ManualTimes ?? SheetSidecar.FindManualTimes(settings, v.Path, v.Root),
+        }).ToList();
         var options = new BatchOptions();
         if ((o.Jobs ?? app.MaxParallelProcesses) is { } j) options.MaxParallelProcesses = Math.Max(1, j);
         options.MaxParallelVideos = Math.Max(1, o.Videos ?? app.MaxParallelVideos ?? Math.Max(1, options.MaxParallelProcesses / 2));
@@ -191,6 +196,72 @@ public static class CliApp
         if (cts.IsCancellationRequested) return ExitCancelled;
         var exported = o.InfoExport is null || await ExportInfoAsync(tools, inputs, o, options);
         return stats.Failed > 0 || !exported ? ExitFailures : ExitOk;
+    }
+
+    // ------------------------------------------------------------------ pack (#37)
+
+    /// <summary>
+    /// <c>vthumb pack &lt;videos/folders&gt; -o pack.jpg</c>: one overview picture, a row per video. Tiles per row = -c,
+    /// width = -w; all other sheet options (preset, colours, time stamps …) work as for sheets.
+    /// </summary>
+    private static async Task<int> PackCommandAsync(List<string> args)
+    {
+        if (args.Count > 0 && args[0] is "-h" or "--help") { Console.WriteLine(HelpText.Pack); return ExitOk; }
+        string? target = null;
+        var rest = new List<string>();
+        for (var i = 0; i < args.Count; i++)
+        {
+            var a = args[i];
+            if (a is "-o" or "--output")
+            {
+                if (i + 1 >= args.Count) throw new UsageException(CliText.T("NeedsValue", a));
+                target = args[++i];
+            }
+            else if (a.StartsWith("--output=", StringComparison.Ordinal)) target = a[9..];
+            else if (a == "--tiles") rest.Add("--columns");
+            else rest.Add(a);
+        }
+        if (target is null) throw new UsageException(CliText.T("PackNeedsOutput"));
+        var o = ArgParser.ParseGenerate(rest);
+        if (o.Inputs.Count == 0) throw new UsageException(CliText.T("NoInputs"));
+
+        var app = AppSettings.Load();
+        var settings = o.Preset is not null
+            ? new PresetStore().Find(o.Preset)?.Clone() ?? throw new UsageException(CliText.T("PresetNotFound", o.Preset))
+            : app.LastSettings?.Clone() ?? BuiltInPresets.Default;
+        foreach (var apply in o.Overrides) apply(settings);
+        var problems = settings.Normalize();
+        if (problems.Count > 0) throw new UsageException(string.Join(" ", problems));
+
+        var inputs = VideoScanner.Scan(o.Inputs, o.Recursive ?? app.Recursive);
+        if (inputs.Count == 0) { Console.Error.WriteLine(CliText.T("NoVideos")); return ExitFailures; }
+        target = Path.GetFullPath(target);
+        if (o.DryRun)
+        {
+            foreach (var v in inputs) Console.WriteLine(v.Path);
+            Console.WriteLine("  => " + target);
+            return ExitOk;
+        }
+        var tools = await EnsureFfmpegAsync(o.FfmpegDir ?? app.FfmpegDirectory, o.Yes, app);
+        if (tools is null) return ExitNoFfmpeg;
+
+        using var cts = new CancellationTokenSource();
+        Console.CancelKeyPress += (_, e) => { if (cts.IsCancellationRequested) return; e.Cancel = true; cts.Cancel(); };
+        var jobs = Math.Max(1, o.Jobs ?? app.MaxParallelProcesses ?? Environment.ProcessorCount);
+        if (!o.Quiet) Console.WriteLine(CliText.T("PackProcessing", inputs.Count, settings.Columns));
+        PackResult result;
+        try
+        {
+            using var limiter = new SemaphoreSlim(jobs);
+            result = await new PackGenerator(tools, limiter).GenerateAsync(inputs.Select(v => v.Path).ToList(), settings, target,
+                                                                           settings.Columns, settings.SheetWidth, null, cts.Token);
+        }
+        catch (OperationCanceledException) { return ExitCancelled; }
+        foreach (var (path, error) in result.Failed) Console.Error.WriteLine($"FAIL {path} -> {error}");
+        foreach (var f in result.Files) Console.WriteLine("OK   " + f);
+        if (result.Files.Count == 0) return ExitFailures;
+        if (!o.Quiet) Console.WriteLine(CliText.T("PackDone", result.Videos, result.Files.Count));
+        return result.Failed.Count > 0 ? ExitFailures : ExitOk;
     }
 
     /// <summary>Writes the data of all inputs into the file of --export-info (#32). False if it could not be written.</summary>

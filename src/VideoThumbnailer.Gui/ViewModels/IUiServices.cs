@@ -18,6 +18,14 @@ public interface IUiServices
     Task<string?> PickFontAsync(string? current);
     /// <summary>Dialog for the capture time of one tile; changes reach the preview through the editor while it is open.</summary>
     Task<TileTimeResult> EditTileTimeAsync(TileTimeViewModel editor);
+    /// <summary>A sheet for the viewer (#39): a .vtsheet or a sheet image. Null when cancelled.</summary>
+    Task<string?> PickSheetFileAsync();
+    /// <summary>Shows the sheet viewer (#39) as its own window.</summary>
+    void ShowViewer(ViewerViewModel viewer);
+    /// <summary>Target of a pack picture (#37): .jpg, .png or .webp. Null when cancelled.</summary>
+    Task<string?> PickPackFileAsync(string suggestedName);
+    /// <summary>Grid editor (#36); true = apply the grid.</summary>
+    Task<bool> EditGridAsync(GridEditorViewModel editor);
     /// <summary>Opens a file or folder, or a web address in the browser.</summary>
     void OpenPath(string path);
 }

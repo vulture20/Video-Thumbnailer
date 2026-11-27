@@ -32,7 +32,7 @@
   <string>public.app-category.video</string>
   <key>NSHighResolutionCapable</key>
   <true/>
-  <!-- Preset files (*.vtpreset) open with a double-click (#33); the program gets them as "open file" event. -->
+  <!-- Preset files (*.vtpreset, #33), sheet sidecars (*.vtsheet, #38/#39) and grids (*.vtgrid, #36) open with a double-click; the program gets them as "open file" event. -->
   <key>CFBundleDocumentTypes</key>
   <array>
     <dict>
@@ -47,6 +47,34 @@
       <key>LSItemContentTypes</key>
       <array>
         <string>io.github.vulture20.videothumbnailer.preset</string>
+      </array>
+    </dict>
+    <dict>
+      <key>CFBundleTypeName</key>
+      <string>Video-Thumbnailer Sheet</string>
+      <key>CFBundleTypeRole</key>
+      <string>Viewer</string>
+      <key>LSHandlerRank</key>
+      <string>Owner</string>
+      <key>CFBundleTypeIconFile</key>
+      <string>app.icns</string>
+      <key>LSItemContentTypes</key>
+      <array>
+        <string>io.github.vulture20.videothumbnailer.sheet</string>
+      </array>
+    </dict>
+    <dict>
+      <key>CFBundleTypeName</key>
+      <string>Video-Thumbnailer Grid</string>
+      <key>CFBundleTypeRole</key>
+      <string>Viewer</string>
+      <key>LSHandlerRank</key>
+      <string>Owner</string>
+      <key>CFBundleTypeIconFile</key>
+      <string>app.icns</string>
+      <key>LSItemContentTypes</key>
+      <array>
+        <string>io.github.vulture20.videothumbnailer.grid</string>
       </array>
     </dict>
   </array>
@@ -72,6 +100,52 @@
         <key>public.mime-type</key>
         <array>
           <string>application/x-vtpreset+json</string>
+        </array>
+      </dict>
+    </dict>
+    <dict>
+      <key>UTTypeIdentifier</key>
+      <string>io.github.vulture20.videothumbnailer.sheet</string>
+      <key>UTTypeDescription</key>
+      <string>Video-Thumbnailer Sheet</string>
+      <key>UTTypeIconFile</key>
+      <string>app.icns</string>
+      <key>UTTypeConformsTo</key>
+      <array>
+        <string>public.json</string>
+      </array>
+      <key>UTTypeTagSpecification</key>
+      <dict>
+        <key>public.filename-extension</key>
+        <array>
+          <string>vtsheet</string>
+        </array>
+        <key>public.mime-type</key>
+        <array>
+          <string>application/x-vtsheet+json</string>
+        </array>
+      </dict>
+    </dict>
+    <dict>
+      <key>UTTypeIdentifier</key>
+      <string>io.github.vulture20.videothumbnailer.grid</string>
+      <key>UTTypeDescription</key>
+      <string>Video-Thumbnailer Grid</string>
+      <key>UTTypeIconFile</key>
+      <string>app.icns</string>
+      <key>UTTypeConformsTo</key>
+      <array>
+        <string>public.json</string>
+      </array>
+      <key>UTTypeTagSpecification</key>
+      <dict>
+        <key>public.filename-extension</key>
+        <array>
+          <string>vtgrid</string>
+        </array>
+        <key>public.mime-type</key>
+        <array>
+          <string>application/x-vtgrid+json</string>
         </array>
       </dict>
     </dict>

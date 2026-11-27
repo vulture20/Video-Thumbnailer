@@ -233,6 +233,47 @@ public partial class MainWindow : Window, IUiServices
 
     public Task<TileTimeResult> EditTileTimeAsync(TileTimeViewModel editor) => TileTimeWindow.ShowAsync(this, editor);
 
+    public async Task<string?> PickSheetFileAsync()
+    {
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = Loc.T("DlgOpenSheet"),
+            FileTypeFilter =
+            [
+                new FilePickerFileType(Loc.T("DlgSheetFiles")) { Patterns = ["*" + Core.Output.SheetSidecar.Suffix, "*.jpg", "*.jpeg", "*.png", "*.webp", "*.mp4", "*.webm", "*.gif"] },
+                FilePickerFileTypes.All,
+            ],
+        });
+        return files.Count > 0 ? files[0].TryGetLocalPath() : null;
+    }
+
+    public async Task<string?> PickPackFileAsync(string suggestedName)
+    {
+        var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = Loc.T("CreatePack"),
+            SuggestedFileName = suggestedName,
+            DefaultExtension = "jpg",
+            FileTypeChoices =
+            [
+                new FilePickerFileType("JPEG") { Patterns = ["*.jpg", "*.jpeg"] },
+                new FilePickerFileType("PNG") { Patterns = ["*.png"] },
+                new FilePickerFileType("WebP") { Patterns = ["*.webp"] },
+            ],
+        });
+        return file?.TryGetLocalPath();
+    }
+
+    public Task<bool> EditGridAsync(GridEditorViewModel editor) => GridEditorWindow.ShowAsync(this, editor);
+
+    public void ShowViewer(ViewerViewModel viewer)
+    {
+        if (IsVisible) { ViewerWindow.Show(this, viewer); return; }
+        // A .vtsheet given at start: the viewer waits until the main window is there.
+        void Once(object? sender, EventArgs e) { Opened -= Once; ViewerWindow.Show(this, viewer); }
+        Opened += Once;
+    }
+
     public void OpenPath(string path)
     {
         try

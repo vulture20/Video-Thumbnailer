@@ -12,6 +12,7 @@ internal static class HelpText
         Usage:
           vthumb [options] <file|folder|URL>...  create sheets
           vthumb presets list|show|import|export|delete
+          vthumb pack [options] <file|folder>... -o <pack.jpg>   one overview picture, a row per video
           vthumb ffmpeg status|check|install|update|uninstall [--force] [--latest]
           vthumb --help | --version
 
@@ -41,7 +42,8 @@ internal static class HelpText
           -w, --width <px>           total sheet width
               --tile-width <px>      fixed tile width (overrides --width)
               --layout <grid|name|file>  special grid with big and small tiles: big-top, big-center, two-big,
-                                     big-first, or a JSON file with a template; "grid" = plain columns x rows
+                                     big-first, the name of an own grid from the editor, or a .vtgrid/JSON
+                                     file with a template; "grid" = plain columns x rows
               --fit-screen off|width|both  sheet as wide as the screen, or as large as fits on it (width and height)
               --screen <WxH>         screen size for --fit-screen (default: the screen the GUI was last on;
                                      unknown = the fixed width applies)
@@ -127,6 +129,7 @@ internal static class HelpText
               --info-only            with --export-info: only the data, no sheets
               --webvtt / --no-webvtt also write "<name>.thumbnails.vtt" with a sprite "<name>.thumbnails.jpg"
               --webvtt-width <px>    width of one picture in the sprite (default 160)
+              --sidecar / --no-sidecar  also write "<name>.vtsheet" with the time and rectangle of every tile
 
         Processing:
           -j, --jobs <n>             max. parallel ffmpeg processes (default: CPU cores)
@@ -144,6 +147,7 @@ internal static class HelpText
         Aufruf:
           vthumb [Optionen] <Datei|Ordner|URL>... Sheets erstellen
           vthumb presets list|show|import|export|delete
+          vthumb pack [Optionen] <Datei|Ordner>... -o <pack.jpg>  ein Übersichtsbild, eine Zeile je Video
           vthumb ffmpeg status|check|install|update|uninstall [--force] [--latest]
           vthumb --help | --version
 
@@ -173,7 +177,8 @@ internal static class HelpText
           -w, --width <px>           Gesamtbreite des Sheets
               --tile-width <px>      feste Kachelbreite (ersetzt --width)
               --layout <grid|Name|Datei>  Spezial-Raster mit großen und kleinen Kacheln: big-top, big-center,
-                                     two-big, big-first oder eine JSON-Datei mit Vorlage; "grid" = einfaches Raster
+                                     two-big, big-first, der Name eines eigenen Rasters aus dem Editor oder eine
+                                     .vtgrid-/JSON-Datei mit Vorlage; "grid" = einfaches Raster
               --fit-screen off|width|both  Sheet so breit wie der Bildschirm oder so groß, dass es ganz darauf passt
               --screen <BxH>         Bildschirmgröße für --fit-screen (Standard: der Bildschirm, auf dem die
                                      Oberfläche zuletzt war; unbekannt = es gilt die feste Breite)
@@ -260,6 +265,7 @@ internal static class HelpText
               --info-only            mit --export-info: nur die Daten, keine Sheets
               --webvtt / --no-webvtt zusätzlich „<Name>.thumbnails.vtt“ mit Sprite „<Name>.thumbnails.jpg“ schreiben
               --webvtt-width <px>    Breite eines Bildes im Sprite (Standard 160)
+              --sidecar / --no-sidecar  zusätzlich „<Name>.vtsheet“ mit Zeitpunkt und Rechteck jeder Kachel
 
         Verarbeitung:
           -j, --jobs <n>             max. parallele ffmpeg-Prozesse (Standard: CPU-Kerne)
@@ -269,5 +275,39 @@ internal static class HelpText
               --quiet                nur Fehler und die Zusammenfassung ausgeben
 
         Exit-Codes: 0 ok, 1 einzelne Videos fehlgeschlagen, 2 Aufruffehler, 3 ffmpeg fehlt, 130 abgebrochen.
+        """;
+
+    public static string Pack => Lang.Current == Lang.German ? PackGerman : PackEnglish;
+
+    public const string PackEnglish = """
+        vthumb pack - one overview picture of many videos (a season, a folder)
+
+        Usage:
+          vthumb pack [options] <file|folder>... -o <pack.jpg|png|webp>
+
+        Every video gets one row: its name, duration, resolution and size, below a strip of small pictures.
+          -o, --output <file>        target picture; the format follows the extension (JPEG, PNG, WebP)
+          -c, --columns, --tiles <n> pictures per video (default: columns of the preset)
+          -w, --width <px>           width of the picture (default: sheet width of the preset)
+          -p, --preset <name|file>   colours, font, time stamps, gaps and skipped start/end come from the preset;
+                                     the sheet options (--background, --gap, --no-timestamps …) work as well
+          -r, --recursive, -j, --jobs, --ffmpeg, -y, --dry-run, --quiet  as for sheets
+        Too tall for the format (WebP 16383 px, JPEG 65000 px, PNG 32000 px): split into pack-1, pack-2 …
+        """;
+
+    public const string PackGerman = """
+        vthumb pack - ein Übersichtsbild aus vielen Videos (eine Staffel, ein Ordner)
+
+        Aufruf:
+          vthumb pack [Optionen] <Datei|Ordner>... -o <pack.jpg|png|webp>
+
+        Jedes Video bekommt eine Zeile: Name, Dauer, Auflösung und Größe, darunter ein Streifen kleiner Bilder.
+          -o, --output <Datei>       Zielbild; das Format richtet sich nach der Endung (JPEG, PNG, WebP)
+          -c, --columns, --tiles <n> Bilder je Video (Standard: Spalten des Presets)
+          -w, --width <px>           Breite des Bildes (Standard: Sheet-Breite des Presets)
+          -p, --preset <Name|Datei>  Farben, Schrift, Zeitstempel, Abstände und übersprungener Anfang/Ende kommen
+                                     aus dem Preset; die Sheet-Optionen (--background, --gap, --no-timestamps …) gehen auch
+          -r, --recursive, -j, --jobs, --ffmpeg, -y, --dry-run, --quiet  wie bei Sheets
+        Zu hoch für das Format (WebP 16383 px, JPEG 65000 px, PNG 32000 px): Aufteilung in pack-1, pack-2 …
         """;
 }

@@ -201,6 +201,10 @@ public partial class MainViewModel : ObservableObject
                 }
                 catch (Exception ex) { StatusText = Loc.T("StatusPresetLoadFailed", ex.Message); }
             }
+            else if (TemplateStore.IsTemplateFile(a) && File.Exists(a))
+                ImportGrid(a);
+            else if (a.EndsWith(SheetSidecar.Suffix, StringComparison.OrdinalIgnoreCase) && File.Exists(a))
+                _ = OpenViewerAsync(a); // a sheet sidecar opens the viewer (#39)
             else inputs.Add(a);
         }
         if (inputs.Count > 0) AddPaths(inputs);
@@ -517,10 +521,13 @@ public partial class MainViewModel : ObservableObject
     {
         var existing = Jobs.Select(j => j.Job.InputPath).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var added = 0;
+        SheetSettings? current = null;
         foreach (var v in VideoScanner.Scan(paths, Recursive))
         {
             if (!existing.Add(v.Path)) continue;
-            var job = new ThumbnailJob(v.Path, v.Root);
+            // Times chosen by hand for an earlier sheet come back from its sidecar (#38).
+            current ??= Settings.ToSettings(SelectedPreset?.Name ?? "");
+            var job = new ThumbnailJob(v.Path, v.Root) { ManualTimes = SheetSidecar.FindManualTimes(current, v.Path, v.Root) };
             var vm = new JobViewModel(job);
             job.Changed += _ => Dispatcher.UIThread.Post(() => { vm.Refresh(); UpdateStats(); });
             Jobs.Add(vm);
@@ -533,6 +540,104 @@ public partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     private async Task AddFilesAsync() => AddPaths(await _ui.PickVideoFilesAsync());
+
+    /// <summary>
+    /// Pack picture (#37): one overview of all videos in the queue, a row per video with as many pictures as the
+    /// grid has columns, as wide as the sheet; colours, font and time stamps from the current settings.
+    /// </summary>
+    [RelayCommand]
+    private async Task CreatePackAsync()
+    {
+        if (Jobs.Count == 0) { StatusText = Loc.T("StatusNothingToExport"); return; }
+        var file = await _ui.PickPackFileAsync(Loc.T("PackFileName") + ".jpg");
+        if (file is null) return;
+        var tools = await Ffmpeg.EnsureAsync();
+        if (tools is null) return;
+        var s = Settings.ToSettings(SelectedPreset?.Name ?? "");
+        var paths = Jobs.Select(j => j.Job.InputPath).ToList();
+        StatusText = Loc.T("StatusPackRunning", paths.Count, 0);
+        var progress = new Progress<double>(p => StatusText = Loc.T("StatusPackRunning", paths.Count, (int)(p * 100)));
+        try
+        {
+            using var limiter = new SemaphoreSlim((int)MaxParallelProcesses);
+            var result = await Task.Run(() => new PackGenerator(tools, limiter).GenerateAsync(paths, s, file, s.Columns, s.SheetWidth, progress, CancellationToken.None));
+            if (result.Files.Count == 0)
+            {
+                await _ui.ShowMessageAsync(Loc.T("CreatePack"), Loc.T("DlgPackFailed", string.Join("\n", result.Failed.Select(f => $"{Path.GetFileName(f.Path)}: {f.Error}"))));
+                return;
+            }
+            StatusText = result.Failed.Count > 0
+                ? Loc.T("StatusPackDoneFailed", result.Videos, result.Files.Count, result.Failed.Count)
+                : Loc.T("StatusPackDone", result.Videos, result.Files.Count);
+            _ui.OpenPath(result.Files[0]);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            await _ui.ShowMessageAsync(Loc.T("CreatePack"), Loc.T("DlgPackFailed", ex.Message));
+        }
+    }
+
+    /// <summary>Grid editor (#36) for the grid in use (or the plain grid as starting point).</summary>
+    [RelayCommand]
+    private async Task EditGridAsync()
+    {
+        var editor = new GridEditorViewModel(Settings.SelectedLayout?.Template, (int)Settings.Columns, (int)Settings.Rows)
+        {
+            CellAspect = _lastPreview?.Info.Video?.DisplayAspect is { } a and > 0 ? a : 16.0 / 9,
+        };
+        var ok = await _ui.EditGridAsync(editor);
+        if (ok)
+        {
+            var t = editor.ToTemplate();
+            Settings.ReloadOwnLayouts(t);
+            StatusText = Loc.T(editor.SaveAsOwn ? "StatusGridSaved" : "StatusGridApplied", t.Name);
+        }
+        else if (editor.OwnGridsChanged) Settings.ReloadOwnLayouts(null);
+    }
+
+    /// <summary>A ".vtgrid" given to the program (double-click): saved as own grid and selected.</summary>
+    private void ImportGrid(string file)
+    {
+        try
+        {
+            var t = GridTemplate.LoadFile(file);
+            if (t.Validate() is { Count: > 0 } problems) { StatusText = string.Join(" ", problems); return; }
+            new TemplateStore().Save(t);
+            Settings.ReloadOwnLayouts(t);
+            StatusText = Loc.T("StatusGridImported", t.Name);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or System.Text.Json.JsonException)
+        {
+            StatusText = Loc.T("StatusGridImportFailed", ex.Message);
+        }
+    }
+
+    [RelayCommand]
+    private async Task OpenSheetAsync()
+    {
+        if (await _ui.PickSheetFileAsync() is { } file) await OpenViewerAsync(file);
+    }
+
+    /// <summary>Opens the viewer for a sidecar or a sheet image (#39); a video moved to the trash there leaves the queue.</summary>
+    public async Task OpenViewerAsync(string file)
+    {
+        try
+        {
+            var viewer = await ViewerViewModel.OpenAsync(file, _app, Ffmpeg.Tools);
+            viewer.VideoDeleted += video => Dispatcher.UIThread.Post(() =>
+            {
+                foreach (var j in Jobs.Where(j => string.Equals(j.Job.InputPath, video, StringComparison.OrdinalIgnoreCase) && !j.IsActive).ToList())
+                    Jobs.Remove(j);
+                StatusText = Loc.T("StatusVideoTrashed", Path.GetFileName(video));
+                SchedulePreview();
+            });
+            _ui.ShowViewer(viewer);
+        }
+        catch (InvalidDataException e)
+        {
+            await _ui.ShowMessageAsync(Loc.T("OpenSheet").TrimEnd('…'), ViewerViewModel.SidecarFor(file) is null ? e.Message : Loc.T("ViewerOpenFailed", e.Message));
+        }
+    }
 
     /// <summary>Writes the technical data of all queued videos into a CSV or XML file (#32).</summary>
     [RelayCommand]
@@ -644,9 +749,11 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void OpenOutput(JobViewModel? job)
+    private async Task OpenOutputAsync(JobViewModel? job)
     {
-        if (job?.OutputPath is { } p && File.Exists(p)) _ui.OpenPath(p);
+        // A sheet with a sidecar opens in the viewer (#39), otherwise in the system's program.
+        if (job?.OutputPath is { } sheet && ViewerViewModel.SidecarFor(sheet) is not null) await OpenViewerAsync(sheet);
+        else if (job?.OutputPath is { } p && File.Exists(p)) _ui.OpenPath(p);
         else if (job is not null) _ui.OpenPath(job.Job.InputPath);
     }
 

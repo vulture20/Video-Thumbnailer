@@ -158,6 +158,8 @@ public static class ArgParser
                 case "--no-trailer-audio": o.Overrides.Add(s => s.Trailer.Audio = false); break;
                 case "--webvtt": o.Overrides.Add(s => s.Output.WebVtt = true); break;
                 case "--no-webvtt": o.Overrides.Add(s => s.Output.WebVtt = false); break;
+                case "--sidecar": o.Overrides.Add(s => s.Output.Sidecar = true); break;
+                case "--no-sidecar": o.Overrides.Add(s => s.Output.Sidecar = false); break;
                 case "--webvtt-width": { var v = NextInt(); o.Overrides.Add(s => { s.Output.WebVtt = true; s.Output.WebVttTileWidth = v; }); break; }
                 case "--export-info": o.InfoExport = Next(); break;
                 case "--info-only": o.InfoOnly = true; break;
@@ -290,6 +292,7 @@ public static class ArgParser
         var key = v.Replace("-", "").Replace("_", "");
         if (key.ToLowerInvariant() is "grid" or "plain" or "none" or "uniform") return null;
         if (Core.Layout.BuiltInTemplates.Find(key) is { } builtIn) return builtIn;
+        if (!File.Exists(v) && new Core.Layout.TemplateStore().Find(v) is { } own) return own; // own grid from the editor (#36)
         if (File.Exists(v))
         {
             Core.Layout.GridTemplate t;
@@ -301,7 +304,8 @@ public static class ArgParser
             return t;
         }
         throw new UsageException(CliText.T("UnknownLayout", v, option,
-            "grid, " + string.Join(", ", Core.Layout.BuiltInTemplates.All.Select(t => KebabCase(t.Name)))));
+            "grid, " + string.Join(", ", Core.Layout.BuiltInTemplates.All.Select(t => KebabCase(t.Name))
+                .Concat(new Core.Layout.TemplateStore().LoadAll().Select(t => t.Name.Contains(' ') ? "\"" + t.Name + "\"" : t.Name)))));
     }
 
     /// <summary>"BigTop" -> "big-top" (how built-in grids are written on the command line).</summary>

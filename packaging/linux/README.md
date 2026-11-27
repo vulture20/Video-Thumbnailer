@@ -11,12 +11,12 @@ cp -r icons/hicolor ~/.local/share/icons/
 install -Dm644 video-thumbnailer.desktop ~/.local/share/applications/video-thumbnailer.desktop
 gtk-update-icon-cache ~/.local/share/icons/hicolor 2>/dev/null || true
 
-# Preset-Dateien (*.vtpreset) per Doppelklick öffnen
+# Preset-Dateien (*.vtpreset), Sheet-Begleitdateien (*.vtsheet) und Raster (*.vtgrid) per Doppelklick öffnen
 xdg-mime install --novendor video-thumbnailer-preset.xml
-xdg-mime default video-thumbnailer.desktop application/x-vtpreset+json
+xdg-mime default video-thumbnailer.desktop application/x-vtpreset+json application/x-vtsheet+json application/x-vtgrid+json
 update-desktop-database ~/.local/share/applications 2>/dev/null || true
 ```
 
-Beim AppImage wirkt die Dateizuordnung erst, wenn es ins System eingebunden ist (z. B. mit AppImageLauncher oder appimaged; der MIME-Typ liegt unter `usr/share/mime/packages`). Ohne Einbindung lässt sich eine Preset-Datei über „Öffnen mit“ und das AppImage öffnen.
+Beim AppImage wirkt die Dateizuordnung erst, wenn es ins System eingebunden ist (z. B. mit AppImageLauncher oder appimaged; der MIME-Typ liegt unter `usr/share/mime/packages`). Ohne Einbindung lässt sich eine solche Datei über „Öffnen mit“ und das AppImage öffnen.
 
 Die Icons werden aus `assets/branding` erzeugt (`python3 assets/branding/build.py`).

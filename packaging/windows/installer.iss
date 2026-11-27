@@ -60,10 +60,17 @@ de.AssocPreset=Preset-Dateien (.vtpreset) mit Video-Thumbnailer öffnen
 en.AssocPreset=Open preset files (.vtpreset) with Video-Thumbnailer
 de.PresetType=Video-Thumbnailer-Preset
 en.PresetType=Video-Thumbnailer preset
+de.AssocSheet=Sheet-Begleitdateien (.vtsheet) und Raster (.vtgrid) mit Video-Thumbnailer öffnen
+en.AssocSheet=Open sheet sidecar files (.vtsheet) and grids (.vtgrid) with Video-Thumbnailer
+de.SheetType=Video-Thumbnailer-Sheet
+en.SheetType=Video-Thumbnailer sheet
+de.GridType=Video-Thumbnailer-Raster
+en.GridType=Video-Thumbnailer grid
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 Name: "assocpreset"; Description: "{cm:AssocPreset}"
+Name: "assocsheet"; Description: "{cm:AssocSheet}"
 
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -83,6 +90,19 @@ Root: HKA; Subkey: "Software\Classes\VideoThumbnailer.Preset\shell\open\command"
 Root: HKA; Subkey: "Software\Classes\.json\OpenWithProgids"; ValueType: string; ValueName: "VideoThumbnailer.Preset"; ValueData: ""; Flags: uninsdeletevalue; Tasks: assocpreset
 Root: HKA; Subkey: "Software\Classes\Applications\VideoThumbnailer.exe"; ValueType: string; ValueName: "FriendlyAppName"; ValueData: "Video-Thumbnailer"; Flags: uninsdeletekey
 Root: HKA; Subkey: "Software\Classes\Applications\VideoThumbnailer.exe\SupportedTypes"; ValueType: string; ValueName: ".vtpreset"; ValueData: ""
+; Sheet sidecars (#38) open the viewer (#39), grids (#36) are added to the own grids.
+Root: HKA; Subkey: "Software\Classes\.vtsheet"; ValueType: string; ValueName: ""; ValueData: "VideoThumbnailer.Sheet"; Flags: uninsdeletevalue; Tasks: assocsheet
+Root: HKA; Subkey: "Software\Classes\.vtsheet"; ValueType: string; ValueName: "Content Type"; ValueData: "application/x-vtsheet+json"; Flags: uninsdeletevalue; Tasks: assocsheet
+Root: HKA; Subkey: "Software\Classes\VideoThumbnailer.Sheet"; ValueType: string; ValueName: ""; ValueData: "{cm:SheetType}"; Flags: uninsdeletekey; Tasks: assocsheet
+Root: HKA; Subkey: "Software\Classes\VideoThumbnailer.Sheet\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\VideoThumbnailer.exe,0"; Tasks: assocsheet
+Root: HKA; Subkey: "Software\Classes\VideoThumbnailer.Sheet\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\VideoThumbnailer.exe"" ""%1"""; Tasks: assocsheet
+Root: HKA; Subkey: "Software\Classes\.vtgrid"; ValueType: string; ValueName: ""; ValueData: "VideoThumbnailer.Grid"; Flags: uninsdeletevalue; Tasks: assocsheet
+Root: HKA; Subkey: "Software\Classes\.vtgrid"; ValueType: string; ValueName: "Content Type"; ValueData: "application/x-vtgrid+json"; Flags: uninsdeletevalue; Tasks: assocsheet
+Root: HKA; Subkey: "Software\Classes\VideoThumbnailer.Grid"; ValueType: string; ValueName: ""; ValueData: "{cm:GridType}"; Flags: uninsdeletekey; Tasks: assocsheet
+Root: HKA; Subkey: "Software\Classes\VideoThumbnailer.Grid\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\VideoThumbnailer.exe,0"; Tasks: assocsheet
+Root: HKA; Subkey: "Software\Classes\VideoThumbnailer.Grid\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\VideoThumbnailer.exe"" ""%1"""; Tasks: assocsheet
+Root: HKA; Subkey: "Software\Classes\Applications\VideoThumbnailer.exe\SupportedTypes"; ValueType: string; ValueName: ".vtsheet"; ValueData: ""
+Root: HKA; Subkey: "Software\Classes\Applications\VideoThumbnailer.exe\SupportedTypes"; ValueType: string; ValueName: ".vtgrid"; ValueData: ""
 Root: HKA; Subkey: "Software\Classes\Applications\VideoThumbnailer.exe\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\VideoThumbnailer.exe"" ""%1"""
 
 [Run]

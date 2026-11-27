@@ -20,7 +20,8 @@ public static partial class InfoTemplate
         "filename", "name", "ext", "folder", "path", "title", "container",
         "size", "size:B|KB|MB|GB", "duration", "bitrate",
         "width", "height", "resolution", "vcodec", "vprofile", "fps", "pixfmt", "hdr", "vbitrate", "rotation",
-        "audio", "acodec", "samplerate", "channels", "channellayout", "abitrate", "alang", "audiotracks", "comment",
+        "audio", "acodec", "samplerate", "channels", "channellayout", "abitrate", "alang", "audiotracks",
+        "subtitles", "slang", "subtracks", "comment",
     ];
 
     /// <param name="lang">Language for words like "none" and the decimal separator; default <see cref="Lang.Current"/>.</param>
@@ -83,9 +84,30 @@ public static partial class InfoTemplate
             "abitrate" => Formatting.Bitrate(a?.BitRate, nf, na),
             "alang" => a?.Language ?? na,
             "audiotracks" => i.AudioStreams.Count.ToString(),
+            "subtitles" => i.SubtitleStreams.Count == 0 ? CoreText.TIn(lang, "Sheet.NoAudio")
+                : i.SubtitleStreams.Count + ": " + string.Join(", ", i.SubtitleStreams.Select(t => SubtitleSummary(t, lang))),
+            "slang" => SubtitleLanguages(i) is { Length: > 0 } sl ? sl : i.SubtitleStreams.Count == 0 ? CoreText.TIn(lang, "Sheet.NoAudio") : na,
+            "subtracks" => i.SubtitleStreams.Count.ToString(),
             "comment" => comment?.Replace("\r\n", "\n") ?? "",
             _ => null,
         };
+    }
+
+    /// <summary>Distinct known languages of the subtitle tracks, in track order, comma separated.</summary>
+    public static string SubtitleLanguages(MediaInfo i) =>
+        string.Join(", ", i.SubtitleStreams.Select(t => t.Language).Where(KnownLanguage).Distinct(StringComparer.OrdinalIgnoreCase));
+
+    private static bool KnownLanguage(string? l) => !string.IsNullOrEmpty(l) && l != "und";
+
+    private static string SubtitleSummary(SubtitleStreamInfo t, string lang)
+    {
+        var parts = new List<string>();
+        if (KnownLanguage(t.Language)) parts.Add(t.Language!);
+        parts.Add(t.FormatName);
+        if (t.Forced) parts.Add(CoreText.TIn(lang, "Sheet.SubForced"));
+        if (t.HearingImpaired) parts.Add("SDH");
+        if (t.IsExternal) parts.Add(CoreText.TIn(lang, "Sheet.SubExternal"));
+        return string.Join(" ", parts);
     }
 
     private static string AudioSummary(AudioStreamInfo a, IFormatProvider nf)
