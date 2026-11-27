@@ -123,8 +123,8 @@ public partial class ReadmeTests
             Assert.Contains(CliOptions.HelpNames(o, "en"), HelpText.English);
             Assert.Contains(CliOptions.HelpNames(o, "de"), HelpText.German);
         }
-        Assert.All(HelpText.English.Split('\n'), l => Assert.True(l.Length <= 112, l));
-        Assert.All(HelpText.German.Split('\n'), l => Assert.True(l.Length <= 112, l));
+        Assert.All(HelpText.English.ReplaceLineEndings("\n").Split('\n'), l => Assert.True(l.Length <= 112, l));
+        Assert.All(HelpText.German.ReplaceLineEndings("\n").Split('\n'), l => Assert.True(l.Length <= 112, l));
     }
 
     private static string Replace(string text, string marker, string content)
