@@ -182,6 +182,14 @@ Die Feature-Spezifikation (mit Prioritäten P1–P3) liegt außerhalb des Repos;
 | Datum | Entscheidung | Begründung / Anmerkung |
 |---|---|---|
 | 26.11.2026 | Die Bilder in `docs/images` (`gui.png`, `gui-de.png`, `gui-dark.png`, `gui-narrow.png`) erzeugt der Test `Readme_screenshots` (headless, echtes Testvideo per ffmpeg): `VTHUMB_README_SHOTS=$PWD/docs/images dotnet test --filter Readme_screenshots` (absoluter Pfad). Neu ist das Bild mit eingeklappter Warteschlange im schmalen Fenster | Bilder lassen sich nach jeder Oberflächenänderung mit einem Befehl neu erzeugen |
+| 27.11.2026 | Abgelöst durch `tools/readme-images.sh`: erzeugt ein Demo-Video aus ffmpeg-Testmustern (Mandelbrot, Verläufe, Game of Life, Zellautomat, Sierpinski; kein fremdes Filmmaterial), daraus per Kommandozeile die Beispiele `example-sheet.jpg`, `example-layout.jpg`, `example-animated.webp`, `example-pack.jpg` und ruft `Readme_screenshots` mit `VTHUMB_README_VIDEO` auf; der Test macht zusätzlich `grid-editor.png` und `viewer.png`. Eigener Einstellungsordner (`VIDEO_THUMBNAILER_HOME`), damit Presets des Benutzers nicht in die Bilder geraten | ansprechendere Bilder als das Testbild, weiterhin mit einem Befehl reproduzierbar |
+
+### README-Tabellen (#53)
+| Datum | Entscheidung | Begründung / Anmerkung |
+|---|---|---|
+| 27.11.2026 | Die Tabelle aller Kommandozeilen-Optionen in der README kommt aus einem Katalog (`src/VideoThumbnailer.Cli/CliOptions.cs`: Schreibweisen, Wert, Beschreibung, Beispiel), die der Tastenkürzel aus `Shortcuts.All` (Texte in `ReadmeTests`). `ReadmeTests` prüft, dass Katalog und `ArgParser` dieselben Optionen kennen (über die `case`-Marken im Quelltext), jedes Beispiel fehlerfrei geparst wird, beide Hilfetexte jede lange Option nennen und die README-Abschnitte zwischen den Markierungen aktuell sind. Neu schreiben: `VTHUMB_UPDATE_README=1 dotnet test --filter ReadmeTests` | der Parser ist ein `switch` ohne Metadaten; ein Katalog daneben plus Test hält README und Hilfe ohne Umbau des Parsers synchron |
+| 27.11.2026 | Hilfetext (`vthumb --help`) bleibt handgeschrieben, wird aber gegen den Katalog geprüft | die Hilfe ist bewusst kompakt gruppiert (mehrere Optionen je Zeile); eine Erzeugung aus dem Katalog wäre ein eigenes Thema |
+| 27.11.2026 | README neu gegliedert: Highlights, Beispiel-Galerie, Oberfläche, Installation je System, Schnellstart, Kommandozeile (Beispiele und vollständige Tabelle), Tastenkürzel, aufklappbare Details | Einstieg schneller, Details weiter vollständig |
 
 ### Videos per URL (#21)
 | Datum | Entscheidung | Begründung / Anmerkung |

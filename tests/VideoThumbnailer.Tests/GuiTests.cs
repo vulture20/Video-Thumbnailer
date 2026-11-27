@@ -179,8 +179,10 @@ public class GuiPreviewTests
 {
     /// <summary>
     /// Renders the README screenshots (docs/images) when VTHUMB_README_SHOTS points to a folder: light "Simple" mode,
-    /// dark "Advanced" mode scrolled to the timestamp colors, and a narrow window with the folded queue, all with
-    /// real frames of a test clip. Without the variable it only checks that the scenes come up.
+    /// dark "Advanced" mode scrolled to the timestamp colors, a narrow window with the folded queue, the grid editor
+    /// and the viewer, all with real frames. VTHUMB_README_VIDEO names the video to show (tools/readme-images.sh makes
+    /// a colourful demo reel); without it a test clip is used. Without VTHUMB_README_SHOTS it only checks that the
+    /// scenes come up.
     /// </summary>
     [AvaloniaFact]
     public async Task Readme_screenshots()
@@ -192,7 +194,10 @@ public class GuiPreviewTests
         {
             new AppSettings { FfmpegDownloadAsked = true, CheckFfmpegUpdates = false, Language = "English" }.Save();
             var dir = Directory.CreateDirectory(Path.Combine(home, "Videos")).FullName;
-            var video = PreviewSourceTests.MakeVideo(t, dir);
+            var demo = Environment.GetEnvironmentVariable("VTHUMB_README_VIDEO");
+            string video;
+            if (string.IsNullOrEmpty(demo)) video = PreviewSourceTests.MakeVideo(t, dir);
+            else File.Copy(demo, video = Path.Combine(dir, "demo-reel.mp4"));
             File.Copy(video, Path.Combine(dir, "holiday-2026.mp4"));
             File.Copy(video, Path.Combine(dir, "interview.mkv"));
             var outDir = Environment.GetEnvironmentVariable("VTHUMB_README_SHOTS");
@@ -234,6 +239,28 @@ public class GuiPreviewTests
             Assert.True(vm.IsQueueCollapsed);
             Shot(window, "gui-narrow.png");
             window.Close();
+
+            // Grid editor with the "big image on top" grid
+            var editor = new GridEditorViewModel(Core.Layout.BuiltInTemplates.Find("BigTop"), 4, 5) { Name = "My grid" };
+            var editorWindow = new GridEditorWindow(editor);
+            editorWindow.Show();
+            Shot(editorWindow, "grid-editor.png");
+            editorWindow.Close();
+
+            // Viewer of a sheet with sidecar, mouse over a tile
+            var s = BuiltInPresets.All.First(p => p.Name == "Standard").Clone();
+            s.Output.Sidecar = true;
+            s.Output.Location = OutputLocation.OutputFolder;
+            s.Output.Folder = Directory.CreateDirectory(Path.Combine(home, "Sheets")).FullName;
+            var job = new Core.Batch.ThumbnailJob(video);
+            await new Core.Batch.BatchProcessor(t).RunAsync([job], s, new Core.Batch.BatchOptions(), TestContext.Current.CancellationToken);
+            Assert.Equal(Core.Batch.JobStatus.Done, job.Status);
+            var viewer = await ViewerViewModel.OpenAsync(job.OutputPath!, new AppSettings(), t);
+            viewer.Hover(viewer.TileAt(0.4, 0.45));
+            var viewerWindow = new ViewerWindow(viewer);
+            viewerWindow.Show();
+            Shot(viewerWindow, "viewer.png");
+            viewerWindow.Close();
         }
         finally
         {

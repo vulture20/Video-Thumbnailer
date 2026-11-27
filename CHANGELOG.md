@@ -10,6 +10,7 @@ Neue Einträge kommen mit jedem Pull Request unter „Unveröffentlicht“ und w
 - Fertige Einträge der Warteschlange erneut einreihen: Rechtsklick → „Erneut einreihen“ oder Strg/Cmd+R für die Auswahl, ↻ am Eintrag beim Überfahren, „⋯“ → „Alle erledigten erneut einreihen“. Der Eintrag bleibt an seiner Stelle, läuft beim nächsten Start mit den aktuellen Einstellungen, behält Zeitpunkte von Hand und ersetzt sein Sheet, auch wenn vorhandene Dateien sonst übersprungen werden
 
 ### Geändert
+- README überarbeitet: Highlights, Galerie mit Beispiel-Sheets (Spezial-Raster, animiert, Pack-Bild), neue Screenshots (auch Viewer und Raster-Editor), Installation je System, Schnellstart, vollständige Tabelle aller Kommandozeilen-Optionen mit Beispiel und alle Tastenkürzel für Windows/Linux und macOS. Tabellen werden aus dem Code erzeugt und per Test aktuell gehalten; `tools/readme-images.sh` erzeugt alle Bilder neu
 - „Fehlgeschlagene wiederholen“ heißt jetzt „Fehlgeschlagene erneut versuchen“, hat einen Tooltip und ist nur ohne laufenden Lauf und mit fehlgeschlagenen Einträgen anwählbar
 
 ## [1.0.0] – 2026-11-27
