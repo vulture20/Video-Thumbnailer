@@ -101,9 +101,9 @@ public class SubtitleAndSidecarTests
     [Fact]
     public void Sidecar_paths_and_round_trip()
     {
-        Assert.Equal("/v/a.sheet.json", SheetSidecar.PathFor("/v/a.jpg").Replace('\\', '/'));
-        Assert.Equal("/v/a.sheet.json", SheetSidecar.PathFor("/v/a.sheet.mp4").Replace('\\', '/'));
-        Assert.Equal("/v/a (2).sheet.json", SheetSidecar.PathFor("/v/a (2).png").Replace('\\', '/'));
+        Assert.Equal("/v/a.vtsheet", SheetSidecar.PathFor("/v/a.jpg").Replace('\\', '/'));
+        Assert.Equal("/v/a.vtsheet", SheetSidecar.PathFor("/v/a.sheet.mp4").Replace('\\', '/'));
+        Assert.Equal("/v/a (2).vtsheet", SheetSidecar.PathFor("/v/a (2).png").Replace('\\', '/'));
 
         var dir = TestUtil.TempDir();
         var video = Path.Combine(dir, "videos", "clip.mp4");
@@ -126,7 +126,7 @@ public class SubtitleAndSidecarTests
         Assert.DoesNotContain("\"manual\": false", File.ReadAllText(path));
 
         // moved away: the absolute path still finds the video; neither found: null
-        var moved = Path.Combine(TestUtil.TempDir(), "clip.sheet.json");
+        var moved = Path.Combine(TestUtil.TempDir(), "clip.vtsheet");
         File.Copy(path, moved);
         Assert.Equal(Path.GetFullPath(video), SheetSidecar.Read(moved).ResolveVideo(moved));
         File.Delete(video);
@@ -148,7 +148,7 @@ public class SubtitleAndSidecarTests
         await new BatchProcessor(t).RunAsync([job], s, new BatchOptions(), TestContext.Current.CancellationToken);
         Assert.Equal(JobStatus.Done, job.Status);
 
-        var car = SheetSidecar.Read(Path.Combine(dir, "side.sheet.json"));
+        var car = SheetSidecar.Read(Path.Combine(dir, "side.vtsheet"));
         Assert.Equal(("side.mp4", "side.jpg", 6, false), (car.Video.Path, car.Sheet.File, car.Tiles.Count, car.Sheet.Animated));
         Assert.Equal(7.5, car.Tiles[1].Time);
         Assert.True(car.Tiles[1].Manual);

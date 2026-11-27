@@ -233,6 +233,24 @@ public partial class MainWindow : Window, IUiServices
 
     public Task<TileTimeResult> EditTileTimeAsync(TileTimeViewModel editor) => TileTimeWindow.ShowAsync(this, editor);
 
+    public async Task<string?> PickSheetFileAsync()
+    {
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = Loc.T("DlgOpenSheet"),
+            FileTypeFilter =
+            [
+                new FilePickerFileType(Loc.T("DlgSheetFiles")) { Patterns = ["*" + Core.Output.SheetSidecar.Suffix, "*.jpg", "*.jpeg", "*.png", "*.webp", "*.mp4", "*.webm", "*.gif"] },
+                FilePickerFileTypes.All,
+            ],
+        });
+        return files.Count > 0 ? files[0].TryGetLocalPath() : null;
+    }
+
+    public Task<bool> EditGridAsync(GridEditorViewModel editor) => GridEditorWindow.ShowAsync(this, editor);
+
+    public void ShowViewer(ViewerViewModel viewer) => ViewerWindow.Show(this, viewer);
+
     public void OpenPath(string path)
     {
         try

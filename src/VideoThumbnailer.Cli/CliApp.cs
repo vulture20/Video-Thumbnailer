@@ -136,7 +136,11 @@ public static class CliApp
         var tools = await EnsureFfmpegAsync(o.FfmpegDir ?? app.FfmpegDirectory, o.Yes, app);
         if (tools is null) return ExitNoFfmpeg;
 
-        var jobs = inputs.Select(v => new ThumbnailJob(v.Path, v.Root) { ManualTimes = o.ManualTimes }).ToList();
+        // Without --times, times chosen by hand earlier come from the sidecar of the last sheet (#38).
+        var jobs = inputs.Select(v => new ThumbnailJob(v.Path, v.Root)
+        {
+            ManualTimes = o.ManualTimes ?? SheetSidecar.FindManualTimes(settings, v.Path, v.Root),
+        }).ToList();
         var options = new BatchOptions();
         if ((o.Jobs ?? app.MaxParallelProcesses) is { } j) options.MaxParallelProcesses = Math.Max(1, j);
         options.MaxParallelVideos = Math.Max(1, o.Videos ?? app.MaxParallelVideos ?? Math.Max(1, options.MaxParallelProcesses / 2));

@@ -27,6 +27,9 @@ public class GuiEffectsTests
         public Task ShowMessageAsync(string title, string message) => Task.CompletedTask;
         public Task<string?> PickFontAsync(string? current) => Task.FromResult<string?>(null);
         public Task<TileTimeResult> EditTileTimeAsync(TileTimeViewModel editor) => Task.FromResult(TileTimeResult.Cancel);
+        public Task<string?> PickSheetFileAsync() => Task.FromResult<string?>(null);
+        public void ShowViewer(ViewerViewModel viewer) { }
+        public Task<bool> EditGridAsync(GridEditorViewModel editor) => Task.FromResult(false);
         public void OpenPath(string path) { }
     }
 

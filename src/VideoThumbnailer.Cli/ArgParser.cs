@@ -292,6 +292,7 @@ public static class ArgParser
         var key = v.Replace("-", "").Replace("_", "");
         if (key.ToLowerInvariant() is "grid" or "plain" or "none" or "uniform") return null;
         if (Core.Layout.BuiltInTemplates.Find(key) is { } builtIn) return builtIn;
+        if (!File.Exists(v) && new Core.Layout.TemplateStore().Find(v) is { } own) return own; // own grid from the editor (#36)
         if (File.Exists(v))
         {
             Core.Layout.GridTemplate t;
@@ -303,7 +304,8 @@ public static class ArgParser
             return t;
         }
         throw new UsageException(CliText.T("UnknownLayout", v, option,
-            "grid, " + string.Join(", ", Core.Layout.BuiltInTemplates.All.Select(t => KebabCase(t.Name)))));
+            "grid, " + string.Join(", ", Core.Layout.BuiltInTemplates.All.Select(t => KebabCase(t.Name))
+                .Concat(new Core.Layout.TemplateStore().LoadAll().Select(t => t.Name.Contains(' ') ? "\"" + t.Name + "\"" : t.Name)))));
     }
 
     /// <summary>"BigTop" -> "big-top" (how built-in grids are written on the command line).</summary>

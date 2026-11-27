@@ -41,7 +41,8 @@ internal static class HelpText
           -w, --width <px>           total sheet width
               --tile-width <px>      fixed tile width (overrides --width)
               --layout <grid|name|file>  special grid with big and small tiles: big-top, big-center, two-big,
-                                     big-first, or a JSON file with a template; "grid" = plain columns x rows
+                                     big-first, the name of an own grid from the editor, or a .vtgrid/JSON
+                                     file with a template; "grid" = plain columns x rows
               --fit-screen off|width|both  sheet as wide as the screen, or as large as fits on it (width and height)
               --screen <WxH>         screen size for --fit-screen (default: the screen the GUI was last on;
                                      unknown = the fixed width applies)
@@ -127,7 +128,7 @@ internal static class HelpText
               --info-only            with --export-info: only the data, no sheets
               --webvtt / --no-webvtt also write "<name>.thumbnails.vtt" with a sprite "<name>.thumbnails.jpg"
               --webvtt-width <px>    width of one picture in the sprite (default 160)
-              --sidecar / --no-sidecar  also write "<name>.sheet.json" with the time and rectangle of every tile
+              --sidecar / --no-sidecar  also write "<name>.vtsheet" with the time and rectangle of every tile
 
         Processing:
           -j, --jobs <n>             max. parallel ffmpeg processes (default: CPU cores)
@@ -174,7 +175,8 @@ internal static class HelpText
           -w, --width <px>           Gesamtbreite des Sheets
               --tile-width <px>      feste Kachelbreite (ersetzt --width)
               --layout <grid|Name|Datei>  Spezial-Raster mit großen und kleinen Kacheln: big-top, big-center,
-                                     two-big, big-first oder eine JSON-Datei mit Vorlage; "grid" = einfaches Raster
+                                     two-big, big-first, der Name eines eigenen Rasters aus dem Editor oder eine
+                                     .vtgrid-/JSON-Datei mit Vorlage; "grid" = einfaches Raster
               --fit-screen off|width|both  Sheet so breit wie der Bildschirm oder so groß, dass es ganz darauf passt
               --screen <BxH>         Bildschirmgröße für --fit-screen (Standard: der Bildschirm, auf dem die
                                      Oberfläche zuletzt war; unbekannt = es gilt die feste Breite)
@@ -261,7 +263,7 @@ internal static class HelpText
               --info-only            mit --export-info: nur die Daten, keine Sheets
               --webvtt / --no-webvtt zusätzlich „<Name>.thumbnails.vtt“ mit Sprite „<Name>.thumbnails.jpg“ schreiben
               --webvtt-width <px>    Breite eines Bildes im Sprite (Standard 160)
-              --sidecar / --no-sidecar  zusätzlich „<Name>.sheet.json“ mit Zeitpunkt und Rechteck jeder Kachel
+              --sidecar / --no-sidecar  zusätzlich „<Name>.vtsheet“ mit Zeitpunkt und Rechteck jeder Kachel
 
         Verarbeitung:
           -j, --jobs <n>             max. parallele ffmpeg-Prozesse (Standard: CPU-Kerne)

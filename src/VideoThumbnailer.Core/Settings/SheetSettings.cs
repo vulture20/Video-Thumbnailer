@@ -330,7 +330,7 @@ public sealed class OutputSettings
     /// <summary>Width of one picture in the WebVTT sprite (pixels).</summary>
     public int WebVttTileWidth { get; set; } = 160;
     /// <summary>
-    /// Additionally write the JSON sidecar "&lt;sheet name&gt;.sheet.json" with the video, the sheet size and per tile
+    /// Additionally write the JSON sidecar "&lt;sheet name&gt;.vtsheet" with the video, the sheet size and per tile
     /// its rectangle and capture time (#38), for the viewer (#39) and to restore times chosen by hand.
     /// </summary>
     public bool Sidecar { get; set; }

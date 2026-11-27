@@ -28,6 +28,10 @@ public sealed class AppSettings
     public string? Theme { get; set; }
     /// <summary>Usable area of the screen the GUI window was last on; the CLI uses it for "fit to screen" without --screen.</summary>
     public Layout.ScreenSize? LastScreen { get; set; }
+    /// <summary>Player the sheet viewer starts videos in (#39).</summary>
+    public Viewer.PlayerKind Player { get; set; } = Viewer.PlayerKind.Auto;
+    /// <summary>Command line for <see cref="Viewer.PlayerKind.Custom"/>, with {file}, {seconds}, {ms}, {time}.</summary>
+    public string? PlayerCommand { get; set; }
 
     public static AppSettings Load(string? path = null)
     {

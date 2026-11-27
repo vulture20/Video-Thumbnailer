@@ -9,14 +9,14 @@ namespace VideoThumbnailer.Core.Output;
 /// <summary>
 /// The open JSON sidecar next to a sheet (#38): which video, how big the sheet is and, per tile, its rectangle and
 /// capture time. A viewer uses it to start the video at the clicked tile (#39); the queue uses it to restore capture
-/// times chosen by hand (#23). The format is documented in <c>docs/sheet-json.md</c>.
+/// times chosen by hand (#23). The format is documented in <c>docs/vtsheet.md</c>.
 /// </summary>
 public sealed class SheetSidecar
 {
     public const string FormatName = "video-thumbnailer-sheet";
     public const int CurrentVersion = 1;
-    /// <summary>"movie.jpg" → "movie.sheet.json".</summary>
-    public const string Suffix = ".sheet.json";
+    /// <summary>"movie.jpg" → "movie.vtsheet".</summary>
+    public const string Suffix = ".vtsheet";
 
     public string Format { get; set; } = FormatName;
     public int Version { get; set; } = CurrentVersion;
@@ -38,7 +38,7 @@ public sealed class SheetSidecar
         AllowTrailingCommas = true,
     };
 
-    /// <summary>Path of the sidecar for a sheet: "movie.jpg" and "movie.sheet.mp4" both give "movie.sheet.json".</summary>
+    /// <summary>Path of the sidecar for a sheet: "movie.jpg" and "movie.sheet.mp4" both give "movie.vtsheet".</summary>
     public static string PathFor(string sheetPath)
     {
         var dir = Path.GetDirectoryName(sheetPath) ?? ".";
@@ -167,6 +167,27 @@ public sealed class SheetSidecar
                 list[t.Index] = new ManualTime(t.Time, Sheet.Animated ? t.ClipSeconds : null);
         var last = Array.FindLastIndex(list, m => m is not null);
         return list[..(last + 1)];
+    }
+
+    /// <summary>
+    /// Times chosen by hand for a video from the sidecar where these settings would put it, or null when there is
+    /// none (or it belongs to another video). Used when a video is added to the queue, so a hand-picked sheet can be
+    /// made again.
+    /// </summary>
+    public static ManualTime?[]? FindManualTimes(Settings.SheetSettings settings, string videoPath, string? inputRoot)
+    {
+        try
+        {
+            var path = PathFor(OutputPathResolver.ResolveSheetPath(settings, videoPath, inputRoot));
+            if (TryRead(path) is not { } car) return null;
+            var same = VideoSource.IsUrl(videoPath)
+                ? car.Video.Url == videoPath
+                : car.ResolveVideo(path) is { } v && string.Equals(Path.GetFullPath(v), Path.GetFullPath(videoPath), StringComparison.OrdinalIgnoreCase);
+            if (!same) return null;
+            var times = car.ManualTimes();
+            return times.Length > 0 ? times : null;
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException) { return null; }
     }
 
     /// <summary>The tile at a point of the sheet (sheet pixels), null between tiles.</summary>

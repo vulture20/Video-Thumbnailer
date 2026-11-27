@@ -45,7 +45,18 @@ public partial class SettingsViewModel : ObservableObject
 
     // Layout
     /// <summary>Plain grid, the built-in special grids and (if any) the special grid of the loaded preset.</summary>
-    public ObservableCollection<LayoutChoice> Layouts { get; } = [LayoutChoice.Plain(), .. LayoutChoice.BuiltIns()];
+    public ObservableCollection<LayoutChoice> Layouts { get; } = [LayoutChoice.Plain(), .. LayoutChoice.BuiltIns(), .. OwnChoices()];
+
+    private static IEnumerable<LayoutChoice> OwnChoices() => new TemplateStore().LoadAll().Select(LayoutChoice.Own);
+
+    /// <summary>Reads the own grids again (after the editor saved or deleted one) and selects <paramref name="select"/>.</summary>
+    public void ReloadOwnLayouts(GridTemplate? select)
+    {
+        foreach (var old in Layouts.Where(l => l.IsOwn).ToList()) Layouts.Remove(old);
+        var at = Layouts.Count(l => l.IsBuiltIn);
+        foreach (var c in OwnChoices()) Layouts.Insert(at++, c);
+        SelectedLayout = ChoiceFor(select ?? SelectedLayout?.Template);
+    }
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(IsPlainGrid))] private LayoutChoice? _selectedLayout;
     /// <summary>Columns and rows only apply to the plain grid.</summary>
     public bool IsPlainGrid => SelectedLayout?.Template is null;
@@ -238,9 +249,9 @@ public partial class SettingsViewModel : ObservableObject
     private LayoutChoice ChoiceFor(GridTemplate? t)
     {
         // Only the special grid of the preset currently loaded is offered besides the built-in ones.
-        foreach (var old in Layouts.Where(l => !l.IsBuiltIn).ToList()) Layouts.Remove(old);
+        foreach (var old in Layouts.Where(l => !l.IsBuiltIn && !l.IsOwn).ToList()) Layouts.Remove(old);
         if (t is null) return Layouts[0];
-        var builtIn = Layouts.FirstOrDefault(l => l.Template is { } b && l.IsBuiltIn
+        var builtIn = Layouts.FirstOrDefault(l => l.Template is { } b && (l.IsBuiltIn || l.IsOwn)
                                                   && string.Equals(b.Name, t.Name, StringComparison.OrdinalIgnoreCase) && BuiltInTemplates.SameTiles(b, t));
         if (builtIn is not null) return builtIn;
         var custom = LayoutChoice.Custom(t);

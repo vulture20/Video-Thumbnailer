@@ -60,6 +60,7 @@
                   <MenuItem Header="{l:T ClearAll}" Command="{Binding ClearAllCommand}" />
                   <MenuItem Header="{l:T RetryFailed}" Command="{Binding RetryFailedCommand}" />
                   <Separator />
+                  <MenuItem x:Name="OpenSheetItem" Header="{l:T OpenSheet}" Command="{Binding OpenSheetCommand}" ToolTip.Tip="{l:T OpenSheetTip}" />
                   <MenuItem x:Name="ExportInfoItem" Header="{l:T ExportInfo}" Command="{Binding ExportInfoCommand}" ToolTip.Tip="{l:T ExportInfoTip}" />
                   <Separator />
                   <MenuItem Header="{l:T SortByName}" Command="{Binding SortCommand}" CommandParameter="name" />
@@ -216,6 +217,7 @@
                 </DataTemplate>
               </ListBox.ItemTemplate>
             </ListBox>
+            <Button x:Name="EditGridButton" Content="{l:T EditGrid}" Command="{Binding EditGridCommand}" ToolTip.Tip="{l:T EditGridTip}" Margin="0,0,0,4" />
             <Grid ColumnDefinitions="*,140" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="6">
               <TextBlock Classes="label" Text="{l:T Columns}" IsEnabled="{Binding Settings.IsPlainGrid}" />
               <NumericUpDown x:Name="ColumnsBox" Grid.Column="1" Value="{Binding Settings.Columns}" Minimum="1" Maximum="50" Increment="1" FormatString="0" IsEnabled="{Binding Settings.IsPlainGrid}" />

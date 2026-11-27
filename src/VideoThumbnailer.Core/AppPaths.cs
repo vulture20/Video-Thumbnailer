@@ -58,6 +58,9 @@ public static class AppPaths
     }
 
     public static string PresetsDir => Path.Combine(ConfigDir, "presets");
+
+    /// <summary>Own special grids from the grid editor (#36), one "*.vtgrid" file each.</summary>
+    public static string GridsDir => Path.Combine(ConfigDir, "grids");
     public static string SettingsFile => Path.Combine(ConfigDir, "settings.json");
     public static string FfmpegDir => Path.Combine(DataDir, "ffmpeg");
 
