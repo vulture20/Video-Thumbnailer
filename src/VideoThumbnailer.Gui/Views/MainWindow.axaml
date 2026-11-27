@@ -60,6 +60,7 @@
                   <MenuItem Header="{l:T ClearAll}" Command="{Binding ClearAllCommand}" />
                   <MenuItem Header="{l:T RetryFailed}" Command="{Binding RetryFailedCommand}" />
                   <Separator />
+                  <MenuItem x:Name="CreatePackItem" Header="{l:T CreatePack}" Command="{Binding CreatePackCommand}" ToolTip.Tip="{l:T CreatePackTip}" />
                   <MenuItem x:Name="OpenSheetItem" Header="{l:T OpenSheet}" Command="{Binding OpenSheetCommand}" ToolTip.Tip="{l:T OpenSheetTip}" />
                   <MenuItem x:Name="ExportInfoItem" Header="{l:T ExportInfo}" Command="{Binding ExportInfoCommand}" ToolTip.Tip="{l:T ExportInfoTip}" />
                   <Separator />

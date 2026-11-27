@@ -541,6 +541,42 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private async Task AddFilesAsync() => AddPaths(await _ui.PickVideoFilesAsync());
 
+    /// <summary>
+    /// Pack picture (#37): one overview of all videos in the queue, a row per video with as many pictures as the
+    /// grid has columns, as wide as the sheet; colours, font and time stamps from the current settings.
+    /// </summary>
+    [RelayCommand]
+    private async Task CreatePackAsync()
+    {
+        if (Jobs.Count == 0) { StatusText = Loc.T("StatusNothingToExport"); return; }
+        var file = await _ui.PickPackFileAsync(Loc.T("PackFileName") + ".jpg");
+        if (file is null) return;
+        var tools = await Ffmpeg.EnsureAsync();
+        if (tools is null) return;
+        var s = Settings.ToSettings(SelectedPreset?.Name ?? "");
+        var paths = Jobs.Select(j => j.Job.InputPath).ToList();
+        StatusText = Loc.T("StatusPackRunning", paths.Count, 0);
+        var progress = new Progress<double>(p => StatusText = Loc.T("StatusPackRunning", paths.Count, (int)(p * 100)));
+        try
+        {
+            using var limiter = new SemaphoreSlim((int)MaxParallelProcesses);
+            var result = await Task.Run(() => new PackGenerator(tools, limiter).GenerateAsync(paths, s, file, s.Columns, s.SheetWidth, progress, CancellationToken.None));
+            if (result.Files.Count == 0)
+            {
+                await _ui.ShowMessageAsync(Loc.T("CreatePack"), Loc.T("DlgPackFailed", string.Join("\n", result.Failed.Select(f => $"{Path.GetFileName(f.Path)}: {f.Error}"))));
+                return;
+            }
+            StatusText = result.Failed.Count > 0
+                ? Loc.T("StatusPackDoneFailed", result.Videos, result.Files.Count, result.Failed.Count)
+                : Loc.T("StatusPackDone", result.Videos, result.Files.Count);
+            _ui.OpenPath(result.Files[0]);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            await _ui.ShowMessageAsync(Loc.T("CreatePack"), Loc.T("DlgPackFailed", ex.Message));
+        }
+    }
+
     /// <summary>Grid editor (#36) for the grid in use (or the plain grid as starting point).</summary>
     [RelayCommand]
     private async Task EditGridAsync()

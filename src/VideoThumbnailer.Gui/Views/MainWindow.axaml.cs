@@ -247,6 +247,23 @@ public partial class MainWindow : Window, IUiServices
         return files.Count > 0 ? files[0].TryGetLocalPath() : null;
     }
 
+    public async Task<string?> PickPackFileAsync(string suggestedName)
+    {
+        var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = Loc.T("CreatePack"),
+            SuggestedFileName = suggestedName,
+            DefaultExtension = "jpg",
+            FileTypeChoices =
+            [
+                new FilePickerFileType("JPEG") { Patterns = ["*.jpg", "*.jpeg"] },
+                new FilePickerFileType("PNG") { Patterns = ["*.png"] },
+                new FilePickerFileType("WebP") { Patterns = ["*.webp"] },
+            ],
+        });
+        return file?.TryGetLocalPath();
+    }
+
     public Task<bool> EditGridAsync(GridEditorViewModel editor) => GridEditorWindow.ShowAsync(this, editor);
 
     public void ShowViewer(ViewerViewModel viewer) => ViewerWindow.Show(this, viewer);

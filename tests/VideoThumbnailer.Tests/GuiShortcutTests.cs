@@ -32,6 +32,7 @@ public class GuiShortcutTests
         public Task<string?> PickSheetFileAsync() => Task.FromResult<string?>(null);
         public void ShowViewer(ViewerViewModel viewer) { }
         public Task<bool> EditGridAsync(GridEditorViewModel editor) => Task.FromResult(false);
+        public Task<string?> PickPackFileAsync(string suggestedName) => Task.FromResult<string?>(null);
         public void OpenPath(string path) { }
     }
 

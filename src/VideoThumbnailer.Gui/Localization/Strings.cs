@@ -348,6 +348,15 @@ internal static class Strings
         ["AnimFormat.Apng"] = new("APNG", "APNG"),
         ["AnimFormat.Ogv"] = new("OGV (Theora)", "OGV (Theora)"),
 
+        // ---- pack picture (#37)
+        ["CreatePack"] = new("Create pack picture…", "Pack-Bild erstellen…"),
+        ["CreatePackTip"] = new("One overview picture of all videos in the queue: a row per video with its name and as many pictures as the grid has columns, as wide as the sheet.", "Ein Übersichtsbild aller Videos der Warteschlange: je Video eine Zeile mit Namen und so vielen Bildern, wie das Raster Spalten hat, so breit wie das Sheet."),
+        ["PackFileName"] = new("pack", "pack"),
+        ["StatusPackRunning"] = new("Pack picture of {0} videos… {1} %", "Pack-Bild aus {0} Videos … {1} %"),
+        ["StatusPackDone"] = new("Pack picture of {0} videos written ({1} file(s))", "Pack-Bild aus {0} Videos geschrieben ({1} Datei(en))"),
+        ["StatusPackDoneFailed"] = new("Pack picture of {0} videos written ({1} file(s)); {2} could not be read", "Pack-Bild aus {0} Videos geschrieben ({1} Datei(en)); {2} ließen sich nicht lesen"),
+        ["DlgPackFailed"] = new("No pack picture was written:\n{0}", "Es wurde kein Pack-Bild geschrieben:\n{0}"),
+
         // ---- grid editor (#36)
         ["EditGrid"] = new("Edit grid…", "Raster bearbeiten…"),
         ["EditGridTip"] = new("Arrange big, small and empty tiles yourself and save the result as your own grid.", "Große, kleine und leere Kacheln selbst anordnen und als eigenes Raster speichern."),

@@ -12,6 +12,7 @@ internal static class HelpText
         Usage:
           vthumb [options] <file|folder|URL>...  create sheets
           vthumb presets list|show|import|export|delete
+          vthumb pack [options] <file|folder>... -o <pack.jpg>   one overview picture, a row per video
           vthumb ffmpeg status|check|install|update|uninstall [--force] [--latest]
           vthumb --help | --version
 
@@ -146,6 +147,7 @@ internal static class HelpText
         Aufruf:
           vthumb [Optionen] <Datei|Ordner|URL>... Sheets erstellen
           vthumb presets list|show|import|export|delete
+          vthumb pack [Optionen] <Datei|Ordner>... -o <pack.jpg>  ein Übersichtsbild, eine Zeile je Video
           vthumb ffmpeg status|check|install|update|uninstall [--force] [--latest]
           vthumb --help | --version
 
@@ -273,5 +275,39 @@ internal static class HelpText
               --quiet                nur Fehler und die Zusammenfassung ausgeben
 
         Exit-Codes: 0 ok, 1 einzelne Videos fehlgeschlagen, 2 Aufruffehler, 3 ffmpeg fehlt, 130 abgebrochen.
+        """;
+
+    public static string Pack => Lang.Current == Lang.German ? PackGerman : PackEnglish;
+
+    public const string PackEnglish = """
+        vthumb pack - one overview picture of many videos (a season, a folder)
+
+        Usage:
+          vthumb pack [options] <file|folder>... -o <pack.jpg|png|webp>
+
+        Every video gets one row: its name, duration, resolution and size, below a strip of small pictures.
+          -o, --output <file>        target picture; the format follows the extension (JPEG, PNG, WebP)
+          -c, --columns, --tiles <n> pictures per video (default: columns of the preset)
+          -w, --width <px>           width of the picture (default: sheet width of the preset)
+          -p, --preset <name|file>   colours, font, time stamps, gaps and skipped start/end come from the preset;
+                                     the sheet options (--background, --gap, --no-timestamps …) work as well
+          -r, --recursive, -j, --jobs, --ffmpeg, -y, --dry-run, --quiet  as for sheets
+        Too tall for the format (WebP 16383 px, JPEG 65000 px, PNG 32000 px): split into pack-1, pack-2 …
+        """;
+
+    public const string PackGerman = """
+        vthumb pack - ein Übersichtsbild aus vielen Videos (eine Staffel, ein Ordner)
+
+        Aufruf:
+          vthumb pack [Optionen] <Datei|Ordner>... -o <pack.jpg|png|webp>
+
+        Jedes Video bekommt eine Zeile: Name, Dauer, Auflösung und Größe, darunter ein Streifen kleiner Bilder.
+          -o, --output <Datei>       Zielbild; das Format richtet sich nach der Endung (JPEG, PNG, WebP)
+          -c, --columns, --tiles <n> Bilder je Video (Standard: Spalten des Presets)
+          -w, --width <px>           Breite des Bildes (Standard: Sheet-Breite des Presets)
+          -p, --preset <Name|Datei>  Farben, Schrift, Zeitstempel, Abstände und übersprungener Anfang/Ende kommen
+                                     aus dem Preset; die Sheet-Optionen (--background, --gap, --no-timestamps …) gehen auch
+          -r, --recursive, -j, --jobs, --ffmpeg, -y, --dry-run, --quiet  wie bei Sheets
+        Zu hoch für das Format (WebP 16383 px, JPEG 65000 px, PNG 32000 px): Aufteilung in pack-1, pack-2 …
         """;
 }
